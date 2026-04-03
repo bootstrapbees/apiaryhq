@@ -42,7 +42,8 @@ function exportInspectionsPDF(hiveId) {
     doc.text(line1, margin+3, y);
     y += 5;
     var line2 = '⭐ Population: '+('⭐'.repeat(i.population||0)+'☆'.repeat(5-(i.population||0)))+' | Honey: '+('⭐'.repeat(i.honey||0)+'☆'.repeat(5-(i.honey||0)))+' | Brood: '+('⭐'.repeat(i.brood||0)+'☆'.repeat(5-(i.brood||0)));
-    doc.text('Population: '+String(i.population||0)+' of 5   Honey Stores: '+String(i.honey||0)+' of 5   Brood: '+String(i.brood||0)+' of 5', margin+3, y);
+    var popStr = 'Population: '+String(i.population||0)+'/5   Honey: '+String(i.honey||0)+'/5   Brood: '+String(i.brood||0)+'/5';
+    doc.text(popStr, margin+3, y);
     y += 5;
     if (i.varroa) { doc.text('Varroa: '+i.varroa, margin+3, y); y+=5; }
     if (i.actions) { var aLines=doc.splitTextToSize('Actions: '+i.actions, pageW-2*margin-6); doc.text(aLines, margin+3, y); y+=aLines.length*4.5; }

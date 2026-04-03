@@ -1,10 +1,39 @@
 // ═══════════════════════════════════════════════════════
 // APIARY HQ — SMART REMINDER ENGINE
-// Phase-aware, season-aware, dedup-safe
+// Phase-aware, season-aware, zone-aware, dedup-safe
 // © 2026 Bootstrap Beekeeping. All rights reserved.
 // ═══════════════════════════════════════════════════════
 
-// ── Date helpers ────────────────────────────────────────
+// ── HARVEST REMINDERS ───────────────────────────────────
+async function saveHarvestReminders(savedRow, obj) {
+  var hive = DATA.hives.find(function(h) { return h.id === obj.hive_id; });
+  if (!hive) return;
+  var hiveName = hive.name;
+  var harvestDate = obj.date;
+  var added = [];
+
+  if (!hasSimilarReminder(hive.id, 'post-harvest')) {
+    await insertSmartReminder({
+      hive_id: hive.id, next_date: addDays(harvestDate, 7), rem_type: 'Treatment',
+      notes: hiveName + ': Varroa wash post-harvest — supers are off. Get a mite count baseline before deciding on Apivar.',
+      item_name: null, item_cost: null, item_qty: null, supplier_id: null, completed: false, added_to_finance: false
+    });
+    added.push('Post-harvest Varroa wash in 7 days');
+  }
+
+  if (!hasSimilarReminder(hive.id, 'treatment decision')) {
+    await insertSmartReminder({
+      hive_id: hive.id, next_date: addDays(harvestDate, 14), rem_type: 'Treatment',
+      notes: hiveName + ': Treatment decision — review mite count. Apply Apivar (2 strips) if count exceeds 2 mites per 100 bees.',
+      item_name: null, item_cost: null, item_qty: null, supplier_id: null, completed: false, added_to_finance: false
+    });
+    added.push('Treatment decision at 14 days');
+  }
+
+  if (added.length) showAutoRemindToast(added.length + ' post-harvest reminder' + (added.length > 1 ? 's' : '') + ' set');
+}
+
+// ── Date helpers ─────────────────────────────────────────
 function addDays(dateStr, days) {
   var d = new Date(dateStr + 'T12:00:00');
   d.setDate(d.getDate() + days);
@@ -14,11 +43,11 @@ function daysBetween(a, b) {
   return Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 864e5);
 }
 function getMonth(dateStr) {
-  return new Date(dateStr + 'T12:00:00').getMonth() + 1; // 1–12
+  return new Date(dateStr + 'T12:00:00').getMonth() + 1; // 1-12
 }
 
-// ── Season / Colony Phase Detection ─────────────────────
-// Cherokee County AL, Zone 7b seasonal calendar
+// ── Colony Phase Detection ────────────────────────────────
+// Zone-aware via _userZone from core.js (defaults to 7b)
 // Returns: 'new_package' | 'swarm_season' | 'summer' | 'treatment' | 'fall_prep' | 'winter'
 function getColonyPhase(hive, today) {
   var month = getMonth(today);
@@ -29,39 +58,48 @@ function getColonyPhase(hive, today) {
     if (daysOld >= 0 && daysOld <= 28) return 'new_package';
   }
 
-  // Apivar / amitraz active — suppresses inspection reminders
+  // Apivar / amitraz active
   if (DATA.treatments) {
     var activeTreatment = DATA.treatments.find(function(t) {
       if (t.hiveId !== hive.id || !t.date) return false;
       var product = (t.product || t.category || '').toLowerCase();
       if (!product.includes('apivar') && !product.includes('amitraz')) return false;
-      // Apivar is active for 56 days from application date
       return today >= t.date && today <= addDays(t.date, 56);
     });
     if (activeTreatment) return 'treatment';
   }
 
-  // Seasonal calendar
-  if (month >= 3 && month <= 5) return 'swarm_season';  // Mar–May: peak swarm, tulip poplar
-  if (month >= 6 && month <= 7) return 'summer';         // Jun–Jul: post-flow, summer dearth
-  if (month >= 8 && month <= 11) return 'fall_prep';     // Aug–Nov: Apivar window, OA prep
-  return 'winter';                                        // Dec–Feb
+  // Zone-aware seasonal calendar
+  var zone = (typeof _userZone !== 'undefined' && _userZone) ? _userZone : '7b';
+  var cal = (typeof getZoneSeasonalCalendar === 'function')
+    ? getZoneSeasonalCalendar(zone)
+    : { swarm:[3,5], summer:[6,7], fallPrep:[8,11], winter:[12,2] };
+
+  function inRange(m, range) {
+    if (range[0] <= range[1]) return m >= range[0] && m <= range[1];
+    return m >= range[0] || m <= range[1]; // wraps year boundary
+  }
+
+  if (inRange(month, cal.swarm))    return 'swarm_season';
+  if (inRange(month, cal.summer))   return 'summer';
+  if (inRange(month, cal.fallPrep)) return 'fall_prep';
+  return 'winter';
 }
 
-// ── Inspection interval by phase ────────────────────────
+// ── Inspection interval by phase ─────────────────────────
 function getInspectionInterval(phase) {
   switch (phase) {
-    case 'new_package':  return 7;    // Weekly while establishing
-    case 'swarm_season': return 8;    // Queen cell caps at day 9 — stay ahead of it
-    case 'summer':       return 14;   // Standard biweekly
-    case 'treatment':    return null; // Suppressed during Apivar
-    case 'fall_prep':    return 21;   // Winding down, less frequent
-    case 'winter':       return null; // No full inspections
+    case 'new_package':  return 7;
+    case 'swarm_season': return 8;
+    case 'summer':       return 14;
+    case 'treatment':    return null;
+    case 'fall_prep':    return 21;
+    case 'winter':       return null;
     default:             return 14;
   }
 }
 
-// ── Dedup: one active inspection reminder per hive ──────
+// ── Dedup: one active inspection reminder per hive ───────
 function hasActiveInspectionReminder(hiveId) {
   var today = new Date().toISOString().slice(0,10);
   return DATA.reminders.some(function(r) {
@@ -72,7 +110,7 @@ function hasActiveInspectionReminder(hiveId) {
   });
 }
 
-// ── Dedup: check for similar note already pending ───────
+// ── Dedup: check for similar pending note ────────────────
 function hasSimilarReminder(hiveId, fragment) {
   var today = new Date().toISOString().slice(0,10);
   return DATA.reminders.some(function(r) {
@@ -83,7 +121,7 @@ function hasSimilarReminder(hiveId, fragment) {
   });
 }
 
-// ── Safe reminder insert ─────────────────────────────────
+// ── Safe reminder insert ──────────────────────────────────
 async function insertSmartReminder(obj) {
   var row = await (typeof dbInsertSafe === 'function'
     ? dbInsertSafe('reminders', obj)
@@ -104,11 +142,9 @@ async function insertSmartReminder(obj) {
   return row;
 }
 
-// ════════════════════════════════════════════════════════
-// MAIN ENGINE — called after saving any inspection log
-// logType: 'Inspection' | 'Feeding' | 'Treatment' | 'Split' | 'Requeen'
-// ════════════════════════════════════════════════════════
-// ── Internal engine — do not call directly, use entry points below ──
+// ═══════════════════════════════════════════════════════
+// MAIN ENGINE
+// ═══════════════════════════════════════════════════════
 async function _runReminderEngine(savedRow, obj) {
   var hive = DATA.hives.find(function(h) { return h.id === obj.hive_id; });
   if (!hive) return;
@@ -118,7 +154,7 @@ async function _runReminderEngine(savedRow, obj) {
   var phase = getColonyPhase(hive, inspDate);
   var remindersAdded = [];
 
-  // ── TREATMENT PHASE: suppress all, queue post-treatment check ──
+  // Treatment phase: suppress all, queue post-treatment check
   if (phase === 'treatment') {
     var activeTx = DATA.treatments && DATA.treatments.find(function(t) {
       if (t.hiveId !== hive.id || !t.date) return false;
@@ -127,10 +163,10 @@ async function _runReminderEngine(savedRow, obj) {
              inspDate >= t.date && inspDate <= addDays(t.date, 56);
     });
     if (activeTx && !hasSimilarReminder(hive.id, 'post-apivar')) {
-      var postCheck = addDays(activeTx.date, 64); // 56-day strip + 8-day buffer
+      var postCheck = addDays(activeTx.date, 64);
       await insertSmartReminder({
         hive_id: hive.id, next_date: postCheck, rem_type: 'Inspection',
-        notes: hiveName + ': ✅ Post-Apivar inspection — confirm queen is laying, do alcohol wash to verify treatment efficacy.',
+        notes: hiveName + ': Post-Apivar inspection — confirm queen is laying, do alcohol wash to verify treatment efficacy.',
         item_name: null, item_cost: null, item_qty: null, supplier_id: null, completed: false, added_to_finance: false
       });
       remindersAdded.push('Post-Apivar check scheduled');
@@ -139,22 +175,20 @@ async function _runReminderEngine(savedRow, obj) {
     return;
   }
 
-  // ── WINTER PHASE: no full inspections ───────────────
+  // Winter: no full inspections
   if (phase === 'winter') {
     showAutoRemindToast('Winter mode — no full inspection reminders set');
     return;
   }
 
-  // ════════════════════════════════════════════════════
-  // NEW PACKAGE PHASE — one-time milestone reminders
-  // ════════════════════════════════════════════════════
+  // New package milestones
   if (phase === 'new_package' && hive.install_date) {
     var daysOld = daysBetween(hive.install_date, inspDate);
 
     if (daysOld < 3 && !hasSimilarReminder(hive.id, 'queen cage')) {
       await insertSmartReminder({
         hive_id: hive.id, next_date: addDays(hive.install_date, 4), rem_type: 'Inspection',
-        notes: hiveName + ': ⚙️ Queen cage check — confirm queen has been released. Peek only, do NOT do a full inspection.',
+        notes: hiveName + ': Queen cage check — confirm queen has been released. Peek only, do NOT do a full inspection.',
         item_name: null, item_cost: null, item_qty: null, supplier_id: null, completed: false, added_to_finance: false
       });
       remindersAdded.push('Queen cage check at day 4');
@@ -163,7 +197,7 @@ async function _runReminderEngine(savedRow, obj) {
     if (daysOld < 7 && !hasSimilarReminder(hive.id, 'first brood')) {
       await insertSmartReminder({
         hive_id: hive.id, next_date: addDays(hive.install_date, 8), rem_type: 'Inspection',
-        notes: hiveName + ': 🔍 First brood check — look for eggs and young larvae confirming queen is laying.',
+        notes: hiveName + ': First brood check — look for eggs and young larvae confirming queen is laying.',
         item_name: null, item_cost: null, item_qty: null, supplier_id: null, completed: false, added_to_finance: false
       });
       remindersAdded.push('First brood check at day 8');
@@ -172,88 +206,76 @@ async function _runReminderEngine(savedRow, obj) {
     if (!hasSimilarReminder(hive.id, 'alcohol wash')) {
       await insertSmartReminder({
         hive_id: hive.id, next_date: addDays(hive.install_date, 21), rem_type: 'Treatment',
-        notes: hiveName + ': 🧪 Baseline alcohol wash — day 21–25 Varroa baseline per AUBEE 5-phase protocol.',
+        notes: hiveName + ': Baseline alcohol wash — day 21-25 Varroa baseline per AUBEE 5-phase protocol.',
         item_name: null, item_cost: null, item_qty: null, supplier_id: null, completed: false, added_to_finance: false
       });
       remindersAdded.push('Baseline alcohol wash at day 21');
     }
   }
 
-  // ════════════════════════════════════════════════════
-  // CONDITION-TRIGGERED REMINDERS
-  // ════════════════════════════════════════════════════
-
-  // Queen not seen
+  // Condition-triggered reminders
   if (obj.queen_seen === 'No ✗' && !hasSimilarReminder(hive.id, 'queen not seen')) {
     await insertSmartReminder({
       hive_id: hive.id, next_date: addDays(inspDate, 5), rem_type: 'Inspection',
-      notes: hiveName + ': ⚠️ Queen not seen — re-inspect in 5 days for eggs or queen presence.',
+      notes: hiveName + ': Queen not seen — re-inspect in 5 days for eggs or queen presence.',
       item_name: null, item_cost: null, item_qty: null, supplier_id: null, completed: false, added_to_finance: false
     });
     remindersAdded.push('Queen check in 5 days');
   }
 
-  // High Varroa
   if (obj.varroa && obj.varroa.toLowerCase().includes('high') && !hasSimilarReminder(hive.id, 'varroa recheck')) {
     await insertSmartReminder({
       hive_id: hive.id, next_date: addDays(inspDate, 7), rem_type: 'Treatment',
-      notes: hiveName + ': 🚨 High Varroa — urgent recheck in 7 days. Verify treatment efficacy with alcohol wash.',
+      notes: hiveName + ': High Varroa — urgent recheck in 7 days. Verify treatment efficacy with alcohol wash.',
       item_name: null, item_cost: null, item_qty: null, supplier_id: null, completed: false, added_to_finance: false
     });
     remindersAdded.push('Urgent Varroa recheck in 7 days');
   } else if (obj.varroa && obj.varroa.toLowerCase().includes('medium') && !hasSimilarReminder(hive.id, 'varroa recheck')) {
     await insertSmartReminder({
       hive_id: hive.id, next_date: addDays(inspDate, 14), rem_type: 'Treatment',
-      notes: hiveName + ': ⚠️ Moderate Varroa — recheck in 14 days. Consider treatment if trending up.',
+      notes: hiveName + ': Moderate Varroa — recheck in 14 days. Consider treatment if trending up.',
       item_name: null, item_cost: null, item_qty: null, supplier_id: null, completed: false, added_to_finance: false
     });
     remindersAdded.push('Varroa recheck in 14 days');
   }
 
-  // Low honey stores — feeding check (General Task, NOT Inspection)
   if (obj.honey && Number(obj.honey) <= 2 && !hasSimilarReminder(hive.id, 'low honey')) {
     await insertSmartReminder({
       hive_id: hive.id, next_date: addDays(inspDate, 3), rem_type: 'General Task',
-      notes: hiveName + ': 🍯 Low honey stores (' + obj.honey + '/5) — check feeders and refill syrup jars.',
+      notes: hiveName + ': Low honey stores (' + obj.honey + '/5) — check feeders and refill syrup jars.',
       item_name: 'Sugar syrup', item_cost: null, item_qty: null, supplier_id: null, completed: false, added_to_finance: false
     });
     remindersAdded.push('Feed check in 3 days');
   }
 
-  // Very low population
   if (obj.population && Number(obj.population) <= 1 && !hasSimilarReminder(hive.id, 'low population')) {
     await insertSmartReminder({
       hive_id: hive.id, next_date: addDays(inspDate, 7), rem_type: 'Inspection',
-      notes: hiveName + ': 📉 Very low population — re-inspect in 7 days. Check for disease, queen failure, or absconding.',
+      notes: hiveName + ': Very low population — re-inspect in 7 days. Check for disease, queen failure, or absconding.',
       item_name: null, item_cost: null, item_qty: null, supplier_id: null, completed: false, added_to_finance: false
     });
     remindersAdded.push('Low population check in 7 days');
   }
 
-  // Defensive temperament
   if (obj.temperament === 'Defensive' && !hasSimilarReminder(hive.id, 'temperament')) {
     await insertSmartReminder({
       hive_id: hive.id, next_date: addDays(inspDate, 14), rem_type: 'Inspection',
-      notes: hiveName + ': 😤 Defensive temperament — re-inspect in 14 days. Consider requeening if behavior continues.',
+      notes: hiveName + ': Defensive temperament — re-inspect in 14 days. Consider requeening if behavior continues.',
       item_name: null, item_cost: null, item_qty: null, supplier_id: null, completed: false, added_to_finance: false
     });
     remindersAdded.push('Temperament follow-up in 14 days');
   }
 
-  // Queen cells noted — swarm decision needed
   if (obj.queenCells && obj.queenCells !== 'None' && !hasSimilarReminder(hive.id, 'queen cell')) {
     await insertSmartReminder({
       hive_id: hive.id, next_date: addDays(inspDate, 5), rem_type: 'Inspection',
-      notes: hiveName + ': 👑 Queen cells noted — re-inspect in 5 days. Decide: split, allow supersedure, or remove cells.',
+      notes: hiveName + ': Queen cells noted — re-inspect in 5 days. Decide: split, allow supersedure, or remove cells.',
       item_name: null, item_cost: null, item_qty: null, supplier_id: null, completed: false, added_to_finance: false
     });
     remindersAdded.push('Queen cell follow-up in 5 days');
   }
 
-  // ════════════════════════════════════════════════════
-  // ROUTINE NEXT INSPECTION
-  // Only if no active inspection reminder already exists for this hive
-  // ════════════════════════════════════════════════════
+  // Routine next inspection
   var interval = getInspectionInterval(phase);
   if (interval && !hasActiveInspectionReminder(hive.id)) {
     var phaseLabel = {
@@ -266,7 +288,7 @@ async function _runReminderEngine(savedRow, obj) {
       hive_id: hive.id,
       next_date: addDays(inspDate, interval),
       rem_type: 'Inspection',
-      notes: hiveName + ': 📋 Next ' + phaseLabel + ' — ' + interval + '-day interval (' + phase.replace(/_/g,' ') + ' phase).',
+      notes: hiveName + ': Next ' + phaseLabel + ' — ' + interval + '-day interval (' + phase.replace(/_/g,' ') + ' phase).',
       item_name: null, item_cost: null, item_qty: null, supplier_id: null, completed: false, added_to_finance: false
     });
     remindersAdded.push('Next inspection in ' + interval + ' days');
@@ -277,39 +299,35 @@ async function _runReminderEngine(savedRow, obj) {
   }
 }
 
-// ══════════════════════════════════════════════════════
-// PUBLIC ENTRY POINTS — call these from save functions,
-// never call _runReminderEngine directly
-// ══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// PUBLIC ENTRY POINTS
+// ═══════════════════════════════════════════════════════
 async function saveInspectionReminders(savedRow, obj) {
   return _runReminderEngine(savedRow, obj);
 }
 async function saveFeedingReminders(savedRow, obj) {
-  // Feedings never trigger inspection reminders — intentional no-op
+  // Feedings never trigger inspection reminders
 }
 async function saveTreatmentReminders(savedRow, obj) {
-  // Treatments are logged separately; post-treatment check is
-  // handled automatically by _runReminderEngine during treatment phase
   return _runReminderEngine(savedRow, obj);
 }
 async function saveSplitReminders(savedRow, obj) {
-  // Splits reset the colony to new-package phase — run full engine
   return _runReminderEngine(savedRow, obj);
 }
 
-// ══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // INSTALL REMINDER FLOW
-// ══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 async function promptInstallReminders(hive) {
-  var h = '<div class="modal-title">📦 Set Install Reminders?</div>';
+  var h = '<div class="modal-title">Set Install Reminders?</div>';
   h += '<div style="font-size:14px;color:var(--txt2);margin-bottom:18px;line-height:1.6">';
-  h += 'Apiary HQ will set smart reminders for <strong>' + esc(hive.name) + '</strong> based on your install date:<br><br>';
+  h += 'Apiary HQ will set smart reminders for <strong>' + esc(hive.name) + '</strong>:<br><br>';
   h += '&bull; <strong>Day 4</strong> — Queen cage release check<br>';
   h += '&bull; <strong>Day 8</strong> — First brood inspection<br>';
   h += '&bull; <strong>Day 21</strong> — Baseline alcohol wash<br>';
   h += '&bull; <strong>Day 28</strong> — End of new-package phase';
   h += '</div>';
-  h += '<button class="btn btn-p" onclick="confirmInstallReminders(\'' + hive.id + '\')">Set Reminders 🔔</button>';
+  h += '<button class="btn btn-p" onclick="confirmInstallReminders(\'' + hive.id + '\')">Set Reminders</button>';
   h += '<button class="btn btn-c" onclick="dismissInstallConfirm(\'' + hive.id + '\')">Skip</button>';
   openModal(h);
 }
@@ -320,10 +338,10 @@ async function confirmInstallReminders(hiveId) {
   var base = hive.install_date;
   var hn = hive.name;
   var schedule = [
-    { days: 4,  type: 'Inspection', frag: 'queen cage',    note: hn + ': ⚙️ Queen cage check — confirm queen has been released. Peek only, no full inspection.' },
-    { days: 8,  type: 'Inspection', frag: 'first brood',   note: hn + ': 🔍 First brood check — look for eggs and young larvae confirming queen is laying.' },
-    { days: 21, type: 'Treatment',  frag: 'alcohol wash',  note: hn + ': 🧪 Baseline alcohol wash — day 21–25 Varroa baseline per AUBEE 5-phase protocol.' },
-    { days: 28, type: 'Inspection', frag: 'end of new-package', note: hn + ': 📋 End of new-package phase — colony should be established. Shift to swarm-season schedule.' }
+    { days: 4,  type: 'Inspection', frag: 'queen cage',         note: hn + ': Queen cage check — confirm queen has been released. Peek only, no full inspection.' },
+    { days: 8,  type: 'Inspection', frag: 'first brood',        note: hn + ': First brood check — look for eggs and young larvae confirming queen is laying.' },
+    { days: 21, type: 'Treatment',  frag: 'alcohol wash',       note: hn + ': Baseline alcohol wash — day 21-25 Varroa baseline per AUBEE 5-phase protocol.' },
+    { days: 28, type: 'Inspection', frag: 'end of new-package', note: hn + ': End of new-package phase — colony should be established. Shift to swarm-season schedule.' }
   ];
   var added = 0;
   for (var i = 0; i < schedule.length; i++) {
@@ -336,7 +354,6 @@ async function confirmInstallReminders(hiveId) {
       added++;
     }
   }
-  // Mark install confirmed
   await (typeof dbUpdateSafe === 'function'
     ? dbUpdateSafe('hives', hiveId, { install_confirmed: true })
     : dbUpdate('hives', hiveId, { install_confirmed: true }));
@@ -357,9 +374,9 @@ async function dismissInstallConfirm(hiveId) {
   renderAll();
 }
 
-// ══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 // TOAST
-// ══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 function showAutoRemindToast(msg) {
   var existing = document.querySelector('.auto-remind-toast');
   if (existing) existing.remove();
@@ -371,9 +388,9 @@ function showAutoRemindToast(msg) {
   setTimeout(function() { toast.classList.remove('show'); setTimeout(function() { toast.remove(); }, 400); }, 3500);
 }
 
-// ══════════════════════════════════════════════════════
-// REMINDER MODAL (unified task + supply)
-// ══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// REMINDER MODAL
+// ═══════════════════════════════════════════════════════
 function openReminderModal(item) {
   var edit = !!item;
   var today = new Date().toISOString().slice(0,10);
@@ -387,18 +404,18 @@ function openReminderModal(item) {
   var remType = item ? (item.remType || 'Inspection') : 'Inspection';
   var h = '<div class="modal-title">'+(edit?'Edit':'New')+' Reminder</div>';
   h += '<div class="fg"><label>Type</label>'+makePills('rty',['Inspection','Treatment','Supply Purchase','General Task'],remType)+'</div>';
-  h += (DATA.hives.length ? '<div class="fg"><label>Hive (optional)</label><select id="f-rhive"><option value="">— All / N/A —</option>'+hiveOpts+'</select></div>' : '');
+  h += (DATA.hives.length ? '<div class="fg"><label>Hive (optional)</label><select id="f-rhive"><option value="">All / N/A</option>'+hiveOpts+'</select></div>' : '');
   h += '<div class="fg"><label>Due Date</label><input id="f-rdate" type="date" value="'+(edit?item.nextDate||today:today)+'"></div>';
-  h += '<div class="fg"><label>Notes / Description</label><textarea id="f-rnotes">'+esc(item?item.notes||'':'')+'</textarea></div>';
-  h += '<div id="supply-fields" style="margin-top:2px"><div style="padding:12px;background:rgba(37,99,168,.06);border-radius:12px;border:1px solid rgba(37,99,168,.15)">';
-  h += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blu);margin-bottom:10px">🛒 Supply / Purchase Details</div>';
-  h += '<div class="fg"><label>Item Name</label><input id="f-ritem" value="'+esc(item?item.itemName||'':'')+'" placeholder="e.g. Apivar strips, sugar, etc."></div>';
+  h += '<div class="fg"><label>Notes</label><textarea id="f-rnotes">'+esc(item?item.notes||'':'')+'</textarea></div>';
+  h += '<div style="padding:12px;background:rgba(37,99,168,.06);border-radius:12px;border:1px solid rgba(37,99,168,.15);margin-top:2px">';
+  h += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--blu);margin-bottom:10px">Supply / Purchase Details</div>';
+  h += '<div class="fg"><label>Item Name</label><input id="f-ritem" value="'+esc(item?item.itemName||'':'')+'" placeholder="e.g. Apivar strips, sugar"></div>';
   h += '<div class="row2"><div class="fg"><label>Qty</label><input id="f-rqty" type="number" value="'+esc(item?item.itemQty||'':'')+'" placeholder="1"></div>';
   h += '<div class="fg"><label>Est. Cost ('+_prefs.currency+')</label><input id="f-rcost" type="number" step="0.01" value="'+esc(item?item.itemCost||'':'')+'" placeholder="0.00"></div></div>';
-  h += (supOpts ? '<div class="fg"><label>Supplier (from Contacts)</label><select id="f-rsupplier"><option value="">— None —</option>'+supOpts+'</select></div>' : '');
-  h += '</div></div>';
-  h += '<button class="btn btn-p" onclick="saveReminder(\''+(edit?item.id:'')+'\','+(edit?1:0)+')">'+(edit?'Save Changes':'Add Reminder 🔔')+'</button>';
-  if (edit && !item.completed) h += '<button class="btn btn-s" onclick="completeReminder(\''+item.id+'\')">✅ Mark Complete</button>';
+  h += (supOpts ? '<div class="fg"><label>Supplier</label><select id="f-rsupplier"><option value="">None</option>'+supOpts+'</select></div>' : '');
+  h += '</div>';
+  h += '<button class="btn btn-p" onclick="saveReminder(\''+(edit?item.id:'')+'\','+(edit?1:0)+')">'+(edit?'Save Changes':'Add Reminder')+'</button>';
+  if (edit && !item.completed) h += '<button class="btn btn-s" onclick="completeReminder(\''+item.id+'\')">Mark Complete</button>';
   if (edit) h += '<button class="btn btn-d" onclick="deleteReminder(\''+item.id+'\')">Delete</button>';
   h += '<button class="btn btn-c" onclick="closeModal()">Cancel</button>';
   openModal(h);
@@ -445,9 +462,9 @@ async function completeReminder(id) {
 function promptAddToFinance(rem) {
   var h = '<div class="modal-title">Add to Finance?</div>';
   h += '<div style="font-size:14px;color:var(--txt2);margin-bottom:16px;line-height:1.6">You completed <strong>'+esc(rem.itemName||rem.notes||'task')+'</strong>';
-  if (rem.itemCost) h += ' with an estimated cost of <strong>'+_prefs.currency+parseFloat(rem.itemCost).toFixed(2)+'</strong>';
-  h += '. Add this as a Finance expense?</div>';
-  h += '<button class="btn btn-p" onclick="addReminderToFinance(\''+rem.id+'\')">Yes, Add to Finance 💰</button>';
+  if (rem.itemCost) h += ' — estimated cost <strong>'+_prefs.currency+parseFloat(rem.itemCost).toFixed(2)+'</strong>';
+  h += '. Add as Finance expense?</div>';
+  h += '<button class="btn btn-p" onclick="addReminderToFinance(\''+rem.id+'\')">Yes, Add to Finance</button>';
   h += '<button class="btn btn-c" onclick="closeModal();renderAll();">No Thanks</button>';
   openModal(h);
 }
@@ -478,4 +495,3 @@ function deleteReminder(id) {
     renderAll();
   });
 }
-/ ═══════════════════════════════════════════════════════

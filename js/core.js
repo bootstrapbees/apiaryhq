@@ -198,7 +198,10 @@ async function showApp(user) {
   document.getElementById('app-loading').classList.add('hidden');
   document.getElementById('main-header').style.display = '';
   document.getElementById('main-nav').style.display = '';
+  loadSavedZone();
   showTab('dash');
+  // Show onboarding for new users
+  setTimeout(function() { if (typeof showOnboarding === 'function') showOnboarding(); }, 600);
 }
 
 // ── Password Reset Helpers ───────────────────────────────
@@ -345,6 +348,53 @@ async function saveApiaryName() {
   document.getElementById('settings-apiary-name').textContent = name;
   if (_currentUser && _currentUser.user_metadata) _currentUser.user_metadata.apiary_name = name;
   closeModal();
+}
+
+// ═══════════════════════════════════════════════════════
+// ZIP CODE / HARDINESS ZONE TAILORING
+// Uses phzmapi.org to look up USDA hardiness zone from ZIP
+// ═══════════════════════════════════════════════════════
+var _userZone = null; // e.g. '7b'
+var _ZIP_KEY = 'apiaryhq_zip';
+var _ZONE_KEY = 'apiaryhq_zone';
+
+async function lookupZoneFromZip(zip) {
+  if (!zip || zip.length < 5) return null;
+  try {
+    var res = await fetch('https://phzmapi.org/' + zip + '.json');
+    if (!res.ok) return null;
+    var data = await res.json();
+    return data.zone || null; // e.g. '7b'
+  } catch(e) {
+    return null;
+  }
+}
+
+function getZoneSeasonalCalendar(zone) {
+  // Returns season month ranges based on hardiness zone
+  // Zones 3-4: short season, late spring, early fall
+  // Zones 5-6: moderate season
+  // Zones 7-8: long season (Cherokee County AL is 7b)
+  // Zones 9-10+: near-year-round
+  var z = parseInt(zone);
+  if (z <= 4) return { swarm:[4,6], summer:[7,8], fallPrep:[8,10], winter:[11,3] };
+  if (z <= 6) return { swarm:[3,5], summer:[6,8], fallPrep:[8,10], winter:[11,2] };
+  if (z <= 8) return { swarm:[3,5], summer:[6,7], fallPrep:[8,11], winter:[12,2] };
+  return        { swarm:[2,4], summer:[5,8], fallPrep:[8,10], winter:[11,1] };
+}
+
+async function saveZipCode(zip) {
+  localStorage.setItem(_ZIP_KEY, zip);
+  var zone = await lookupZoneFromZip(zip);
+  if (zone) {
+    localStorage.setItem(_ZONE_KEY, zone);
+    _userZone = zone;
+  }
+  return zone;
+}
+
+function loadSavedZone() {
+  _userZone = localStorage.getItem(_ZONE_KEY) || '7b'; // Default Cherokee County AL
 }
 
 // ═══════════════════════════════════════════════════════
