@@ -92,12 +92,14 @@ function loadPollenForecast() {
   if (window._pollenData) { renderPollenWidget(el, window._pollenData.days, window._pollenData.source); return; }
   var lat = parseFloat(localStorage.getItem('apiaryhq_lat'));
   var lng = parseFloat(localStorage.getItem('apiaryhq_lng'));
-  // No ZIP set — show prompt
+  // No ZIP set — prompt user to go to Settings
   if (!lat || !lng) {
-    el.innerHTML = '<div style="font-size:13px;color:var(--txt2);margin-bottom:10px">Enter your ZIP code to get a live pollen and foraging forecast.</div>'+
-      '<div style="display:flex;gap:8px;align-items:center">'+
-        '<input id="pollen-zip-input" type="text" inputmode="numeric" maxlength="5" placeholder="ZIP code" style="flex:1;padding:9px 12px;border-radius:10px;border:1px solid rgba(232,160,32,.3);background:var(--bg);color:var(--txt);font-size:15px;letter-spacing:2px">'+
-        '<button class="btn btn-p" style="margin:0;padding:9px 14px" onclick="saveZipFromWidget()">Go</button>'+
+    el.innerHTML =
+      '<div style="text-align:center;padding:8px 0">'+
+      '<div style="font-size:28px;margin-bottom:8px">📍</div>'+
+      '<div style="font-size:14px;font-weight:700;color:var(--txt);margin-bottom:6px">Set Your Location</div>'+
+      '<div style="font-size:13px;color:var(--txt2);margin-bottom:14px;line-height:1.5">Enter your ZIP code in Settings to get a live pollen and foraging forecast.</div>'+
+      '<button class="btn btn-p" style="margin:0;padding:10px 20px" onclick="showTab(\u0027settings\u0027)">Open Settings →</button>'+
       '</div>';
     return;
   }

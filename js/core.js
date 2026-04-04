@@ -402,26 +402,6 @@ function loadSavedZone() {
   _userZone = localStorage.getItem(_ZONE_KEY) || '7b'; // Default Cherokee County AL
 }
 
-async function saveZipFromWidget() {
-  // Reads from either the weather or pollen widget ZIP input
-  var input = document.getElementById('wx-zip-input') || document.getElementById('pollen-zip-input');
-  var zip = input ? input.value.trim() : '';
-  if (!zip || zip.length < 5) return;
-  // Save to settings field too so it stays in sync
-  var settingsInput = document.getElementById('settings-zip');
-  if (settingsInput) settingsInput.value = zip;
-  await saveZipCode(zip);
-  // Clear cache and reload both widgets
-  window._wx = null;
-  window._pollenData = null;
-  loadWeather();
-  loadPollenForecast();
-  // Update settings status
-  var zone = localStorage.getItem('apiaryhq_zone');
-  var zipStatus = document.getElementById('zip-status');
-  if (zipStatus && zone) { zipStatus.textContent = '✅ Zone ' + zone + ' active'; zipStatus.style.color = 'var(--ok)'; }
-}
-
 async function saveZipFromSettings() {
   var zip = (document.getElementById('settings-zip').value || '').trim();
   var statusEl = document.getElementById('zip-status');

@@ -981,30 +981,10 @@ body.dark .rec-item{background:var(--surface2)}
       <div style="font-size:13px;color:var(--bark);font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:6px"><svg viewBox="0 0 18 18" fill="none" style="width:14px;height:14px" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="8" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M9 2C5.7 2 3 4.7 3 8c0 4.5 6 9 6 9s6-4.5 6-9c0-3.3-2.7-6-6-6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>ZIP Code</div>
       <div style="font-size:11px;color:var(--txt2);margin-bottom:10px">Used to tailor inspection intervals and seasonal reminders to your hardiness zone.</div>
       <div style="display:flex;gap:8px;align-items:center">
-        <input id="settings-zip" type="text" inputmode="numeric" maxlength="5" placeholder="e.g. 35960" style="flex:1;padding:9px 12px;border-radius:10px;border:1px solid rgba(232,160,32,.3);background:var(--bg);color:var(--txt);font-size:14px;letter-spacing:2px">
+        <input id="settings-zip" type="text" inputmode="numeric" maxlength="5" placeholder="e.g. 35960" style="flex:1;padding:11px 14px;border-radius:10px;border:1.5px solid rgba(232,160,32,.4);background:var(--bg);color:var(--txt);font-size:16px;letter-spacing:3px;font-weight:600">
         <button class="btn btn-p" style="margin:0;padding:9px 14px;font-size:13px" onclick="saveZipFromSettings()">Save</button>
       </div>
       <div id="zip-status" style="font-size:11px;color:var(--txt2);margin-top:8px"></div>
-    </div>
-  </div>
-  <div class="settings-section">
-    <div class="settings-label">Integrations</div>
-    <div class="card" style="padding:0;overflow:hidden">
-      <div class="settings-row" style="padding:13px 14px;cursor:pointer" onclick="var s=document.getElementById('tomorrow-section');var a=document.getElementById('tomorrow-arrow');if(s.style.display==='none'){s.style.display='';a.style.transform='rotate(90deg)'}else{s.style.display='none';a.style.transform=''}">
-        <div class="settings-row-left">
-          <div class="settings-ico" style="background:rgba(37,99,168,.08)"><svg viewBox="0 0 22 22" fill="none" style="width:18px;height:18px" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M11 3v2M11 17v2M3 11H5M17 11h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
-          <div><div class="settings-title">Weather / Pollen API</div><div class="settings-sub">Tomorrow.io integration</div></div>
-        </div>
-        <span class="settings-arrow" id="tomorrow-arrow" style="transition:transform .2s">›</span>
-      </div>
-      <div id="tomorrow-section" style="display:none;padding:0 14px 14px;border-top:1px solid rgba(232,160,32,.1)">
-        <div style="font-size:11px;color:var(--txt2);margin:10px 0">Get a free key at tomorrow.io — powers the pollen &amp; foraging forecast on the dashboard.</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input id="tomorrow-api-key" type="password" placeholder="Paste API key here…" style="flex:1;padding:9px 12px;border-radius:10px;border:1px solid rgba(232,160,32,.3);background:var(--bg);color:var(--txt);font-size:13px">
-          <button class="btn btn-p" style="margin:0;padding:9px 14px;font-size:13px" onclick="saveTomorrowKey()">Save</button>
-        </div>
-        <div id="tomorrow-key-status" style="font-size:11px;color:var(--txt2);margin-top:8px"></div>
-      </div>
     </div>
   </div>
   <div class="settings-section">

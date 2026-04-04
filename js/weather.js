@@ -83,15 +83,14 @@ function loadWeather() {
   var lat = parseFloat(localStorage.getItem('apiaryhq_lat'));
   var lng = parseFloat(localStorage.getItem('apiaryhq_lng'));
   var zip = localStorage.getItem('apiaryhq_zip');
-  // No ZIP set — show prompt
+  // No ZIP set — prompt user to go to Settings
   if (!lat || !lng) {
     el.className = 'wx-load';
     el.innerHTML =
-      '<div style="font-size:13px;color:var(--txt2);margin-bottom:10px">Enter your ZIP code to get local weather and inspection conditions.</div>'+
-      '<div style="display:flex;gap:8px;align-items:center">'+
-        '<input id="wx-zip-input" type="text" inputmode="numeric" maxlength="5" placeholder="ZIP code" style="flex:1;padding:9px 12px;border-radius:10px;border:1px solid rgba(232,160,32,.3);background:#fff;color:var(--txt);font-size:15px;letter-spacing:2px">'+
-        '<button class="btn btn-p" style="margin:0;padding:9px 14px" onclick="saveZipFromWidget()">Go</button>'+
-      '</div>';
+      '<div style="font-size:28px;margin-bottom:8px">📍</div>'+
+      '<div style="font-size:14px;font-weight:700;color:var(--txt);margin-bottom:6px">Set Your Location</div>'+
+      '<div style="font-size:13px;color:var(--txt2);margin-bottom:14px;line-height:1.5">Enter your ZIP code in Settings to get local weather and inspection conditions.</div>'+
+      '<button class="btn btn-p" style="margin:0;padding:10px 20px" onclick="showTab(\u0027settings\u0027)">Open Settings →</button>';
     return;
   }
   el.className = 'wx-load'; el.textContent = 'Loading weather…';

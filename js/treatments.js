@@ -595,8 +595,9 @@ var PEST_CATEGORIES = {
   'Varroa Mites': {
     icon:'🔴', type:'pest',
     recommendations:[
-      {name:'Apivar 2.0 (Amitraz)',note:'42-56 days. 1 strip per 5 frames. No supers. Best fall treatment. Most effective synthetic available.',warn:'⚠️ Remove supers. Do not use during honey flow.'},
-      {name:'Formic Pro (MAQS)',note:'14 days. Supers OK. Only treatment that kills mites in capped brood. Temp 50-85°F.',warn:'⚠️ Remove if temps exceed 85°F — critical in Alabama summer.'},
+      {name:'Apivar 2.0 (Amitraz)',note:'42-56 days. 1 strip per 5 frames per brood chamber. No supers. Spring and fall use.',warn:'⚠️ Remove supers. Same chemical class as original Apivar — do not use both same season.'},
+      {name:'Apivar (Amitraz — Original)',note:'42 days. 1 strip per 4–5 frames. No supers. Normally used as fall treatment.',warn:'⚠️ Do not use with honey supers. Resistance emerging nationally.'},
+      {name:'Formic Pro (MAQS)',note:'14 days. Supers OK. Only treatment that kills mites in capped brood. Temp 50-85°F.',warn:'⚠️ Remove immediately if temps exceed 85°F — critical in Alabama summer.'},
       {name:'Api-Bioxal / EZ-OX (Oxalic Acid Vaporization)',note:'Near 100% effective when broodless. Best fall/winter treatment.',warn:'⛔ Full PPE required — respirator, gloves, goggles. Never without PPE.'},
       {name:'VarroxSan (Oxalic Acid Strips)',note:'Fold in half, drape over frames. 42-56 days. No temp restriction.',warn:'⚠️ Avoid intense nectar flow. Fold and drape — do not lay flat.'},
       {name:'Apiguard (Thymol Gel)',note:'Two-treatment protocol, 12-14 days each. Temp 59-105°F required.',warn:'⚠️ Close screened bottom and vents during treatment. No supers.'}
@@ -713,10 +714,52 @@ function getTreatRecs(pestName) {
       '<div class="rec-item-name">'+esc(r.name)+'</div>'+
       '<div class="rec-item-note">'+esc(r.note)+'</div>'+
       (r.warn?'<div class="rec-item-warn">'+esc(r.warn)+'</div>':'')+
-      '<button class="use-btn" onclick="useTreatRec(\''+esc(r.name)+'\',\''+esc(pestName)+'\')">Use This →</button>'+
+      '<button class="use-btn" onclick="useTreatRec(\''+esc(r.name)+'\',\''+esc(pestName)+'\')">✔️ Use This</button>'+
     '</div>';
   }).join('');
-  return afbAlert + '<div class="rec-panel"><div class="rec-title">💊 Recommended Treatments</div>'+recs+'</div>';
+  var viewRefBtn = pestName === 'Varroa Mites'
+    ? '<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(212,132,10,.2);text-align:center">'+
+        '<button onclick="openTreatmentReferencePanel()" style="background:none;border:none;color:var(--amber);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">📚 View Full Varroa Treatment Reference →</button>'+
+        '<div style="font-size:10px;color:var(--txt2);margin-top:3px">Also includes HopGuard, Amiflex, Apistan &amp; more</div>'+
+      '</div>'
+    : '';
+  return afbAlert + '<div class="rec-panel"><div class="rec-title">💊 Recommended Treatments</div>'+recs+viewRefBtn+'</div>';
+}
+
+// Opens full Varroa treatment reference in a panel on top of the treatment modal
+function openTreatmentReferencePanel() {
+  var panel = document.getElementById('treat-ref-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'treat-ref-panel';
+    panel.style.cssText = 'position:fixed;inset:0;z-index:500;background:#fff;overflow-y:auto;-webkit-overflow-scrolling:touch;';
+    document.body.appendChild(panel);
+  }
+  var html = '<div style="position:sticky;top:0;background:var(--deep);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;z-index:10">';
+  html += '<div style="font-family:\'Playfair Display\',serif;font-size:16px;color:#fff;font-weight:700">📚 Varroa Treatment Reference</div>';
+  html += '<button onclick="document.getElementById(\'treat-ref-panel\').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">← Back</button>';
+  html += '</div><div style="padding:14px">';
+  VARROA_TREATMENTS.forEach(function(t) {
+    var id = 'vref-' + t.id;
+    html += '<div style="background:#fff;border:1px solid #e4ede4;border-radius:14px;margin-bottom:10px;overflow:hidden">';
+    html += '<div onclick="var b=document.getElementById(\''+id+'\');b.style.display=b.style.display===\'none\'?\'\':\'none\'" style="display:flex;align-items:center;gap:12px;padding:13px;cursor:pointer">';
+    html += '<div style="font-size:18px">'+(t.class==='synthetic'?'🔵':t.class==='organic'?'🟢':'🟡')+'</div>';
+    html += '<div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--deep)">'+esc(t.name)+'</div>';
+    html += '<div style="font-size:11px;color:var(--txt2);margin-top:2px">'+esc(t.summary)+'</div></div>';
+    html += '<span style="color:var(--txt3);font-size:14px">▾</span></div>';
+    html += '<div id="'+id+'" style="display:none;padding:0 14px 14px;border-top:1px solid #e4ede4">';
+    html += '<div style="font-size:12px;color:var(--txt2);margin:10px 0 6px"><strong>Duration:</strong> '+esc(t.duration)+'</div>';
+    html += '<div style="font-size:12px;color:var(--txt2);margin-bottom:6px"><strong>Temperature:</strong> '+esc(t.temperature)+'</div>';
+    if (t.warnings && t.warnings.length) {
+      t.warnings.forEach(function(w) {
+        html += '<div style="font-size:11px;color:var(--warn);margin-top:4px">' + esc(w) + '</div>';
+      });
+    }
+    html += '<button class="btn btn-p" style="margin-top:12px" onclick="document.getElementById(\'treat-ref-panel\').remove();useTreatRec(\''+esc(t.name)+'\',\'Varroa Mites\')">Use This Treatment →</button>';
+    html += '</div></div>';
+  });
+  html += '</div>';
+  panel.innerHTML = html;
 }
 
 function useTreatRec(productName, pestName) {

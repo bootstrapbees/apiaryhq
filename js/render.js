@@ -584,6 +584,146 @@ function renderTreatRefLibrary() {
     });
   }
 
+  // Pests & Diseases — full rework with SVG illustrations
+  html += secHeader('lib-sec-pests', '&#129458; Pests &amp; Diseases');
+
+  var PEST_ILLUS = {
+    'Varroa Mites': '<svg viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg" style="width:80px;height:50px;display:block"><ellipse cx="40" cy="28" rx="22" ry="12" fill="#F5A623" stroke="#C47200" stroke-width="1.2"/><line x1="24" y1="24" x2="56" y2="24" stroke="#C47200" stroke-width="1"/><line x1="21" y1="30" x2="59" y2="30" stroke="#C47200" stroke-width="1"/><ellipse cx="48" cy="22" rx="8" ry="5.5" fill="#8B2A0A" stroke="#5C1A05" stroke-width="1"/><line x1="40" y1="20" x2="33" y2="16" stroke="#5C1A05" stroke-width="1" stroke-linecap="round"/><line x1="40" y1="22" x2="33" y2="20" stroke="#5C1A05" stroke-width="1" stroke-linecap="round"/><line x1="40" y1="24" x2="33" y2="26" stroke="#5C1A05" stroke-width="1" stroke-linecap="round"/><line x1="41" y1="25" x2="34" y2="30" stroke="#5C1A05" stroke-width="1" stroke-linecap="round"/><line x1="56" y1="20" x2="63" y2="16" stroke="#5C1A05" stroke-width="1" stroke-linecap="round"/><line x1="56" y1="22" x2="63" y2="20" stroke="#5C1A05" stroke-width="1" stroke-linecap="round"/><line x1="56" y1="24" x2="63" y2="26" stroke="#5C1A05" stroke-width="1" stroke-linecap="round"/><line x1="55" y1="25" x2="62" y2="30" stroke="#5C1A05" stroke-width="1" stroke-linecap="round"/><text x="48" y="44" text-anchor="middle" font-size="7" fill="#888">~1.5mm wide</text></svg>',
+    'Small Hive Beetles': '<svg viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg" style="width:80px;height:50px;display:block"><ellipse cx="38" cy="25" rx="18" ry="10" fill="#2A1A08" stroke="#000" stroke-width="1"/><line x1="38" y1="15" x2="38" y2="35" stroke="#4A3020" stroke-width="1"/><ellipse cx="54" cy="25" rx="4" ry="8" fill="#2A1A08" stroke="#000" stroke-width="1"/><ellipse cx="23" cy="25" rx="5" ry="6" fill="#1A0A04" stroke="#000" stroke-width="1"/><path d="M21 20 Q13 14 11 11" stroke="#2A1A08" stroke-width="1.2" fill="none" stroke-linecap="round"/><circle cx="10" cy="10" r="2" fill="#2A1A08"/><path d="M23 19 Q15 12 13 9" stroke="#2A1A08" stroke-width="1.2" fill="none" stroke-linecap="round"/><circle cx="12" cy="8" r="2" fill="#2A1A08"/><line x1="30" y1="33" x2="26" y2="40" stroke="#1A0A04" stroke-width="1" stroke-linecap="round"/><line x1="38" y1="34" x2="36" y2="42" stroke="#1A0A04" stroke-width="1" stroke-linecap="round"/><line x1="46" y1="33" x2="48" y2="40" stroke="#1A0A04" stroke-width="1" stroke-linecap="round"/><line x1="30" y1="17" x2="26" y2="10" stroke="#1A0A04" stroke-width="1" stroke-linecap="round"/><line x1="38" y1="16" x2="36" y2="9" stroke="#1A0A04" stroke-width="1" stroke-linecap="round"/><line x1="46" y1="17" x2="48" y2="10" stroke="#1A0A04" stroke-width="1" stroke-linecap="round"/><text x="40" y="48" text-anchor="middle" font-size="7" fill="#888">~6mm dark brown</text></svg>',
+    'Wax Moths': '<svg viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg" style="width:80px;height:50px;display:block"><rect x="5" y="10" width="10" height="12" rx="2" fill="none" stroke="#C8A040" stroke-width="1.2"/><rect x="16" y="10" width="10" height="12" rx="2" fill="none" stroke="#C8A040" stroke-width="1.2"/><rect x="27" y="10" width="10" height="12" rx="2" fill="none" stroke="#C8A040" stroke-width="1.2"/><path d="M5 10 Q20 5 37 10" stroke="#D4C090" stroke-width="0.8" fill="none" stroke-dasharray="2,1"/><path d="M5 16 Q20 12 37 16" stroke="#D4C090" stroke-width="0.8" fill="none" stroke-dasharray="2,1"/><ellipse cx="58" cy="28" rx="16" ry="6" fill="#F5EBCC" stroke="#C8A040" stroke-width="1"/><ellipse cx="44" cy="28" rx="4" ry="5" fill="#8B6020" stroke="#5C3A10" stroke-width="1"/><line x1="50" y1="33" x2="50" y2="38" stroke="#C8A040" stroke-width="1" stroke-linecap="round"/><line x1="56" y1="34" x2="56" y2="39" stroke="#C8A040" stroke-width="1" stroke-linecap="round"/><line x1="62" y1="34" x2="62" y2="39" stroke="#C8A040" stroke-width="1" stroke-linecap="round"/><text x="40" y="48" text-anchor="middle" font-size="7" fill="#888">Larva ~25mm with webbing</text></svg>',
+    'American Foulbrood': '<svg viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg" style="width:80px;height:50px;display:block"><rect x="4" y="8" width="14" height="16" rx="2" fill="#F5DCA0" stroke="#C8A040" stroke-width="1.2"/><rect x="20" y="8" width="14" height="16" rx="2" fill="#F5DCA0" stroke="#C8A040" stroke-width="1.2"/><rect x="36" y="8" width="14" height="16" rx="2" fill="#8B5010" stroke="#5C3000" stroke-width="1.2"/><circle cx="43" cy="16" r="3" fill="#5C2000"/><rect x="52" y="8" width="14" height="16" rx="2" fill="#6B3010" stroke="#5C3000" stroke-width="1.2"/><text x="11" y="32" font-size="6" fill="#2D6A4F">OK</text><text x="27" y="32" font-size="6" fill="#2D6A4F">OK</text><text x="37" y="32" font-size="6" fill="#8B3010">Sunken</text><text x="53" y="32" font-size="6" fill="#8B3010">Ropy</text><text x="40" y="44" text-anchor="middle" font-size="7" fill="#888">Sunken cappings, ropy larvae</text></svg>',
+    'Deformed Wing Virus': '<svg viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg" style="width:80px;height:50px;display:block"><ellipse cx="35" cy="28" rx="16" ry="9" fill="#F5A623" stroke="#C47200" stroke-width="1.2"/><ellipse cx="22" cy="26" rx="8" ry="8" fill="#4A3010" stroke="#2A1A00" stroke-width="1"/><circle cx="12" cy="25" r="5" fill="#2A1A00" stroke="#000" stroke-width="1"/><path d="M24 18 Q35 8 52 14" stroke="#AAA" stroke-width="1" stroke-dasharray="3,2" fill="none"/><path d="M24 18 Q26 14 22 10 Q28 12 30 16 Q28 18 26 16" fill="#B0C0E0" stroke="#7080A0" stroke-width="1"/><path d="M24 19 Q27 17 24 15" fill="#8090B0" stroke="#5060A0" stroke-width="1"/><text x="40" y="44" text-anchor="middle" font-size="7" fill="#888">Crumpled wings, shortened abdomen</text></svg>',
+    'Chalkbrood': '<svg viewBox="0 0 80 50" xmlns="http://www.w3.org/2000/svg" style="width:80px;height:50px;display:block"><rect x="4" y="8" width="14" height="16" rx="2" fill="#F5DCA0" stroke="#C8A040" stroke-width="1.2"/><ellipse cx="11" cy="16" rx="5" ry="6" fill="#FFFFF0" stroke="#CCC" stroke-width="1"/><rect x="20" y="8" width="14" height="16" rx="2" fill="#F5DCA0" stroke="#C8A040" stroke-width="1.2"/><ellipse cx="27" cy="16" rx="5" ry="6" fill="#D0D0D0" stroke="#999" stroke-width="1"/><circle cx="25" cy="14" r="1.5" fill="#444"/><circle cx="29" cy="17" r="1.5" fill="#444"/><text x="10" y="32" font-size="6" fill="#888">White</text><text x="22" y="32" font-size="6" fill="#888">Dark</text><text x="40" y="44" text-anchor="middle" font-size="7" fill="#888">Chalk-hard mummies in cells</text></svg>'
+  };
+
+  var PEST_DESCRIPTIONS = {
+    'Varroa Mites': {
+      desc: 'Varroa destructor — a reddish-brown external mite ~1/16" wide, wider than long, crab-shaped. Visible to the naked eye on adult bees. Feeds on bee fat body tissue, weakens bees, and vectors viruses including Deformed Wing Virus. The #1 threat to managed beekeeping worldwide.',
+      detect: ['Alcohol wash (most accurate) — 300 bees in jar with 70% isopropyl, shake 60 sec, count mites. Divide by bee count for % infestation.', 'Screened bottom board — count mite drop over 24 hours. 8-10+ per day suggests treatment needed.', 'Visual — look for reddish-brown dots on bee thorax during inspection.'],
+      threshold: 'Action threshold: 2 mites per 100 bees (2%) in summer. 1% in fall (Aug-Sep) before winter bees are raised.'
+    },
+    'Small Hive Beetles': {
+      desc: 'Aethina tumida — 5-7mm, flattened, dark brown to black with clubbed antennae. Larvae are whitish grubs with body spines. Larvae tunnel through comb and contaminate honey causing fermentation with a rotten-orange odor. Strong colonies in full sun manage beetles well.',
+      detect: ['Look in dark hive corners — under the cover, bottom board edges, propolis crevices.', 'Slimy, fermented honey with rotten-orange smell indicates larval infestation.', 'Check bottom board for beetle larvae exiting to pupate in soil.'],
+      threshold: 'Strong colonies defend themselves. Any beetles in a weak colony need action. 2-3+ beetles visible per inspection in a weak colony warrants traps.'
+    },
+    'Wax Moths': {
+      desc: 'Greater wax moth (Galleria mellonella) larvae are cream caterpillars up to 1" long that tunnel through comb, spinning silky webbing. Cannot successfully infest a strong healthy colony — wax moth damage is a symptom of weakness, not the cause.',
+      detect: ['Webbing and silk tunnels across comb surfaces.', 'Larvae tunneling through comb or cocoons on frame wood.', 'Groove damage carved into wooden frame bars for pupation.'],
+      threshold: 'Presence in an active hive indicates weakness. Remove and freeze affected frames (48 hrs at 20F). Focus on strengthening the colony.'
+    },
+    'American Foulbrood': {
+      desc: 'Most serious bacterial brood disease. Caused by Paenibacillus larvae — spores survive 50+ years in equipment. Larvae turn coffee-brown and produce a foul glue-like rope when a toothpick is slowly withdrawn from a sunken cell. Cappings become sunken and perforated. HIGHLY CONTAGIOUS. NOTIFIABLE DISEASE.',
+      detect: ['Sunken, darkened cappings with pinhole perforations.', 'Ropy test — toothpick in sunken cell, withdraw slowly: infected larvae string 1-3 inches before breaking.', 'Distinctive foul smell — like rotting gym shoes or glue.', 'Scattered sunken cells mixed with healthy brood.'],
+      threshold: 'ANY suspected AFB: contact your state apiary inspector immediately. Do not treat, move, or destroy equipment without authorization.'
+    },
+    'European Foulbrood': {
+      desc: 'Bacterial brood disease (Melissococcus plutonius). Affects young unsealed larvae which twist and turn yellow-brown. No ropy string — larvae break cleanly. Sour or vinegary smell. Often triggered by nutritional stress.',
+      detect: ['Twisted, discolored larvae in unsealed cells — yellow to brown.', 'Sour or vinegary smell (not the glue-like AFB smell).', 'Spotty brood with discolored larvae.'],
+      threshold: 'Mild cases may resolve with better nutrition and a strong queen. Moderate-severe cases may need oxytetracycline and requeening.'
+    },
+    'Chalkbrood': {
+      desc: 'Fungal disease (Ascosphaera apis). Larvae mummify into chalk-hard white masses, turning grey-black as spores develop. Mummies found on bottom board and landing board. Most common in cool damp conditions with poor ventilation. Usually self-limiting in strong colonies.',
+      detect: ['White or grey-black hard mummies in cells or on the bottom/landing board.', 'Spotty brood with mummified larvae.', 'No foul smell — dry, chalky texture distinguishes it from foulbrood.'],
+      threshold: 'Low levels usually self-resolve. Persistent chalkbrood indicates ventilation problems or a non-hygienic queen — requeen with VSH stock.'
+    },
+    'Sacbrood': {
+      desc: 'Viral disease (Sacbrood virus). Infected larvae fail to pupate and die in a fluid-filled sac under the old larval skin. Head end turns upward. Color changes yellow to dark brown. Usually mild and self-limiting.',
+      detect: ['Uncapped cells with larvae showing a fluid-filled sac and upturned head ("Chinese slipper" shape).', 'Yellow to dark brown discoloration.', 'Scattered affected cells among healthy brood.'],
+      threshold: 'Typically self-limiting. Requeening with hygienic stock is most effective response to persistent sacbrood.'
+    },
+    'Nosema': {
+      desc: 'Microsporidian gut parasite. Nosema ceranae (most common now) and N. apis. Infects midgut lining, shortens bee lifespan, impairs royal jelly production. N. apis causes dysentery (brown streaks on hive). Confirmed by microscopic examination.',
+      detect: ['Brown dysentery streaks on hive front or landing board (more common N. apis).', 'Unexplained spring dwindling or high winter losses.', 'Crawling bees near entrance unable to fly.', 'Confirmed by microscopic gut exam — send sample to state lab.'],
+      threshold: 'Managed with improved ventilation, spring reversal, and nutrition. Fumagilin-B (where legal) is the primary chemical option.'
+    },
+    'Deformed Wing Virus': {
+      desc: 'Most common and damaging honey bee virus, transmitted by Varroa mites. Causes crumpled, useless wings and shortened abdomens. Affected bees cannot fly and are ejected from the hive. DWV severity tracks directly with Varroa load — controlling Varroa controls DWV.',
+      detect: ['Bees emerging with crumpled, shriveled wings that cannot open.', 'Shortened stubby abdomens on newly emerged bees.', 'Crawling bees at hive entrance unable to fly.'],
+      threshold: 'Any visible DWV symptoms indicate serious Varroa infestation requiring immediate treatment. Treat the Varroa — the virus resolves with mite control.'
+    },
+    'Tracheal Mites': {
+      desc: 'Acarapis woodi — microscopic mite living inside bee breathing tubes (tracheae). Cannot be seen without a microscope. May cause K-wing (forewing held at angle). Less economically significant than Varroa today.',
+      detect: ['K-wing — forewings held at a distinct angle from hindwings when viewed from above.', 'Crawling bees unable to fly, especially late winter/early spring.', 'Confirmed by microscopic dissection — send sample to state lab.'],
+      threshold: 'Rarely requires standalone treatment. Grease patties and menthol are standard management.'
+    },
+    'Ants': {
+      desc: 'Various ant species invade hives, especially weak colonies. Fire ants (common in Alabama) are more aggressive and can cause real damage to weakened colonies.',
+      detect: ['Ant trails on hive stands or boxes.', 'Ant nests in and around bottom boards.'],
+      threshold: 'Physical barriers first — petroleum jelly or motor oil on stand legs. Chemical treatment around stands only, never inside hive.'
+    },
+    'Rodents (Mice/Voles)': {
+      desc: 'Mice enter hives in fall seeking warmth. They destroy comb and disturb the winter cluster. Most damage occurs through winter when bees cannot defend the entrance.',
+      detect: ['Mouse droppings inside hive.', 'Destroyed comb with nesting material.', 'Gnawed frames or wooden ware.'],
+      threshold: 'Install mouse guards before first frost (September-October in Alabama). Entrance reducer to 3/8" gap is sufficient.'
+    }
+  };
+
+  if (typeof PEST_CATEGORIES !== 'undefined') {
+    Object.keys(PEST_CATEGORIES).forEach(function(key) {
+      var p = PEST_CATEGORIES[key];
+      var desc = PEST_DESCRIPTIONS[key] || {};
+      var illus = PEST_ILLUS[key] || '';
+      var id = 'pest-' + key.replace(/[^a-zA-Z]/g, '');
+
+      html += '<div class="tref-card" id="' + id + '">';
+      html += '<div class="tref-header" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.tref-chevron\').classList.toggle(\'open\')">'+
+        '<div class="tref-ico" style="background:rgba(180,60,60,.1);color:#b43c3c;font-size:18px">' + (p.icon || '&#129458;') + '</div>'+
+        '<div style="flex:1;min-width:0"><div class="tref-name">' + esc(key) + '</div>'+
+        '<div class="tref-tags"><span class="tref-tag" style="background:rgba(180,60,60,.1);color:#b43c3c">' + esc(p.type || 'pest') + '</span>'+
+        (p.notifiable ? '<span class="tref-tag resistance">Reportable</span>' : '') + '</div></div>'+
+        '<span class="tref-chevron">&#9662;</span></div>';
+
+      html += '<div class="tref-body">';
+
+      if (illus || desc.desc) {
+        html += '<div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;padding:12px;background:#fafafa;border-radius:10px;border:1px solid #e4ede4">';
+        if (illus) html += '<div style="flex-shrink:0;background:#fff;border-radius:8px;padding:6px;border:1px solid #e4ede4">' + illus + '</div>';
+        if (desc.desc) html += '<div style="font-size:12px;color:var(--txt2);line-height:1.6">' + esc(desc.desc) + '</div>';
+        html += '</div>';
+      }
+
+      if (desc.detect && desc.detect.length) {
+        html += '<div class="tref-section"><div class="tref-section-title">How to Detect</div>';
+        desc.detect.forEach(function(d) {
+          html += '<div class="tref-row"><div class="tref-row-ico">&#x1F50D;</div><div style="font-size:12px;color:var(--txt2)">' + esc(d) + '</div></div>';
+        });
+        html += '</div>';
+      }
+
+      if (desc.threshold) {
+        html += '<div class="tref-warn" style="border-color:rgba(212,132,10,.4);color:var(--warn)">' + esc(desc.threshold) + '</div>';
+      }
+
+      if (p.recommendations && p.recommendations.length) {
+        html += '<div class="tref-section"><div class="tref-section-title">Recommended Treatments</div>';
+        p.recommendations.forEach(function(r) {
+          var treatId = id + '-' + r.name.replace(/[^a-zA-Z0-9]/g,'');
+          var fullTreat = typeof VARROA_TREATMENTS !== 'undefined' ? VARROA_TREATMENTS.find(function(t){ return t.name === r.name; }) : null;
+          html += '<div style="background:#fff;border:1px solid #e4ede4;border-radius:10px;margin-bottom:6px;overflow:hidden">';
+          html += '<div onclick="var bd=document.getElementById(\''+treatId+'\');bd.style.display=bd.style.display===\'none\'?\'\':\'none\'" style="display:flex;align-items:flex-start;gap:10px;padding:10px;cursor:pointer">';
+          html += '<div style="flex:1"><div style="font-size:13px;font-weight:700;color:var(--deep)">' + esc(r.name) + '</div>';
+          html += '<div style="font-size:11px;color:var(--txt2);margin-top:2px">' + esc(r.note) + '</div>';
+          if (r.warn) html += '<div style="font-size:11px;color:var(--warn);margin-top:3px">' + esc(r.warn) + '</div>';
+          html += '</div><span style="color:var(--txt3);font-size:12px;flex-shrink:0">More &#9662;</span></div>';
+          html += '<div id="' + treatId + '" style="display:none;padding:0 10px 10px;border-top:1px solid #e4ede4">';
+          if (fullTreat) {
+            html += '<div style="font-size:11px;color:var(--txt2);margin-top:8px"><strong>Duration:</strong> ' + esc(fullTreat.duration) + '</div>';
+            html += '<div style="font-size:11px;color:var(--txt2);margin-top:4px"><strong>Temperature:</strong> ' + esc(fullTreat.temperature) + '</div>';
+            if (fullTreat.warnings && fullTreat.warnings.length) {
+              fullTreat.warnings.slice(0,3).forEach(function(w){ html += '<div style="font-size:11px;color:var(--warn);margin-top:3px">' + esc(w) + '</div>'; });
+            }
+          }
+          html += '<button class="use-btn" style="margin-top:10px" onclick="openTreatmentModal(null)">+ Log Treatment</button>';
+          html += '</div></div>';
+        });
+        html += '</div>';
+      }
+
+      html += '</div></div>';
+    });
+  }
+
   // Feeding Guide
   html += secHeader('lib-sec-feeding', '&#127855; Feeding Guide');
   if (typeof ALABAMA_FEEDING_CALENDAR !== 'undefined') {
