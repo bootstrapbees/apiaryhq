@@ -557,34 +557,7 @@ function renderTreatRefLibrary() {
     }).join('');
   }
 
-  // Pests & Diseases
-  html += secHeader('lib-sec-pests', '&#129458; Pests & Diseases');
-  if (typeof PEST_CATEGORIES !== 'undefined') {
-    Object.keys(PEST_CATEGORIES).forEach(function(key) {
-      var p = PEST_CATEGORIES[key];
-      html += '<div class="tref-card">' +
-        '<div class="tref-header" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.tref-chevron\').classList.toggle(\'open\')">' +
-          '<div class="tref-ico" style="background:rgba(180,60,60,.1);color:#b43c3c;font-size:18px">' + (p.icon || '&#129458;') + '</div>' +
-          '<div style="flex:1;min-width:0"><div class="tref-name">' + esc(p.name || key) + '</div>' +
-          '<div class="tref-tags"><span class="tref-tag" style="background:rgba(180,60,60,.1);color:#b43c3c">' + esc(p.type || 'pest') + '</span>' +
-          (p.notifiable ? '<span class="tref-tag resistance">Reportable</span>' : '') + '</div></div>' +
-          '<span class="tref-chevron">&#9662;</span>' +
-        '</div>' +
-        '<div class="tref-body">' +
-          (p.symptoms ? '<div class="tref-section"><div class="tref-section-title">Symptoms</div><div class="tref-note">' + esc(p.symptoms) + '</div></div>' : '') +
-          (p.controls && p.controls.length ? '<div class="tref-section"><div class="tref-section-title">Controls</div>' +
-            p.controls.map(function(c) {
-              return '<div class="tref-row"><div class="tref-row-ico">&bull;</div><div><strong>' + esc(c.name) + '</strong>' +
-                (c.note ? ' &mdash; ' + esc(c.note) : '') +
-                (c.warn ? '<br><span style="color:#b43c3c;font-size:11px">' + esc(c.warn) + '</span>' : '') +
-              '</div></div>';
-            }).join('') + '</div>' : '') +
-        '</div>' +
-      '</div>';
-    });
-  }
-
-  // Pests & Diseases — full rework with SVG illustrations
+  // Pests & Diseases — with SVG illustrations
   html += secHeader('lib-sec-pests', '&#129458; Pests &amp; Diseases');
 
   var PEST_ILLUS = {
