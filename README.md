@@ -1,2 +1,0 @@
-# apiaryhq
-Apiary Management App
