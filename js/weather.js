@@ -1,6 +1,6 @@
-
 // ═══════════════════════════════════════════════════════
-// WEATHER
+// APIARY HQ — WEATHER + 7-DAY FORECAST
+// Open-Meteo (free, no key) + bee-specific scoring
 // ═══════════════════════════════════════════════════════
 
 var WX_SVG = {
@@ -11,6 +11,14 @@ var WX_SVG = {
   snow:   '<svg viewBox="0 0 36 36" fill="none" style="width:44px;height:44px;flex-shrink:0" xmlns="http://www.w3.org/2000/svg"><path d="M6 18a6 6 0 010-12A9 9 0 0124 8a5 5 0 010 10H6z" fill="rgba(255,255,255,.8)"/><circle cx="10" cy="26" r="2" fill="rgba(255,255,255,.7)"/><circle cx="18" cy="26" r="2" fill="rgba(255,255,255,.7)"/><circle cx="26" cy="26" r="2" fill="rgba(255,255,255,.7)"/></svg>',
   storm:  '<svg viewBox="0 0 36 36" fill="none" style="width:44px;height:44px;flex-shrink:0" xmlns="http://www.w3.org/2000/svg"><path d="M6 17a6 6 0 010-12A9 9 0 0124 7a5 5 0 010 10H6z" fill="rgba(255,255,255,.75)"/><path d="M16 22l-4 8h5l-3 6" stroke="rgba(255,255,100,.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   fog:    '<svg viewBox="0 0 36 36" fill="none" style="width:44px;height:44px;flex-shrink:0" xmlns="http://www.w3.org/2000/svg"><line x1="4" y1="12" x2="32" y2="12" stroke="rgba(255,255,255,.6)" stroke-width="2.5" stroke-linecap="round"/><line x1="6" y1="18" x2="30" y2="18" stroke="rgba(255,255,255,.5)" stroke-width="2.5" stroke-linecap="round"/><line x1="8" y1="24" x2="28" y2="24" stroke="rgba(255,255,255,.4)" stroke-width="2.5" stroke-linecap="round"/></svg>',
+  // Small inline versions for forecast strip
+  sun_sm:    '<svg viewBox="0 0 20 20" fill="none" style="width:20px;height:20px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="4" fill="rgba(255,255,255,.9)"/><line x1="10" y1="2" x2="10" y2="4" stroke="rgba(255,255,255,.7)" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="16" x2="10" y2="18" stroke="rgba(255,255,255,.7)" stroke-width="1.5" stroke-linecap="round"/><line x1="2" y1="10" x2="4" y2="10" stroke="rgba(255,255,255,.7)" stroke-width="1.5" stroke-linecap="round"/><line x1="16" y1="10" x2="18" y2="10" stroke="rgba(255,255,255,.7)" stroke-width="1.5" stroke-linecap="round"/><line x1="4.2" y1="4.2" x2="5.6" y2="5.6" stroke="rgba(255,255,255,.5)" stroke-width="1.5" stroke-linecap="round"/><line x1="14.4" y1="14.4" x2="15.8" y2="15.8" stroke="rgba(255,255,255,.5)" stroke-width="1.5" stroke-linecap="round"/><line x1="15.8" y1="4.2" x2="14.4" y2="5.6" stroke="rgba(255,255,255,.5)" stroke-width="1.5" stroke-linecap="round"/><line x1="5.6" y1="14.4" x2="4.2" y2="15.8" stroke="rgba(255,255,255,.5)" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  cloud_sm:  '<svg viewBox="0 0 20 20" fill="none" style="width:20px;height:20px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg"><path d="M4 14a4 4 0 010-8 6 6 0 0111.5 1.5A3 3 0 0117 14H4z" fill="rgba(255,255,255,.85)"/></svg>',
+  pcloud_sm: '<svg viewBox="0 0 20 20" fill="none" style="width:20px;height:20px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="8" r="3.5" fill="rgba(255,255,255,.65)"/><path d="M8 15a3.5 3.5 0 010-7 5.5 5.5 0 0110 1.5A2.5 2.5 0 0119 15H8z" fill="rgba(255,255,255,.9)"/></svg>',
+  rain_sm:   '<svg viewBox="0 0 20 20" fill="none" style="width:20px;height:20px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg"><path d="M3 11a4 4 0 010-8A6 6 0 0114 5a3 3 0 010 6H3z" fill="rgba(255,255,255,.8)"/><line x1="6" y1="14" x2="5" y2="18" stroke="rgba(255,255,255,.7)" stroke-width="1.5" stroke-linecap="round"/><line x1="10" y1="14" x2="9" y2="18" stroke="rgba(255,255,255,.7)" stroke-width="1.5" stroke-linecap="round"/><line x1="14" y1="14" x2="13" y2="18" stroke="rgba(255,255,255,.7)" stroke-width="1.5" stroke-linecap="round"/></svg>',
+  storm_sm:  '<svg viewBox="0 0 20 20" fill="none" style="width:20px;height:20px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg"><path d="M3 10a4 4 0 010-8A6 6 0 0114 4a3 3 0 010 6H3z" fill="rgba(255,255,255,.75)"/><path d="M10 13l-2 5h3l-2 3" stroke="rgba(255,255,100,.9)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  snow_sm:   '<svg viewBox="0 0 20 20" fill="none" style="width:20px;height:20px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg"><path d="M3 11a4 4 0 010-8A6 6 0 0114 5a3 3 0 010 6H3z" fill="rgba(255,255,255,.8)"/><circle cx="6" cy="16" r="1.2" fill="rgba(255,255,255,.7)"/><circle cx="10" cy="16" r="1.2" fill="rgba(255,255,255,.7)"/><circle cx="14" cy="16" r="1.2" fill="rgba(255,255,255,.7)"/></svg>',
+  fog_sm:    '<svg viewBox="0 0 20 20" fill="none" style="width:20px;height:20px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg"><line x1="2" y1="7" x2="18" y2="7" stroke="rgba(255,255,255,.6)" stroke-width="1.8" stroke-linecap="round"/><line x1="3" y1="11" x2="17" y2="11" stroke="rgba(255,255,255,.5)" stroke-width="1.8" stroke-linecap="round"/><line x1="4" y1="15" x2="16" y2="15" stroke="rgba(255,255,255,.4)" stroke-width="1.8" stroke-linecap="round"/></svg>',
   humid:  '<svg viewBox="0 0 18 18" fill="none" style="width:16px;height:16px;display:block;margin:0 auto 2px" xmlns="http://www.w3.org/2000/svg"><path d="M9 3C9 3 4 9 4 12a5 5 0 0010 0c0-3-5-9-5-9z" fill="rgba(255,255,255,.3)" stroke="rgba(255,255,255,.8)" stroke-width="1.4" stroke-linejoin="round"/></svg>',
   wind:   '<svg viewBox="0 0 18 18" fill="none" style="width:16px;height:16px;display:block;margin:0 auto 2px" xmlns="http://www.w3.org/2000/svg"><path d="M2 7c3 0 6-2 9-2a3 3 0 010 6H4" stroke="rgba(255,255,255,.8)" stroke-width="1.4" stroke-linecap="round"/><path d="M2 11c2 0 4-1 6-1a2 2 0 010 4H5" stroke="rgba(255,255,255,.6)" stroke-width="1.3" stroke-linecap="round"/></svg>',
   pin:    '<svg viewBox="0 0 16 16" fill="none" style="width:11px;height:11px;display:inline-block;vertical-align:-1px;opacity:.6" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="6" r="2.5" stroke="white" stroke-width="1.3"/><path d="M8 8.5S3.5 12 3.5 15h9c0-3-4.5-6.5-4.5-6.5z" stroke="white" stroke-width="1.2" stroke-linejoin="round"/></svg>',
@@ -30,7 +38,9 @@ var WMO_DESC = {
 };
 
 function wmoDesc(c) { return WMO_DESC[c] || 'Unknown'; }
-function wmoWxSvg(c) { return WX_SVG[WMO_WX[c] || 'sun']; }
+function wmoWxKey(c) { return WMO_WX[c] || 'sun'; }
+function wmoWxSvg(c) { return WX_SVG[wmoWxKey(c)]; }
+function wmoWxSvgSm(c) { return WX_SVG[wmoWxKey(c)+'_sm'] || WX_SVG[wmoWxKey(c)+'_sm'] || WX_SVG.sun_sm; }
 
 function beeAdv(t, w, code) {
   if (t < 50)  return { ok:false, m:'Too cold — bees are clustered. No inspections.' };
@@ -58,16 +68,65 @@ function scoreColor(s) {
   return '#EF9A9A';
 }
 
+function scoreDotColor(s) {
+  if (s >= 75) return 'rgba(134,239,172,.9)';  // green
+  if (s >= 50) return 'rgba(253,211,77,.9)';   // yellow
+  if (s >= 25) return 'rgba(251,146,60,.9)';   // orange
+  return 'rgba(248,113,113,.9)';               // red
+}
+
+var _DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
 function loadWeather() {
   var el = document.getElementById('wx-el'); if (!el) return;
   if (window._wx) { renderWeather(el); return; }
-  el.className = 'wx-load'; el.textContent = 'Loading weather for Centre, Alabama…';
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=34.1512&longitude=-85.6762&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,apparent_temperature&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FChicago')
+  var lat = parseFloat(localStorage.getItem('apiaryhq_lat'));
+  var lng = parseFloat(localStorage.getItem('apiaryhq_lng'));
+  var zip = localStorage.getItem('apiaryhq_zip');
+  // No ZIP set — show prompt
+  if (!lat || !lng) {
+    el.className = 'wx-load';
+    el.innerHTML =
+      '<div style="font-size:13px;color:var(--txt2);margin-bottom:10px">Enter your ZIP code to get local weather and inspection conditions.</div>'+
+      '<div style="display:flex;gap:8px;align-items:center">'+
+        '<input id="wx-zip-input" type="text" inputmode="numeric" maxlength="5" placeholder="ZIP code" style="flex:1;padding:9px 12px;border-radius:10px;border:1px solid rgba(232,160,32,.3);background:#fff;color:var(--txt);font-size:15px;letter-spacing:2px">'+
+        '<button class="btn btn-p" style="margin:0;padding:9px 14px" onclick="saveZipFromWidget()">Go</button>'+
+      '</div>';
+    return;
+  }
+  el.className = 'wx-load'; el.textContent = 'Loading weather…';
+  // Fetch current conditions AND 7-day daily forecast in one call
+  var url = 'https://api.open-meteo.com/v1/forecast' +
+    '?latitude=' + lat + '&longitude=' + lng +
+    '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,apparent_temperature' +
+    '&daily=weather_code,temperature_2m_max,temperature_2m_min,wind_speed_10m_max,precipitation_probability_max' +
+    '&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto&forecast_days=7';
+  fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(j) {
-      var c=j.current, t=Math.round(c.temperature_2m), f=Math.round(c.apparent_temperature);
-      var w=Math.round(c.wind_speed_10m), h=Math.round(c.relative_humidity_2m), code=c.weather_code;
-      window._wx = { temp:t, feels:f, wind:w, humidity:h, desc:wmoDesc(code), wxSvg:wmoWxSvg(code), score:beeScore(t,w,h,code), col:scoreColor(beeScore(t,w,h,code)), adv:beeAdv(t,w,code) };
+      var c = j.current;
+      var t = Math.round(c.temperature_2m), f = Math.round(c.apparent_temperature);
+      var w = Math.round(c.wind_speed_10m), h = Math.round(c.relative_humidity_2m), code = c.weather_code;
+      // Build 7-day forecast array
+      var forecast = [];
+      if (j.daily && j.daily.time) {
+        for (var i = 0; i < j.daily.time.length; i++) {
+          var d = new Date(j.daily.time[i] + 'T12:00:00');
+          var hi = Math.round(j.daily.temperature_2m_max[i]);
+          var lo = Math.round(j.daily.temperature_2m_min[i]);
+          var wcode = j.daily.weather_code[i];
+          var wmax = Math.round(j.daily.wind_speed_10m_max[i]);
+          var precip = j.daily.precipitation_probability_max[i] || 0;
+          var score = beeScore(hi, wmax, 70, wcode);
+          forecast.push({ date:d, hi:hi, lo:lo, code:wcode, wind:wmax, precip:precip, score:score });
+        }
+      }
+      window._wx = {
+        temp:t, feels:f, wind:w, humidity:h,
+        desc:wmoDesc(code), wxSvg:wmoWxSvg(code),
+        score:beeScore(t,w,h,code), col:scoreColor(beeScore(t,w,h,code)),
+        adv:beeAdv(t,w,code), zip:zip, forecast:forecast
+      };
       renderWeather(el);
     })
     .catch(function() { el.className='wx-load'; el.textContent='Weather unavailable.'; });
@@ -76,13 +135,15 @@ function loadWeather() {
 function renderWeather(el) {
   var wx = window._wx; if (!wx) return;
   el.className = 'wx-card';
-  el.innerHTML =
+
+  // ── Current conditions ──────────────────────────────
+  var html =
     '<div style="display:flex;align-items:center;gap:14px">'+
       wx.wxSvg+
       '<div style="flex:1">'+
         '<div style="font-family:\'Playfair Display\',serif;font-size:36px;color:#fff;line-height:1">'+wx.temp+'°F</div>'+
         '<div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:2px">'+wx.desc+' · Feels '+wx.feels+'°F</div>'+
-        '<div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:3px">'+WX_SVG.pin+' Centre, Alabama</div>'+
+        '<div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:3px">'+WX_SVG.pin+' ZIP '+(wx.zip||'')+'</div>'+
       '</div>'+
       '<div style="text-align:center;background:rgba(255,255,255,.15);border-radius:14px;padding:10px 14px;min-width:58px">'+
         '<div style="font-size:22px;font-weight:700;color:'+wx.col+'">'+wx.score+'</div>'+
@@ -99,4 +160,31 @@ function renderWeather(el) {
         : '<svg viewBox="0 0 16 16" fill="none" style="width:13px;height:13px;display:inline-block;vertical-align:-2px;margin-right:5px" xmlns="http://www.w3.org/2000/svg"><path d="M8 2L14 13H2L8 2z" stroke="rgba(255,200,100,.9)" stroke-width="1.4" stroke-linejoin="round"/><line x1="8" y1="7" x2="8" y2="10" stroke="rgba(255,200,100,.9)" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="11.5" r=".8" fill="rgba(255,200,100,.9)"/></svg>')+
       wx.adv.m+
     '</div>';
+
+  // ── 7-day forecast strip ────────────────────────────
+  if (wx.forecast && wx.forecast.length) {
+    html += '<div style="margin-top:14px;border-top:1px solid rgba(255,255,255,.15);padding-top:12px">';
+    html += '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,.55);margin-bottom:8px">7-Day Outlook</div>';
+    html += '<div style="display:flex;gap:3px;overflow-x:auto;padding-bottom:2px" class="wx-forecast-strip">';
+    wx.forecast.forEach(function(d, i) {
+      var label = i === 0 ? 'Today' : _DAY_NAMES[d.date.getDay()];
+      var ico = wmoWxSvgSm(d.code);
+      var dot = scoreDotColor(d.score);
+      var isRain = [51,53,55,61,63,65,80,81,82,95,96,99].indexOf(d.code) >= 0;
+      html +=
+        '<div style="flex:1;min-width:40px;text-align:center;background:rgba(255,255,255,.1);border-radius:10px;padding:7px 3px;position:relative">'+
+          '<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.7);margin-bottom:5px;letter-spacing:.3px">'+label+'</div>'+
+          '<div style="margin-bottom:5px">'+ico+'</div>'+
+          '<div style="font-size:11px;font-weight:700;color:#fff">'+d.hi+'°</div>'+
+          '<div style="font-size:9px;color:rgba(255,255,255,.5);margin-top:1px">'+d.lo+'°</div>'+
+          (isRain ? '<div style="font-size:9px;color:rgba(150,220,255,.85);margin-top:3px">'+d.precip+'%</div>' : '')+
+          '<div style="width:6px;height:6px;border-radius:50%;background:'+dot+';margin:4px auto 0;box-shadow:0 0 4px '+dot+'"></div>'+
+        '</div>';
+    });
+    html += '</div>';
+    html += '<div style="font-size:9px;color:rgba(255,255,255,.35);margin-top:6px;text-align:right">Dot = bee fly score · % = rain chance</div>';
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
 }

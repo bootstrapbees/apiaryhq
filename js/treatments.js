@@ -595,7 +595,11 @@ var PEST_CATEGORIES = {
   'Varroa Mites': {
     icon:'🔴', type:'pest',
     recommendations:[
-      {name:'See Varroa Treatment Guide',note:'Full AUBEE/HBHC treatment protocols are in the 📚 Library tab → Reference.',warn:''}
+      {name:'Apivar 2.0 (Amitraz)',note:'42-56 days. 1 strip per 5 frames. No supers. Best fall treatment. Most effective synthetic available.',warn:'⚠️ Remove supers. Do not use during honey flow.'},
+      {name:'Formic Pro (MAQS)',note:'14 days. Supers OK. Only treatment that kills mites in capped brood. Temp 50-85°F.',warn:'⚠️ Remove if temps exceed 85°F — critical in Alabama summer.'},
+      {name:'Api-Bioxal / EZ-OX (Oxalic Acid Vaporization)',note:'Near 100% effective when broodless. Best fall/winter treatment.',warn:'⛔ Full PPE required — respirator, gloves, goggles. Never without PPE.'},
+      {name:'VarroxSan (Oxalic Acid Strips)',note:'Fold in half, drape over frames. 42-56 days. No temp restriction.',warn:'⚠️ Avoid intense nectar flow. Fold and drape — do not lay flat.'},
+      {name:'Apiguard (Thymol Gel)',note:'Two-treatment protocol, 12-14 days each. Temp 59-105°F required.',warn:'⚠️ Close screened bottom and vents during treatment. No supers.'}
     ]
   },
   'Tracheal Mites': {
@@ -718,8 +722,26 @@ function getTreatRecs(pestName) {
 function useTreatRec(productName, pestName) {
   var pInput = document.getElementById('f-trtproduct');
   if (pInput) pInput.value = productName;
+  // Show a summary of the selected treatment if it's in VARROA_TREATMENTS
+  var treat = VARROA_TREATMENTS.find(function(t){ return t.name === productName; });
   var recDiv = document.getElementById('treat-rec-area');
-  if (recDiv) recDiv.style.display = 'none';
+  if (treat && recDiv) {
+    recDiv.innerHTML =
+      '<div style="background:rgba(37,99,168,.06);border:1px solid rgba(37,99,168,.15);border-radius:12px;padding:12px;margin-bottom:10px">' +
+      '<div style="font-size:12px;font-weight:700;color:var(--deep);margin-bottom:6px">' + esc(treat.name) + '</div>' +
+      '<div style="font-size:12px;color:var(--txt2);line-height:1.6;margin-bottom:8px">' + esc(treat.summary) + '</div>' +
+      '<div style="font-size:11px;color:var(--txt2)">' +
+        '<strong>Duration:</strong> ' + esc(treat.duration) + '<br>' +
+        '<strong>Temp:</strong> ' + esc(treat.temperature) +
+      '</div>' +
+      (treat.warnings && treat.warnings.length ?
+        '<div style="margin-top:8px">' + treat.warnings.slice(0,2).map(function(w){
+          return '<div style="font-size:11px;color:var(--warn);margin-top:3px">' + esc(w) + '</div>';
+        }).join('') + '</div>' : '') +
+      '</div>';
+  } else if (recDiv) {
+    recDiv.style.display = 'none';
+  }
 }
 
 function onPestChange() {

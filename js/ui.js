@@ -37,6 +37,13 @@ function showTab(page) {
     var ks = document.getElementById('tomorrow-key-status');
     if (ki && k) { ki.value = k; }
     if (ks && k) { ks.textContent = '✅ API key saved'; }
+    // Populate saved ZIP code
+    var savedZip = localStorage.getItem('apiaryhq_zip');
+    var savedZone = localStorage.getItem('apiaryhq_zone');
+    var zipInput = document.getElementById('settings-zip');
+    var zipStatus = document.getElementById('zip-status');
+    if (zipInput && savedZip) { zipInput.value = savedZip; }
+    if (zipStatus && savedZone) { zipStatus.textContent = '✅ Zone ' + savedZone + ' active'; zipStatus.style.color = 'var(--ok)'; }
   }
 }
 

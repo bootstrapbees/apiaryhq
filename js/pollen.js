@@ -88,14 +88,24 @@ function saveTomorrowKey() {
 function loadPollenForecast() {
   var el = document.getElementById('dash-pollen');
   if (!el) return;
-  var apiKey = localStorage.getItem('hkpro_tomorrow_key');
-  if (!apiKey) { renderPollenWidget(el, getAlabamaPollFallback(), 'alabama-seasonal'); return; }
+  var apiKey = localStorage.getItem('hkpro_tomorrow_key') || 'mJXxIz5dWqzLXIPJHIlVLFZkGmRBRuIW';
   if (window._pollenData) { renderPollenWidget(el, window._pollenData.days, window._pollenData.source); return; }
+  var lat = parseFloat(localStorage.getItem('apiaryhq_lat'));
+  var lng = parseFloat(localStorage.getItem('apiaryhq_lng'));
+  // No ZIP set — show prompt
+  if (!lat || !lng) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--txt2);margin-bottom:10px">Enter your ZIP code to get a live pollen and foraging forecast.</div>'+
+      '<div style="display:flex;gap:8px;align-items:center">'+
+        '<input id="pollen-zip-input" type="text" inputmode="numeric" maxlength="5" placeholder="ZIP code" style="flex:1;padding:9px 12px;border-radius:10px;border:1px solid rgba(232,160,32,.3);background:var(--bg);color:var(--txt);font-size:15px;letter-spacing:2px">'+
+        '<button class="btn btn-p" style="margin:0;padding:9px 14px" onclick="saveZipFromWidget()">Go</button>'+
+      '</div>';
+    return;
+  }
   el.innerHTML = '<div style="font-size:12px;color:var(--txt2)">Loading pollen forecast…</div>';
   var now = new Date(), end = new Date(); end.setDate(end.getDate()+5);
   fetch('https://api.tomorrow.io/v4/timelines?apikey='+apiKey, {
     method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
-    body:JSON.stringify({location:[33.6954,-85.7732],fields:['treeIndex','grassIndex','weedIndex'],units:'imperial',timesteps:['1d'],startTime:now.toISOString(),endTime:end.toISOString()})
+    body:JSON.stringify({location:[lat,lng],fields:['treeIndex','grassIndex','weedIndex'],units:'imperial',timesteps:['1d'],startTime:now.toISOString(),endTime:end.toISOString()})
   })
   .then(function(r){return r.json();})
   .then(function(j){

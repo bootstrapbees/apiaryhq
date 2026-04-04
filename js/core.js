@@ -364,7 +364,12 @@ async function lookupZoneFromZip(zip) {
     var res = await fetch('https://phzmapi.org/' + zip + '.json');
     if (!res.ok) return null;
     var data = await res.json();
-    return data.zone || null; // e.g. '7b'
+    // Store coordinates for weather/pollen use
+    if (data.coordinates) {
+      localStorage.setItem('apiaryhq_lat', data.coordinates.lat);
+      localStorage.setItem('apiaryhq_lng', data.coordinates.lon);
+    }
+    return data.zone || null;
   } catch(e) {
     return null;
   }
@@ -395,6 +400,46 @@ async function saveZipCode(zip) {
 
 function loadSavedZone() {
   _userZone = localStorage.getItem(_ZONE_KEY) || '7b'; // Default Cherokee County AL
+}
+
+async function saveZipFromWidget() {
+  // Reads from either the weather or pollen widget ZIP input
+  var input = document.getElementById('wx-zip-input') || document.getElementById('pollen-zip-input');
+  var zip = input ? input.value.trim() : '';
+  if (!zip || zip.length < 5) return;
+  // Save to settings field too so it stays in sync
+  var settingsInput = document.getElementById('settings-zip');
+  if (settingsInput) settingsInput.value = zip;
+  await saveZipCode(zip);
+  // Clear cache and reload both widgets
+  window._wx = null;
+  window._pollenData = null;
+  loadWeather();
+  loadPollenForecast();
+  // Update settings status
+  var zone = localStorage.getItem('apiaryhq_zone');
+  var zipStatus = document.getElementById('zip-status');
+  if (zipStatus && zone) { zipStatus.textContent = '✅ Zone ' + zone + ' active'; zipStatus.style.color = 'var(--ok)'; }
+}
+
+async function saveZipFromSettings() {
+  var zip = (document.getElementById('settings-zip').value || '').trim();
+  var statusEl = document.getElementById('zip-status');
+  if (!zip || zip.length < 5) {
+    if (statusEl) { statusEl.textContent = 'Please enter a valid 5-digit ZIP code.'; statusEl.style.color = 'var(--red)'; }
+    return;
+  }
+  if (statusEl) { statusEl.textContent = 'Looking up zone…'; statusEl.style.color = 'var(--txt2)'; }
+  var zone = await saveZipCode(zip);
+  // Clear cached weather/pollen so they reload with new coordinates
+  window._wx = null;
+  window._pollenData = null;
+  if (zone) {
+    if (statusEl) { statusEl.textContent = '✅ Zone ' + zone + ' — reminders updated for your location.'; statusEl.style.color = 'var(--ok)'; }
+  } else {
+    localStorage.setItem(_ZIP_KEY, zip);
+    if (statusEl) { statusEl.textContent = 'ZIP saved. Could not look up zone — using default schedule.'; statusEl.style.color = 'var(--warn)'; }
+  }
 }
 
 // ═══════════════════════════════════════════════════════
