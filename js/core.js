@@ -397,7 +397,7 @@ function openCopyrightModal() {
     var h = '<div class="modal-title">Copyright Statement</div>';
     h += '<div style="font-size:14px; color:var(--txt2); line-height:1.5; margin-bottom:20px; text-align:left;">';
     h += '&copy; ' + new Date().getFullYear() + ' Bootstrap Beekeeping. All rights reserved.<br><br>';
-    h += 'Bootstrap Beekeeping HiveKeeper and its associated logos are trademarks of Bootstrap Beekeeping.';
+    h += 'ApiaryHQ and its associated logos are trademarks of Bootstrap Beekeeping.';
     h += '</div>';
     h += '<button class="btn btn-p" onclick="closeModal()">Close</button>';
     openModal(h);
