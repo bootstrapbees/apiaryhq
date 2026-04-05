@@ -378,26 +378,3 @@ function saveCurrencyPref() {
   localStorage.setItem('hkpro_currency', _prefs.currency);
   updatePrefLabels(); closeModal();
 }
-// ═══════════════════════════════════════════════════════
-// LEGAL MODALS
-// ═══════════════════════════════════════════════════════
-function openPrivacyModal() {
-  var h = '<div class="modal-title">Privacy Statement</div>';
-  h += '<div style="font-size:14px; color:var(--txt2); line-height:1.5; max-height:300px; overflow-y:auto; margin-bottom:20px; text-align:left;">';
-  h += '<b>Data Ownership:</b> All records and uploaded documents remain your private property. We do not sell or share your apiary data.<br><br>';
-  h += '<b>Security:</b> Data is stored securely via Supabase with industry-standard encryption.<br><br>';
-  h += '<b>Media:</b> Photos and files are kept in private storage for your records only.';
-  h += '</div>';
-  h += '<button class="btn btn-p" onclick="closeModal()">Close</button>';
-  openModal(h);
-}
-
-function openCopyrightModal() {
-  var h = '<div class="modal-title">Copyright Statement</div>';
-  h += '<div style="font-size:14px; color:var(--txt2); line-height:1.5; margin-bottom:20px; text-align:left;">';
-  h += '&copy; ' + new Date().getFullYear() + ' Bootstrap Beekeeping. All rights reserved 2026.<br><br>';
-  h += 'Apiary HQ and its associated logos are trademarks of Bootstrap Beekeeping.';
-  h += '</div>';
-  h += '<button class="btn btn-p" onclick="closeModal()">Close</button>';
-  openModal(h);
-}
