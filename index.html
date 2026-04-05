@@ -1000,6 +1000,24 @@ body.dark .rec-item{background:var(--surface2)}
           <div><div class="settings-title">Email</div><div class="settings-sub" id="settings-email"></div></div>
         </div>
       </div>
+      <div class="settings-row" style="padding:13px 14px" onclick="openPrivacyModal()">
+            <div class="settings-row-left">
+                <div class="settings-ico" style="background:rgba(128,128,128,0.1)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <div class="settings-title">Privacy Statement</div>
+            </div>
+            <span class="settings-arrow">❯</span>
+        </div>
+        <div class="settings-row" style="padding:13px 14px" onclick="openCopyrightModal()">
+            <div class="settings-row-left">
+                <div class="settings-ico" style="background:rgba(128,128,128,0.1)">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;"><circle cx="12" cy="12" r="10"/><path d="M14.8 9.48a4.4 4.4 0 1 0 0 5.04"/></svg>
+                </div>
+                <div class="settings-title">Copyright Statement</div>
+            </div>
+            <span class="settings-arrow">❯</span>
+        </div>
       <div style="padding:0 14px 14px;display:flex;gap:8px">
         <button class="btn btn-d" style="margin-top:0" onclick="signOut()">Sign Out</button>
       </div>
