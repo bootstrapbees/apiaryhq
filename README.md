@@ -1,5 +1,5 @@
 # Apiary HQ — Project Notes & Changelog
-**Current SW Version: apiaryhq-v3.3**
+**Current SW Version: apiaryhq-v5.0.1**
 
 ## Project Overview
 Apiary HQ is a PWA (Progressive Web App) beekeeping management tool hosted on Cloudflare Pages with a Supabase backend. Built for both desktop (Mac) and mobile (iPhone) use.
