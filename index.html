@@ -729,6 +729,15 @@ body.dark .rec-item{background:var(--surface2)}
     </div>
     <div class="hdr-right">
       <button class="user-btn" id="dm-btn" onclick="toggleDarkMode()">🌙</button>
+      <div class="settings-category" style="margin-top:20px">Legal</div>
+      <div class="settings-row" onclick="openPrivacyModal()">
+        <div class="settings-label">Privacy Statement</div>
+        <div class="settings-value">View</div>
+      </div>
+      <div class="settings-row" onclick="openCopyrightModal()">
+        <div class="settings-label">Copyright Statement</div>
+        <div class="settings-value">View</div>
+      </div>
       <button class="user-btn" onclick="signOut()">Sign Out</button>
     </div>
   </div>
