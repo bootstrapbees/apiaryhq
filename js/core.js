@@ -196,7 +196,6 @@ async function showApp(user) {
   document.getElementById('app-loading').classList.add('hidden');
   document.getElementById('main-header').style.display = '';
   document.getElementById('main-nav').style.display = '';
-  document.getElementById('fab-btn').style.display = '';
   showTab('dash');
 }
 

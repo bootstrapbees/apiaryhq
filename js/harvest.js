@@ -23,9 +23,9 @@ async function saveHarvest(eid, isEdit) {
   if (!yld) { alert('Enter a yield amount'); return; }
   var obj = {hive_id:gv('f-vhive'),date:gv('f-vdate'),yield:yld,unit:gv('f-vunit'),type:getPill('vty'),notes:gv('f-vnotes')};
   if (isEdit) {
-    await dbUpdate('harvests',eid,obj); Object.assign(DATA.harvests.find(function(x){return x.id===eid;}),{...obj,hiveId:obj.hive_id});
+    await (typeof dbUpdateSafe==='function'?dbUpdateSafe('harvests',eid,obj):dbUpdate('harvests',eid,obj)); Object.assign(DATA.harvests.find(function(x){return x.id===eid;}),{...obj,hiveId:obj.hive_id});
   } else {
-    var row=await dbInsert('harvests',obj); if(row) DATA.harvests.push({...row,hiveId:row.hive_id});
+    var row=await (typeof dbInsertSafe==='function'?dbInsertSafe('harvests',obj):dbInsert('harvests',obj)); if(row) DATA.harvests.push({...row,hiveId:row.hive_id});
   }
   closeModal(); renderAll();
 }

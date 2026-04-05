@@ -553,10 +553,10 @@ var FEEDING_SUPPLEMENTS = [
     name:'Sugar Syrup',
     icon:'🍬',
     summary:'1:1 (spring) to stimulate foraging and brood rearing. 2:1 (fall) to build up winter stores. Apply when needed.',
-    whatItIs:'Per Dadant: For spring feeding mix 1 part sugar to 1 part water to stimulate late foraging. For fall feeding mix 2 parts sugar to 1 part water to build up stores for winter. If not enough honey has been stored for winter, supplement accordingly.',
+    whatItIs:'Per Dadant: For spring feeding mix 1 part sugar to 1 part water to stimulate late foraging. For fall feeding mix 2 parts sugar to 1 part water to build up stores for winter. If not enough honey has been stored for winter, supplement accordingly. Measurement reference: 1 lb granulated sugar = approx 2¼ cups. Spring 1:1 quick mix: 2¼ cups sugar per 2¼ cups water. Fall 2:1 quick mix: 4½ cups sugar per 2¼ cups (1 pint) water.',
     howToApply:[
-      'Spring 1:1 syrup: mix equal parts granulated sugar and warm water until dissolved',
-      'Fall 2:1 syrup: mix 2 parts sugar to 1 part water — thicker to mimic nectar and encourage capping',
+      'Spring 1:1 syrup: mix equal parts granulated sugar and warm water until dissolved. Approx 2¼ cups sugar per lb (or per quart of water for a slightly heavy 1:1)',
+      'Fall 2:1 syrup: mix 2 parts sugar to 1 part water — thicker to mimic nectar and encourage capping. Approx 4½ cups sugar to 1 quart water (2 lbs sugar per quart)',
       'Use internal feeders or top feeders to reduce robbing',
       'Feed in the evening during dearth periods to minimize robbing',
       'Continue fall feeding until bees stop taking syrup or first frost'

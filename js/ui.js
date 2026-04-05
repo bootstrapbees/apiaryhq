@@ -26,15 +26,17 @@ function showTab(page) {
   if (homeBtn) homeBtn.classList.toggle('active', page === 'dash');
   currentTab = page;
   renderAll();
+  // Hide FAB on dashboard only — it's not needed there
+  var fab = document.getElementById('fab-btn');
+  if (fab) fab.style.display = (page === 'dash') ? 'none' : '';
   if (page === 'dash') { loadWeather(); loadPollenForecast(); }
   if (page === 'notes') initLibTab();
   if (page === 'settings') {
-    var savedZip = localStorage.getItem('apiaryhq_zip');
-    var savedZone = localStorage.getItem('apiaryhq_zone');
-    var zi = document.getElementById('settings-zip');
-    var zs = document.getElementById('zip-status');
-    if (zi && savedZip) zi.value = savedZip;
-    if (zs && savedZone) { zs.textContent = '✅ Zone ' + savedZone + ' active'; zs.style.color = 'var(--ok)'; }
+    var k = localStorage.getItem('hkpro_tomorrow_key');
+    var ki = document.getElementById('tomorrow-api-key');
+    var ks = document.getElementById('tomorrow-key-status');
+    if (ki && k) { ki.value = k; }
+    if (ks && k) { ks.textContent = '✅ API key saved'; }
   }
 }
 
@@ -62,16 +64,18 @@ function closeMoreTray() {
 function showTabFromMore(page) {
   closeMoreTray();
   showTab(page);
+  // Highlight the More button since we're on a "more" tab
   var btn = document.getElementById('more-tab-btn');
   if (btn) btn.classList.add('active');
+  // Highlight the tray button
   document.querySelectorAll('.more-tray button').forEach(function(b){
     b.classList.toggle('active', b.dataset.moreTab === page);
   });
 }
 
 function showInspTab(tab) {
-  currentInspTab = tab;  // FIX: track current sub-tab so FAB opens the right modal
-  ['insp','feed','treat','harvest'].forEach(function(t){
+  currentInspTab = tab;
+  ['insp','treat','harvest'].forEach(function(t){
     var el = document.getElementById('insp-sub-'+t);
     var btn = document.getElementById('st-'+t);
     if (el) el.style.display = t === tab ? '' : 'none';
@@ -101,10 +105,9 @@ function updateFabForTab() {
 document.getElementById('fab-btn').addEventListener('click', function() {
   if (currentTab === 'dash' || currentTab === 'hives') openHiveModal(null);
   else if (currentTab === 'insp') {
-    if (currentInspTab === 'feed') openFeedingModal(null);
+    if (currentInspTab === 'insp') openInspChoice(null);
     else if (currentInspTab === 'treat') openTreatmentModal(null);
     else if (currentInspTab === 'harvest') openHarvestModal(null);
-    else openInspChoice(null);
   }
   else if (currentTab === 'fin') openTxnModal(null);
   else if (currentTab === 'docs') {
@@ -115,6 +118,7 @@ document.getElementById('fab-btn').addEventListener('click', function() {
   else if (currentTab === 'contacts') openContactModal(null);
   else if (currentTab === 'notes') {
     if (window._libTab === 'notes') openNoteModal(null);
+    // Reference tab — no FAB action needed
   }
   else if (currentTab === 'settings') openApiaryRename();
 });
@@ -134,7 +138,7 @@ document.getElementById('overlay').addEventListener('click', function(e){ if(e.t
 function makePills(gid, options, selected) {
   var html = '<div class="pill-row" id="pill-' + gid + '">';
   options.forEach(function(o) {
-    html += '<button type="button" class="pill'+(o===selected?' active':'\')+'" onclick="selectPill(\''+gid+'\',this)">'+esc(o)+'</button>';
+    html += '<button type="button" class="pill'+(o===selected?' active':'')+'" onclick="selectPill(\''+gid+'\',this)">'+esc(o)+'</button>';
   });
   return html + '</div>';
 }
@@ -195,6 +199,7 @@ function camSheetAction(source) {
 // Wire camera inputs to the same handlers as their gallery counterparts
 document.getElementById('photo-camera').addEventListener('change', function() {
   document.getElementById('photo-file').dataset.ctx = this.dataset.ctx || _camCtx;
+  // Transfer files by triggering the shared handler logic directly
   handlePhotoFiles(this.files, this.dataset.ctx || _camCtx);
   this.value = '';
 });

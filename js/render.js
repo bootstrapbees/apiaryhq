@@ -101,6 +101,51 @@ function renderAll() {
     else dds.innerHTML='<div style="font-size:13px;color:var(--moss);display:flex;align-items:center;gap:5px">'+SVG.check+' All documents current.</div>';
   }
 
+  // Varroa status per hive
+  var dvv = document.getElementById('dash-varroa');
+  if (dvv) {
+    if (!DATA.hives.length) {
+      dvv.innerHTML = '<div style="font-size:13px;color:var(--txt2);font-style:italic">No hives yet.</div>';
+    } else {
+      dvv.innerHTML = DATA.hives.map(function(hive) {
+        // Get most recent inspection with a varroa reading
+        var lastVarroaInsp = DATA.inspections
+          .filter(function(i){ return i.hiveId===hive.id && i.varroa && i.varroa!=='Not checked'; })
+          .sort(function(a,b){ return b.date.localeCompare(a.date); })[0];
+        // Get most recent wash result from treatments
+        var lastWash = DATA.treatments
+          .filter(function(t){ return t.hiveId===hive.id && t.miteCount!=null; })
+          .sort(function(a,b){ return b.date.localeCompare(a.date); })[0];
+        var statusColor, statusLabel, statusBg;
+        if (lastVarroaInsp) {
+          var v = lastVarroaInsp.varroa;
+          if (v.includes('High')) { statusColor='var(--red)'; statusBg='rgba(180,50,50,.1)'; statusLabel='High'; }
+          else if (v.includes('Medium')) { statusColor='var(--amber)'; statusBg='rgba(212,132,10,.1)'; statusLabel='Medium'; }
+          else if (v.includes('Low')) { statusColor='var(--moss)'; statusBg='rgba(60,120,60,.1)'; statusLabel='Low'; }
+          else { statusColor='var(--txt2)'; statusBg='rgba(0,0,0,.05)'; statusLabel='Checked'; }
+        } else {
+          statusColor='var(--txt2)'; statusBg='rgba(0,0,0,.05)'; statusLabel='Not checked';
+        }
+        var lastDate = lastVarroaInsp ? fmtDate(lastVarroaInsp.date) : (lastWash ? fmtDate(lastWash.date) : null);
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border)">'+
+          '<div style="font-size:13px;font-weight:600;color:var(--txt)">'+esc(hive.name)+'</div>'+
+          '<div style="display:flex;align-items:center;gap:8px">'+
+            (lastDate?'<div style="font-size:11px;color:var(--txt2)">'+lastDate+'</div>':'')+
+            '<span style="font-size:11px;font-weight:700;color:'+statusColor+';background:'+statusBg+';padding:3px 9px;border-radius:20px">'+statusLabel+'</span>'+
+          '</div>'+
+        '</div>';
+      }).join('');
+    }
+  }
+
+  // Quick actions
+  var dqa = document.getElementById('dash-quick-actions');
+  if (dqa && DATA.hives.length) {
+    dqa.style.display = '';
+  } else if (dqa) {
+    dqa.style.display = 'none';
+  }
+
   // ── HIVES ──
   var hb=document.getElementById('b-hives'); if(hb) hb.textContent=DATA.hives.length;
   var hl=document.getElementById('hive-list');
@@ -108,17 +153,27 @@ function renderAll() {
     ? DATA.hives.map(function(hive){
         var lastInsp=DATA.inspections.filter(function(i){return i.hiveId===hive.id;}).sort(function(a,b){return b.date.localeCompare(a.date);})[0];
         var statusCls={Healthy:'t-ok',Monitoring:'t-warn',Weak:'t-crit',Queenless:'t-crit'}[hive.status]||'t-ok';
-        return '<div class="hrow card" onclick="openHiveHistory(\''+hive.id+'\')" oncontextmenu="openHiveModal(DATA.hives.find(function(h){return h.id===\''+hive.id+'\';}));return false">'+
+        var needsInstallConfirm = hive.install_date && !hive.install_confirmed;
+        var installMeta = hive.install_date
+          ? '<div class="hmeta" style="color:var(--amber);font-weight:600">📦 Installed: '+fmtDate(hive.install_date)+'</div>'
+          : '';
+        return '<div class="hrow card" style="flex-wrap:wrap" onclick="openHiveHistory(\''+hive.id+'\')" oncontextmenu="openHiveModal(DATA.hives.find(function(h){return h.id===\''+hive.id+'\';}));return false">'+
           hiveThumb(hive)+
-          '<div class="hinfo">'+
+          '<div class="hinfo" style="flex:1;min-width:0">'+
             '<div class="hname">'+esc(hive.name)+'</div>'+
             '<div class="hmeta">'+(hive.location?esc(hive.location)+' · ':'')+esc(hive.species||'')+(hive.boxes?' · '+hive.boxes+' boxes':'')+'</div>'+
             '<div class="hmeta">'+(lastInsp?'Last: '+fmtDate(lastInsp.date):'No inspections yet')+'</div>'+
+            installMeta+
           '</div>'+
-          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">'+
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">'+
             '<span class="tag '+statusCls+'">'+esc(hive.status||'Healthy')+'</span>'+
             '<button class="use-btn" onclick="event.stopPropagation();openInspChoice(\''+hive.id+'\')">'+SVG.inspect+' Inspect</button>'+
             '<button class="icon-btn-sm" onclick="event.stopPropagation();openHiveModal(DATA.hives.find(function(h){return h.id===\''+hive.id+'\';}))">'+SVG.edit+'</button>'+
+          '</div>'+
+          '<div class="row-actions" style="width:100%;margin-top:6px;padding-top:8px;border-top:1px solid var(--border)">'+
+            (needsInstallConfirm?'<button class="action-btn" style="color:#2a7a2a;font-weight:700" onclick="event.stopPropagation();promptInstallReminders(DATA.hives.find(function(h){return h.id===\''+hive.id+'\';}))">📦 Confirm Install</button>':'')+
+            '<button class="action-btn" onclick="event.stopPropagation();openSplitModal(\''+hive.id+'\')">✂️ Split</button>'+
+            '<button class="action-btn" onclick="event.stopPropagation();openRequeenModal(\''+hive.id+'\')">👑 Requeen</button>'+
           '</div>'+
         '</div>';
       }).join('')
@@ -126,6 +181,19 @@ function renderAll() {
 
   // ── INSPECTIONS ──
   var ib=document.getElementById('b-insp'); if(ib) ib.textContent=DATA.inspections.length;
+  // Export toolbar
+  var iexp=document.getElementById('insp-export-bar');
+  if (iexp) {
+    var hiveOpts='<option value="">All Hives</option>'+DATA.hives.map(function(h){return '<option value="'+h.id+'">'+esc(h.name)+'</option>';}).join('');
+    iexp.innerHTML='<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">'+
+      '<select id="insp-export-hive" style="flex:1;min-width:0;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--txt);font-family:\'Source Serif 4\',serif;font-size:13px">'+hiveOpts+'</select>'+
+      '<button onclick="exportInspectionsPDF(document.getElementById(\'insp-export-hive\').value||null)" style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,var(--forest),var(--moss));border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;font-family:\'Source Serif 4\',serif;cursor:pointer;white-space:nowrap">'+
+      SVG.download+' PDF</button>'+
+      '<button onclick="exportInspectionsCSV(document.getElementById(\'insp-export-hive\').value||null)" style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,var(--blu),#1a3a7a);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;font-family:\'Source Serif 4\',serif;cursor:pointer;white-space:nowrap">'+
+      SVG.download+' CSV</button>'+
+      '<button onclick="openInspCompare()" style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,var(--amber),var(--honey));border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;font-family:\'Source Serif 4\',serif;cursor:pointer;white-space:nowrap">⚖️ Compare</button>'+
+    '</div>';
+  }
   var sortedInsp=DATA.inspections.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
   var il=document.getElementById('insp-list');
   if (il) il.innerHTML = sortedInsp.length
@@ -146,6 +214,7 @@ function renderAll() {
             (i.varroa&&i.varroa!=='Not checked'?'<div class="star-item"><div class="star-lbl">Varroa</div><div style="font-size:10px;color:var(--amber);margin-top:2px;font-weight:700">'+esc(i.varroa)+'</div></div>':'')+
           '</div>'+
           (i.actions?'<div class="irow-note"><strong>Actions:</strong> '+esc(i.actions)+'</div>':'')+
+          (i.feed_type||i.feedType?'<div class="irow-note">🍯 <strong>Fed:</strong> '+esc(i.feed_type||i.feedType)+(i.feed_qty||i.feedQty?' · '+esc(i.feed_qty||i.feedQty):'')+(i.feed_notes||i.feedNotes?' · '+esc(i.feed_notes||i.feedNotes):'')+'</div>':'')+
           (i.notes?'<div class="irow-note">'+esc(i.notes)+'</div>':'')+
           (photos.length?'<div class="photo-strip">'+photos.map(function(p,idx){return '<img src="'+p.dataUrl+'" data-ctx="'+i.id+'" data-idx="'+idx+'" onclick="openLbox(this.dataset.ctx,+this.dataset.idx)">';}).join('')+'</div>':'')+
           '<div class="row-actions">'+
@@ -366,37 +435,174 @@ function renderTreatRefLibrary() {
   var el = document.getElementById('lib-ref-list');
   if (!el) return;
   if (typeof VARROA_TREATMENTS === 'undefined') {
-    el.innerHTML = '<div style="color:var(--txt2);font-size:13px;padding:20px;text-align:center">Treatment data loading…</div>';
+    el.innerHTML = '<div style="color:var(--txt2);font-size:13px;padding:20px;text-align:center">Treatment data loading...</div>';
     return;
   }
-  el.innerHTML = VARROA_TREATMENTS.map(function(t) {
-    var typeClass = t.type || 'organic';
-    return '<div class="tref-card">'+
-      '<div class="tref-header" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.tref-chevron\').classList.toggle(\'open\')">'+
-        '<div class="tref-ico '+typeClass+'">'+SVG.treatment+'</div>'+
-        '<div style="flex:1;min-width:0">'+
-          '<div class="tref-name">'+esc(t.name)+'</div>'+
-          '<div class="tref-tags">'+
-            '<span class="tref-tag '+typeClass+'">'+esc(t.type||'organic')+'</span>'+
-            (t.supersOk?'<span class="tref-tag supers-ok">Supers OK</span>':'<span class="tref-tag supers-off">No Supers</span>')+
-            (t.broodlessOnly?'<span class="tref-tag broodless">Broodless only</span>':'')+
-            (t.resistanceRisk?'<span class="tref-tag resistance">Resistance risk</span>':'')+
-          '</div>'+
-        '</div>'+
-        '<span class="tref-chevron">▾</span>'+
-      '</div>'+
-      '<div class="tref-body">'+
-        (t.activeIngredient?'<div class="tref-section"><div class="tref-section-title">Active Ingredient</div><div class="tref-row"><div>'+esc(t.activeIngredient)+'</div></div></div>':'')+
-        (t.application?'<div class="tref-section"><div class="tref-section-title">Application</div>'+t.application.map(function(a){return '<div class="tref-row"><div class="tref-row-ico">•</div><div>'+esc(a)+'</div></div>';}).join('')+'</div>':'')+
-        (t.thresholds?'<div class="tref-section"><div class="tref-section-title">AUBEE Thresholds</div><div class="tref-threshold">'+
-          '<div class="tref-thresh-pill tp-green">'+esc(t.thresholds.low||'')+'<br><span style="font-weight:400;opacity:.7">Low risk</span></div>'+
-          '<div class="tref-thresh-pill tp-yellow">'+esc(t.thresholds.med||'')+'<br><span style="font-weight:400;opacity:.7">Treat</span></div>'+
-          '<div class="tref-thresh-pill tp-red">'+esc(t.thresholds.high||'')+'<br><span style="font-weight:400;opacity:.7">Urgent</span></div>'+
-        '</div></div>':'')+
-        (t.warnings&&t.warnings.length?'<div class="tref-warn">'+t.warnings.map(function(w){return esc(w);}).join('<br>')+'</div>':'')+
-        (t.notes?'<div class="tref-note">'+esc(t.notes)+'</div>':'')+
-        '<button class="use-btn" style="margin-top:10px" onclick="openTreatmentModal(null)">+ Log Treatment</button>'+
-      '</div>'+
+
+  function secHeader(id, label) {
+    return '<div id="' + id + '" class="lib-section-header">' + label + '</div>';
+  }
+
+  function trefCard(t) {
+    var tc = t.type || 'organic';
+    return '<div class="tref-card">' +
+      '<div class="tref-header" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.tref-chevron\').classList.toggle(\'open\')">' +
+        '<div class="tref-ico ' + tc + '">' + SVG.treatment + '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div class="tref-name">' + esc(t.name) + '</div>' +
+          '<div class="tref-tags">' +
+            '<span class="tref-tag ' + tc + '">' + esc(t.type || 'organic') + '</span>' +
+            (t.supersOk ? '<span class="tref-tag supers-ok">Supers OK</span>' : '<span class="tref-tag supers-off">No Supers</span>') +
+            (t.broodlessOnly ? '<span class="tref-tag broodless">Broodless only</span>' : '') +
+            (t.resistanceRisk ? '<span class="tref-tag resistance">Resistance risk</span>' : '') +
+          '</div>' +
+        '</div>' +
+        '<span class="tref-chevron">&#9662;</span>' +
+      '</div>' +
+      '<div class="tref-body">' +
+        (t.activeIngredient ? '<div class="tref-section"><div class="tref-section-title">Active Ingredient</div><div class="tref-row"><div>' + esc(t.activeIngredient) + '</div></div></div>' : '') +
+        (t.application ? '<div class="tref-section"><div class="tref-section-title">Application</div>' + t.application.map(function(a) { return '<div class="tref-row"><div class="tref-row-ico">&bull;</div><div>' + esc(a) + '</div></div>'; }).join('') + '</div>' : '') +
+        (t.thresholds ? '<div class="tref-section"><div class="tref-section-title">AUBEE Thresholds</div><div class="tref-threshold">' +
+          '<div class="tref-thresh-pill tp-green">' + esc(t.thresholds.low || '') + '<br><span style="font-weight:400;opacity:.7">Low risk</span></div>' +
+          '<div class="tref-thresh-pill tp-yellow">' + esc(t.thresholds.med || '') + '<br><span style="font-weight:400;opacity:.7">Treat</span></div>' +
+          '<div class="tref-thresh-pill tp-red">' + esc(t.thresholds.high || '') + '<br><span style="font-weight:400;opacity:.7">Urgent</span></div>' +
+        '</div></div>' : '') +
+        (t.warnings && t.warnings.length ? '<div class="tref-warn">' + t.warnings.map(function(w) { return esc(w); }).join('<br>') + '</div>' : '') +
+        (t.notes ? '<div class="tref-note">' + esc(t.notes) + '</div>' : '') +
+        '<button class="use-btn" style="margin-top:10px" onclick="openTreatmentModal(null)">+ Log Treatment</button>' +
+      '</div>' +
+    '</div>';
+  }
+
+  var html = '';
+
+  // Varroa Mite Treatments
+  html += secHeader('lib-sec-mite', '&#128202; Varroa Mite Treatments (AUBEE)');
+  html += VARROA_TREATMENTS.map(function(t) { return trefCard(t); }).join('');
+
+  // Non-Chemical Controls
+  html += secHeader('lib-sec-nonchemical', '&#127807; Non-Chemical Controls');
+  if (typeof NONCHEMICAL_CONTROLS !== 'undefined') {
+    html += NONCHEMICAL_CONTROLS.map(function(c) {
+      return '<div class="tref-card">' +
+        '<div class="tref-header" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.tref-chevron\').classList.toggle(\'open\')">' +
+          '<div class="tref-ico organic" style="font-size:18px">' + (c.icon || '&#127807;') + '</div>' +
+          '<div style="flex:1;min-width:0"><div class="tref-name">' + esc(c.name) + '</div>' +
+          '<div class="tref-tags"><span class="tref-tag organic">Non-Chemical</span></div></div>' +
+          '<span class="tref-chevron">&#9662;</span>' +
+        '</div>' +
+        '<div class="tref-body">' +
+          (c.desc ? '<div class="tref-note">' + esc(c.desc) + '</div>' : '') +
+          (c.steps && c.steps.length ? '<div class="tref-section"><div class="tref-section-title">Steps</div>' +
+            c.steps.map(function(s) { return '<div class="tref-row"><div class="tref-row-ico">&bull;</div><div>' + esc(s) + '</div></div>'; }).join('') + '</div>' : '') +
+          (c.note ? '<div class="tref-warn">' + esc(c.note) + '</div>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  // Pests & Diseases
+  html += secHeader('lib-sec-pests', '&#129458; Pests & Diseases');
+  if (typeof PEST_CATEGORIES !== 'undefined') {
+    Object.keys(PEST_CATEGORIES).forEach(function(key) {
+      var p = PEST_CATEGORIES[key];
+      html += '<div class="tref-card">' +
+        '<div class="tref-header" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.tref-chevron\').classList.toggle(\'open\')">' +
+          '<div class="tref-ico" style="background:rgba(180,60,60,.1);color:#b43c3c;font-size:18px">' + (p.icon || '&#129458;') + '</div>' +
+          '<div style="flex:1;min-width:0"><div class="tref-name">' + esc(p.name || key) + '</div>' +
+          '<div class="tref-tags"><span class="tref-tag" style="background:rgba(180,60,60,.1);color:#b43c3c">' + esc(p.type || 'pest') + '</span>' +
+          (p.notifiable ? '<span class="tref-tag resistance">Reportable</span>' : '') + '</div></div>' +
+          '<span class="tref-chevron">&#9662;</span>' +
+        '</div>' +
+        '<div class="tref-body">' +
+          (p.symptoms ? '<div class="tref-section"><div class="tref-section-title">Symptoms</div><div class="tref-note">' + esc(p.symptoms) + '</div></div>' : '') +
+          (p.controls && p.controls.length ? '<div class="tref-section"><div class="tref-section-title">Controls</div>' +
+            p.controls.map(function(c) {
+              return '<div class="tref-row"><div class="tref-row-ico">&bull;</div><div><strong>' + esc(c.name) + '</strong>' +
+                (c.note ? ' &mdash; ' + esc(c.note) : '') +
+                (c.warn ? '<br><span style="color:#b43c3c;font-size:11px">' + esc(c.warn) + '</span>' : '') +
+              '</div></div>';
+            }).join('') + '</div>' : '') +
+        '</div>' +
+      '</div>';
+    });
+  }
+
+  // Feeding Guide
+  html += secHeader('lib-sec-feeding', '&#127855; Feeding Guide');
+  if (typeof ALABAMA_FEEDING_CALENDAR !== 'undefined') {
+    html += ALABAMA_FEEDING_CALENDAR.map(function(s) {
+      return '<div class="tref-card">' +
+        '<div class="tref-header" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.tref-chevron\').classList.toggle(\'open\')">' +
+          '<div class="tref-ico organic" style="font-size:18px">&#128467;</div>' +
+          '<div style="flex:1;min-width:0"><div class="tref-name">' + esc(s.season || s.months) + '</div>' +
+          '<div class="tref-tags"><span class="tref-tag organic">' + esc(s.months || '') + '</span></div></div>' +
+          '<span class="tref-chevron">&#9662;</span>' +
+        '</div>' +
+        '<div class="tref-body">' +
+          (s.situation ? '<div class="tref-section"><div class="tref-section-title">Situation</div><div class="tref-note">' + esc(s.situation) + '</div></div>' : '') +
+          (s.syrup ? '<div class="tref-section"><div class="tref-section-title">Syrup</div><div class="tref-note">' + esc(s.syrup) + '</div></div>' : '') +
+          (s.patties ? '<div class="tref-section"><div class="tref-section-title">Protein Patties</div><div class="tref-note">' + esc(s.patties) + '</div></div>' : '') +
+          (s.notes ? '<div class="tref-note" style="margin-top:8px">' + esc(s.notes) + '</div>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  // Feeding Supplements
+  html += secHeader('lib-sec-supplements', '&#129514; Feeding Supplements');
+  if (typeof FEEDING_SUPPLEMENTS !== 'undefined') {
+    html += FEEDING_SUPPLEMENTS.map(function(s) {
+      return '<div class="tref-card">' +
+        '<div class="tref-header" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.tref-chevron\').classList.toggle(\'open\')">' +
+          '<div class="tref-ico organic" style="font-size:18px">&#129514;</div>' +
+          '<div style="flex:1;min-width:0"><div class="tref-name">' + esc(s.name) + '</div>' +
+          '<div class="tref-tags"><span class="tref-tag organic">Supplement</span></div></div>' +
+          '<span class="tref-chevron">&#9662;</span>' +
+        '</div>' +
+        '<div class="tref-body">' +
+          (s.summary ? '<div class="tref-note">' + esc(s.summary) + '</div>' : '') +
+          (s.whatItIs ? '<div class="tref-section"><div class="tref-section-title">What It Is</div><div class="tref-note">' + esc(s.whatItIs) + '</div></div>' : '') +
+          (s.warnings && s.warnings.length ? '<div class="tref-warn">' + s.warnings.map(function(w) { return esc(w); }).join('<br>') + '</div>' : '') +
+          (s.notes ? '<div class="tref-note">' + esc(s.notes) + '</div>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  // Syrup Mixing Guide — inline data (Dadant recommendations)
+  html += secHeader('lib-sec-syrup', '&#127802; Syrup Mixing Guide');
+  var SYRUP_DATA = [
+    { name:'1:1 Sugar Syrup (Spring/Summer)', ratio:'1 lb sugar : 1 pt water', use:'Stimulates brood rearing and comb building. Use in spring to stimulate buildup and for new packages/splits. Do not use during honey flow.', temp:'Feed when temps are above 50°F.', note:'Per Dadant: Add Honey-B-Healthy at 1 tsp/qt to stimulate feeding and inhibit fermentation.' },
+    { name:'2:1 Sugar Syrup (Fall/Winter)', ratio:'2 lbs sugar : 1 pt water', use:'Winter stores — heavier syrup converts to honey faster with less moisture. Feed in fall to ensure adequate winter stores. Stop feeding when temps drop below 50°F consistently.', temp:'Feed before temps drop below 50°F.', note:'Per Dadant: Feed until bees stop taking it. A light hive in November needs emergency feeding — switch to candy board below 50°F.' },
+    { name:'Candy Board (Winter Emergency)', ratio:'10 lbs sugar : 1/2 cup water', use:'Emergency winter feed when temps are too cold for syrup. Bees consume as needed. Place directly above cluster.', temp:'Use when temps consistently below 50°F.', note:'Mix sugar and water to stiff dough, press into mold or rimmed board. Let dry 24 hours. Place rim-side down over cluster.' },
+    { name:'Fondant / Sugar Brick', ratio:'4 lbs sugar : 1/4 cup water', use:'Similar to candy board — emergency winter or early spring feed. Easy to make in bulk.', temp:'Any temperature — solid feed.', note:'Boil to soft ball stage (235-240°F), cool to 110°F, beat until creamy white, pour into molds.' }
+  ];
+  html += SYRUP_DATA.map(function(s) {
+    return '<div class="tref-card">' +
+      '<div class="tref-header" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.tref-chevron\').classList.toggle(\'open\')">' +
+        '<div class="tref-ico organic" style="font-size:18px">&#127855;</div>' +
+        '<div style="flex:1;min-width:0"><div class="tref-name">' + esc(s.name) + '</div>' +
+        '<div class="tref-tags"><span class="tref-tag organic">' + esc(s.ratio) + '</span></div></div>' +
+        '<span class="tref-chevron">&#9662;</span>' +
+      '</div>' +
+      '<div class="tref-body">' +
+        '<div class="tref-section"><div class="tref-section-title">Ratio</div><div class="tref-note">' + esc(s.ratio) + '</div></div>' +
+        '<div class="tref-section"><div class="tref-section-title">When to Use</div><div class="tref-note">' + esc(s.use) + '</div></div>' +
+        '<div class="tref-section"><div class="tref-section-title">Temperature</div><div class="tref-note">' + esc(s.temp) + '</div></div>' +
+        (s.note ? '<div class="tref-warn">' + esc(s.note) + '</div>' : '') +
+      '</div>' +
     '</div>';
   }).join('');
+
+  el.innerHTML = html;
+}
+
+function jumpToLibSection(id) {
+  if (!id) return;
+  var target = document.getElementById(id);
+  if (!target) return;
+  target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  var sel = document.getElementById('lib-jump-select');
+  if (sel) setTimeout(function() { sel.value = ''; }, 800);
 }

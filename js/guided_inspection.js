@@ -177,7 +177,8 @@ function startGuidedInsp(hiveId) {
     miteWashDone:false, miteCount:0, miteTotal:100, shbLevel:'low',
     varroa:'Not checked',
     // Step 6 — actions
-    actions:'', notes:'', period: period
+    actions:'', notes:'', period: period,
+    tempId: 'gi'+Date.now()
   };
   renderGuidedStep();
 }
@@ -200,7 +201,7 @@ function renderGuidedStep() {
     // Step 1: Hive selection, date, weather + seasonal context
     var hiveOpts = DATA.hives.map(function(h){ return '<option value="'+h.id+'"'+(_GINSP.hiveId===h.id?' selected':'')+'>'+esc(h.name)+'</option>'; }).join('');
     var WX = window._wx;
-    var wxBanner = WX ? '<div style="background:linear-gradient(135deg,#1a3a5c,#2563a8);border-radius:12px;padding:11px;color:#fff;font-size:13px;display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="font-size:22px">'+WX.icon+'</span><span>'+WX.temp+'°F · '+WX.desc+' · 💨'+WX.wind+'mph</span></div>' : '';
+    var wxBanner = WX ? '<div style="background:linear-gradient(135deg,#1a3a5c,#2563a8);border-radius:12px;padding:11px;color:#fff;font-size:13px;display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="font-size:22px">'+WX.wxSvg+'</span><span>'+WX.temp+'°F · '+WX.desc+' · 💨'+WX.wind+'mph</span></div>' : '';
     body += '<div class="ginsp-step-title">Step 1 — Setup</div>';
     body += '<div class="ginsp-step-sub">'+period.label+' · '+period.desc+'</div>';
     body += wxBanner;
@@ -252,6 +253,12 @@ function renderGuidedStep() {
     if (period.washNeeded) body += '<div class="ginsp-alert yellow">🧪 <strong>Wash Recommended This Month</strong> — '+period.label+' is a key AUBEE monitoring point for Alabama colonies.</div>';
     body += '<div class="fg" style="margin-top:4px"><label>Actions Taken</label><textarea id="gi-actions" placeholder="e.g. Added super, replaced oil trap, treated for varroa…">'+esc(_GINSP.actions)+'</textarea></div>';
     body += '<div class="fg"><label>Additional Notes</label><textarea id="gi-notes" placeholder="Observations, concerns, next steps…">'+esc(_GINSP.notes)+'</textarea></div>';
+    body += '<div class="fg"><label>Inspection Photos</label>'+
+      '<div style="margin-bottom:8px">'+
+      '<button type="button" onclick="showPhotoSourcePicker(\''+_GINSP.tempId+'\',\'photo\')" style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(135deg,var(--honey),var(--amber));border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;font-family:\"Source Serif 4\",serif;cursor:pointer;width:100%;justify-content:center">'+
+      '<svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px" xmlns="http://www.w3.org/2000/svg"><path d="M3 9a2 2 0 012-2h2l1.5-2h7L17 7h2a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="14" r="3.5" stroke="currentColor" stroke-width="2"/></svg>'+
+      'Add Photo</button></div>'+
+      '<div class="pgal" id="pgal-h">'+buildGallery(_GINSP.tempId)+'</div></div>';
     body += '<script>document.getElementById("gi-washdone").addEventListener("click",function(e){if(e.target.classList.contains("pill")){var show=e.target.textContent==="Yes";document.getElementById("gi-wash-fields").style.display=show?"":"none";}});<\/script>';
   }
 
@@ -364,7 +371,17 @@ async function saveGuidedInsp() {
     notes: fullNotes
   };
   var row = await dbInsert('inspections', obj);
-  if (row) DATA.inspections.push({...row, hiveId:row.hive_id, queenSeen:row.queen_seen, weatherSnap:row.weather_snap});
+  if (row) {
+    // Save any photos taken during guided inspection
+    if (PHOTOS[_GINSP.tempId]) {
+      for (var p of PHOTOS[_GINSP.tempId]) {
+        var ps = await dbInsert('photos', {context_id:row.id, data_url:p.dataUrl});
+        if (ps) { PHOTOS[row.id] = PHOTOS[row.id]||[]; PHOTOS[row.id].push({id:ps.id, dataUrl:p.dataUrl}); }
+      }
+      delete PHOTOS[_GINSP.tempId];
+    }
+    DATA.inspections.push({...row, hiveId:row.hive_id, queenSeen:row.queen_seen, weatherSnap:row.weather_snap});
+  }
 
   closeModal();
 

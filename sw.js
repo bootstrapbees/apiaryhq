@@ -2,7 +2,7 @@
 // APIARY HQ — Service Worker
 // Bump CACHE_VERSION any time you deploy updated files
 // ═══════════════════════════════════════════════════════
-var CACHE_VERSION = 'apiaryhq-v5.0.0';
+var CACHE_VERSION = 'apiaryhq-v5.0.1';
 
 var EXTERNAL_URLS = [
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
@@ -25,7 +25,6 @@ var STATIC_FILES = [
   '/js/harvest.js',
   '/js/finance.js',
   '/js/reminders.js',
-  '/js/feeding.js',
   '/js/docs.js',
   '/js/contacts.js',
   '/js/render.js',

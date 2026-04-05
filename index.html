@@ -138,8 +138,8 @@ header {
   display:flex;background:#fff;
   border-top:1px solid #E8EDE8;
   padding:0;gap:0;position:fixed;bottom:0;left:0;right:0;z-index:98;
-  height:calc(70px + env(safe-area-inset-bottom,0px));box-shadow:0 -1px 0 #E0E8E0, 0 -4px 24px rgba(0,0,0,.08);
-  align-items:flex-start;
+  height:70px;box-shadow:0 -1px 0 #E0E8E0, 0 -4px 24px rgba(0,0,0,.08);
+  align-items:flex-end;
   padding-bottom:env(safe-area-inset-bottom,0px);
   -webkit-transform:translateZ(0);transform:translateZ(0);
 }
@@ -224,7 +224,7 @@ header {
 
 /* ─── PAGES ─── */
 .page{display:none;padding:14px 14px 90px}
-.page.active{display:block;overflow-y:auto;flex:1;min-height:0;padding-bottom:calc(90px + env(safe-area-inset-bottom,0px));-webkit-overflow-scrolling:touch;}
+.page.active{display:block;overflow-y:auto;flex:1;min-height:0;padding-bottom:90px;-webkit-overflow-scrolling:touch;}
 
 /* ─── CARDS ─── */
 .card {
@@ -348,7 +348,7 @@ header {
 .fin-prompt{background:var(--blu-bg);border:1px solid var(--blu-bd);border-radius:var(--r-sm);padding:12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--blu)}
 
 /* ─── REMINDERS ─── */
-.remind-row,.remind-card{display:flex;align-items:center;gap:12px;padding:13px;margin-bottom:0;cursor:pointer;position:relative;overflow:hidden}
+.remind-row{display:flex;align-items:center;gap:12px;padding:13px;margin-bottom:8px;cursor:pointer}
 .remind-overdue{border-left:3px solid var(--red)!important}
 .remind-soon   {border-left:3px solid var(--honey)!important}
 .remind-ok     {border-left:3px solid var(--moss)!important}
@@ -390,10 +390,6 @@ header {
 
 /* ─── SETTINGS ─── */
 .settings-section{margin-bottom:20px}
-.feed-type-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 6px;border:1.5px solid var(--border);background:var(--surface);border-radius:12px;color:var(--txt2);font-family:'Source Serif 4',serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;width:100%}
-.feed-type-btn.active{border-color:var(--amber);background:rgba(232,160,32,.1);color:var(--bark)}
-.feed-type-btn svg{opacity:.7}
-.feed-type-btn.active svg{opacity:1}
 .settings-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--txt2);margin-bottom:8px;padding:0 4px}
 .settings-row{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;margin-bottom:6px;cursor:pointer;border-radius:var(--r-md)}
 .settings-row-left{display:flex;align-items:center;gap:12px}
@@ -634,7 +630,7 @@ body.dark .rec-item{background:var(--surface2)}
 .auto-remind-toast.show{opacity:1}
 
 /* ─── CAMERA SHEET ─── */
-/* cam-sheet removed */
+.cam-sheet{display:none;position:fixed;inset:0;z-index:400;background:rgba(26,58,42,.5);align-items:flex-end;}
 
 /* ─── PILL HOVER ─── */
 .pill:hover{border-color:var(--forest);color:var(--forest)}
@@ -645,10 +641,10 @@ body.dark .rec-item{background:var(--surface2)}
 .btn-p{background:linear-gradient(145deg,var(--honey),var(--amber))!important;box-shadow:0 4px 16px rgba(212,132,10,.3)!important}
 .sub-tabs{border-radius:14px!important}
 .sub-tab{border-radius:11px!important;font-size:12.5px!important}
-#pg-insp .sub-tab{font-size:11px!important;padding:8px 3px!important}
 .card{border-radius:16px!important}
 .hrow{border-radius:14px}
 .irow{border-radius:14px}
+.remind-row{border-radius:14px}
 
 /* ── DESKTOP NAV FORCE OVERRIDE ── */
 @media(min-width:768px){
@@ -768,7 +764,6 @@ body.dark .rec-item{background:var(--surface2)}
 <div class="more-tray-backdrop" id="more-tray-backdrop" onclick="closeMoreTray()">
   <div class="more-tray" onclick="event.stopPropagation()">
     <div class="more-tray-grid">
-      <button onclick="showTabFromMore('insp')" data-more-tab="insp"><span class="ic ahq-icon"><svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="3" width="18" height="22" rx="3" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><line x1="9" y1="9" x2="19" y2="9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="9" y1="14" x2="19" y2="14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="9" y1="19" x2="14" y2="19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>Inspect</button>
       <button onclick="showTabFromMore('hives')" data-more-tab="hives"><span class="ic ahq-icon"><svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 3L21 7.5V16.5L14 21L7 16.5V7.5L14 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 9L17.5 11V15L14 17L10.5 15V11L14 9Z" fill="currentColor" opacity=".3"/></svg></span>Hives</button>
       <button onclick="showTabFromMore('fin')" data-more-tab="fin"><span class="ic ahq-icon"><svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="6" width="22" height="16" rx="3" stroke="currentColor" stroke-width="2"/><path d="M3 11h22" stroke="currentColor" stroke-width="1.8"/><circle cx="9" cy="17" r="2" fill="currentColor" opacity=".5"/><rect x="14" y="15.5" width="7" height="3" rx="1.5" fill="currentColor" opacity=".5"/></svg></span>Finance</button>
       <button onclick="showTabFromMore('remind')" data-more-tab="remind"><span class="ic ahq-icon"><svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 4a7 7 0 017 7v4l2 2H5l2-2v-4a7 7 0 017-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 22a2 2 0 004 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Reminders</button>
@@ -811,7 +806,7 @@ body.dark .rec-item{background:var(--surface2)}
     <div class="dash-widget-title">⚡ Quick Actions</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button class="btn btn-p" style="flex:1;min-width:140px;padding:10px" onclick="showTab('insp');setTimeout(function(){openInspChoice(null);},100)">🔍 New Inspection</button>
-      <button class="btn btn-p" style="flex:1;min-width:140px;padding:10px;background:var(--moss)" onclick="showTab('insp');setTimeout(function(){showInspTab('feed');openFeedingModal(null);},100)">🍯 Log Feeding</button>
+      <button class="btn btn-p" style="flex:1;min-width:140px;padding:10px;background:var(--moss)" onclick="showTab('insp');setTimeout(function(){openHarvestModal(null);},100)">🍯 Log Harvest</button>
     </div>
   </div>
 </div>
@@ -822,13 +817,12 @@ body.dark .rec-item{background:var(--surface2)}
   <div id="hive-list"></div>
 </div>
 
-<!-- INSPECTIONS (with sub-tabs: Inspections, Feeding, Treatments, Harvest) -->
+<!-- INSPECTIONS (with sub-tabs: Inspections, Treatments, Harvest) -->
 <div class="page" id="pg-insp">
   <div class="sub-tabs">
-    <button class="sub-tab active" id="st-insp" onclick="showInspTab('insp')">Inspections</button>
-    <button class="sub-tab" id="st-feed" onclick="showInspTab('feed')">Feeding</button>
-    <button class="sub-tab" id="st-treat" onclick="showInspTab('treat')">Treatments</button>
-    <button class="sub-tab" id="st-harvest" onclick="showInspTab('harvest')">Harvest</button>
+    <button class="sub-tab active" id="st-insp" onclick="showInspTab('insp')"><svg viewBox="0 0 18 18" fill="none" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="2" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><line x1="6" y1="6" x2="12" y2="6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6" y1="9" x2="12" y2="9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Inspections</button>
+    <button class="sub-tab" id="st-treat" onclick="showInspTab('treat')"><svg viewBox="0 0 18 18" fill="none" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px" xmlns="http://www.w3.org/2000/svg"><rect x="7" y="2" width="4" height="5" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 6h8l1.5 9H3.5L5 6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><line x1="9" y1="9" x2="9" y2="12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="7.5" y1="10.5" x2="10.5" y2="10.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Treatments</button>
+    <button class="sub-tab" id="st-harvest" onclick="showInspTab('harvest')"><svg viewBox="0 0 18 18" fill="none" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px" xmlns="http://www.w3.org/2000/svg"><path d="M6 3s-2 4 0 6 5 0 5 0-2 4 0 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M9 7c1.5 0 3.5-1 4-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Harvest</button>
   </div>
   <!-- Inspections sub-tab -->
   <div id="insp-sub-insp">
@@ -838,11 +832,6 @@ body.dark .rec-item{background:var(--surface2)}
     </div>
     <div id="insp-export-bar"></div>
     <div id="insp-list"></div>
-  </div>
-  <!-- Feeding sub-tab -->
-  <div id="insp-sub-feed" style="display:none">
-    <div class="sec"><div class="sec-t">Feeding Log</div><span class="badge" id="b-feed">0</span></div>
-    <div id="feed-list"></div>
   </div>
   <!-- Treatments sub-tab -->
   <div id="insp-sub-treat" style="display:none">
@@ -1016,16 +1005,6 @@ body.dark .rec-item{background:var(--surface2)}
       </div>
     </div>
   </div>
-
-  <div class="settings-section" style="margin-top:4px">
-    <div class="settings-label">About &amp; Legal</div>
-    <div class="card" style="padding:16px 18px;font-size:13px;line-height:1.75;color:var(--txt2)">
-      <div style="font-family:'Playfair Display',serif;font-weight:700;font-size:15px;color:var(--txt);margin-bottom:8px">Apiary HQ by Bootstrap Beekeeping</div>
-      <p style="margin:0 0 10px">This app references publicly available beekeeping information from Dadant &amp; Sons and the Alabama Cooperative Extension System / AUBEE program. Apiary HQ is not affiliated with, sponsored by, or endorsed by Dadant &amp; Sons or AUBEE.</p>
-      <p style="margin:0 0 10px"><strong style="color:var(--txt)">Privacy:</strong> Your hive records are stored securely in your personal account. Your data is never sold, shared with third parties, or used for advertising. All data belongs to you and can be exported or deleted at any time.</p>
-      <p style="margin:0;font-size:11px;color:var(--txt3)">&copy; 2026 Bootstrap Beekeeping. All rights reserved.</p>
-    </div>
-  </div>
 </div>
 
 <!-- HIVE HISTORY OVERLAY -->
@@ -1071,8 +1050,11 @@ body.dark .rec-item{background:var(--surface2)}
 
 <!-- FILE INPUTS -->
 <input type="file" id="photo-file" accept="image/*" multiple style="display:none">
+<input type="file" id="photo-camera" accept="image/*" capture="environment" style="display:none">
 <input type="file" id="doc-file" accept="image/*,application/pdf" style="display:none">
+<input type="file" id="doc-camera" accept="image/*" capture="environment" style="display:none">
 <input type="file" id="asset-file" accept="image/*" style="display:none">
+<input type="file" id="asset-camera" accept="image/*" capture="environment" style="display:none">
 <input type="file" id="logo-file" accept="image/*" style="display:none">
 
 
@@ -1086,7 +1068,6 @@ body.dark .rec-item{background:var(--surface2)}
 <script src="js/harvest.js"></script>
 <script src="js/finance.js"></script>
 <script src="js/reminders.js"></script>
-<script src="js/feeding.js"></script>
 <script src="js/docs.js"></script>
 <script src="js/contacts.js"></script>
 <script src="js/notes.js"></script>
@@ -1097,7 +1078,19 @@ body.dark .rec-item{background:var(--surface2)}
 <script src="js/render.js"></script>
 <script src="js/guided_inspection.js"></script>
 
-<!-- cam-sheet removed -->
+<!-- CAMERA SOURCE PICKER SHEET -->
+<div id="cam-sheet" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);align-items:flex-end" onclick="closeCamSheet()">
+  <div id="cam-sheet-inner" onclick="event.stopPropagation()" style="position:absolute;bottom:0;left:0;right:0;background:var(--warm);border-radius:20px 20px 0 0;padding:20px 16px 36px;box-shadow:0 -8px 40px rgba(0,0,0,.35);border-top:3px solid var(--honey)">
+    <div style="font-family:'Playfair Display',serif;font-size:17px;color:var(--bark);margin-bottom:14px;text-align:center">Add Photo</div>
+    <button onclick="camSheetAction('camera')" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;border:none;background:rgba(232,160,32,.08);border-radius:12px;font-family:'Source Serif 4',serif;font-size:15px;color:var(--txt);cursor:pointer;margin-bottom:10px">
+      <svg viewBox="0 0 24 24" fill="none" style="width:22px;height:22px;flex-shrink:0" xmlns="http://www.w3.org/2000/svg"><path d="M3 9a2 2 0 012-2h2l1.5-2h7L17 7h2a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="14" r="3.5" stroke="currentColor" stroke-width="1.8"/></svg>Take Photo
+    </button>
+    <button onclick="camSheetAction('gallery')" style="display:flex;align-items:center;gap:12px;width:100%;padding:13px 16px;border:none;background:rgba(232,160,32,.08);border-radius:12px;font-family:'Source Serif 4',serif;font-size:15px;color:var(--txt);cursor:pointer;margin-bottom:10px">
+      <svg viewBox="0 0 24 24" fill="none" style="width:22px;height:22px;flex-shrink:0" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="1.8"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><path d="M3 15l5-5 4 4 3-3 6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Choose from Library
+    </button>
+    <button onclick="closeCamSheet()" style="display:block;width:100%;padding:12px;border:none;background:transparent;font-family:'Source Serif 4',serif;font-size:14px;color:var(--txt2);cursor:pointer">Cancel</button>
+  </div>
+</div>
 
 <script>
   // Register Service Worker for offline support

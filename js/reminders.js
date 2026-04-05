@@ -32,10 +32,10 @@ async function saveReminder(eid, isEdit) {
   var hiveId = gv('f-rhive') || null;
   var obj = {rem_type:remType,hive_id:hiveId,next_date:gv('f-rdate'),notes:gv('f-rnotes'),item_name:gv('f-ritem'),item_qty:gv('f-rqty'),item_cost:parseFloat(gv('f-rcost'))||null,supplier_id:gv('f-rsupplier')||null,completed:false,added_to_finance:false};
   if (isEdit) {
-    await dbUpdate('reminders',eid,obj);
+    await (typeof dbUpdateSafe==='function'?dbUpdateSafe('reminders',eid,obj):dbUpdate('reminders',eid,obj));
     Object.assign(DATA.reminders.find(function(x){return x.id===eid;}),{...obj,hiveId:obj.hive_id,nextDate:obj.next_date,remType:obj.rem_type,itemName:obj.item_name,itemCost:obj.item_cost,itemQty:obj.item_qty,supplierId:obj.supplier_id});
   } else {
-    var row=await dbInsert('reminders',obj);
+    var row=await (typeof dbInsertSafe==='function'?dbInsertSafe('reminders',obj):dbInsert('reminders',obj));
     if (row) DATA.reminders.push({...row,hiveId:row.hive_id,nextDate:row.next_date,remType:row.rem_type,itemName:row.item_name,itemCost:row.item_cost,itemQty:row.item_qty,supplierId:row.supplier_id,addedToFinance:row.added_to_finance});
   }
   closeModal(); renderAll();

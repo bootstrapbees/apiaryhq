@@ -2,25 +2,30 @@
 // ═══════════════════════════════════════════════════════
 // PDF EXPORT
 // ═══════════════════════════════════════════════════════
-function exportInspectionsPDF() {
+function exportInspectionsPDF(hiveId) {
   if (typeof window.jspdf === 'undefined' && typeof jspdf === 'undefined') {
     alert('PDF library loading, please try again in a moment.'); return;
   }
   var {jsPDF} = window.jspdf || jspdf;
   var doc = new jsPDF({unit:'mm',format:'a4'});
   var apiaryName = document.getElementById('hdr-apiary-name').textContent || 'My Apiary';
+  var filterHive = hiveId ? DATA.hives.find(function(h){return h.id===hiveId;}) : null;
+  var reportTitle = filterHive
+    ? apiaryName + ' — ' + filterHive.name + ' Inspections'
+    : apiaryName + ' — All Hive Inspections';
   var pageW = doc.internal.pageSize.getWidth();
   var margin = 15; var y = 20;
   // Header
-  doc.setFillColor(74, 44, 10);
+  doc.setFillColor(26, 58, 42);
   doc.rect(0, 0, pageW, 28, 'F');
   doc.setTextColor(245, 223, 160);
   doc.setFontSize(18); doc.setFont('helvetica','bold');
-  doc.text(apiaryName + ' — Inspection Report', margin, 12);
+  doc.text(reportTitle, margin, 12);
   doc.setFontSize(10); doc.setFont('helvetica','normal');
   doc.text('Generated: ' + new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}), margin, 20);
   y = 38; doc.setTextColor(44, 26, 6);
-  var sorted = DATA.inspections.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  var allSorted = DATA.inspections.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  var sorted = hiveId ? allSorted.filter(function(i){return i.hiveId===hiveId;}) : allSorted;
   if (!sorted.length) {
     doc.setFontSize(12); doc.text('No inspection records found.', margin, y);
   }
@@ -37,7 +42,7 @@ function exportInspectionsPDF() {
     doc.text(line1, margin+3, y);
     y += 5;
     var line2 = '⭐ Population: '+('⭐'.repeat(i.population||0)+'☆'.repeat(5-(i.population||0)))+' | Honey: '+('⭐'.repeat(i.honey||0)+'☆'.repeat(5-(i.honey||0)))+' | Brood: '+('⭐'.repeat(i.brood||0)+'☆'.repeat(5-(i.brood||0)));
-    doc.text('Population: '+i.population+'/5  Honey Stores: '+i.honey+'/5  Brood Pattern: '+i.brood+'/5', margin+3, y);
+    doc.text('Population: '+String(i.population||0)+' of 5   Honey Stores: '+String(i.honey||0)+' of 5   Brood: '+String(i.brood||0)+' of 5', margin+3, y);
     y += 5;
     if (i.varroa) { doc.text('Varroa: '+i.varroa, margin+3, y); y+=5; }
     if (i.actions) { var aLines=doc.splitTextToSize('Actions: '+i.actions, pageW-2*margin-6); doc.text(aLines, margin+3, y); y+=aLines.length*4.5; }
@@ -48,7 +53,8 @@ function exportInspectionsPDF() {
   // Footer
   doc.setTextColor(160,120,80); doc.setFontSize(8);
   doc.text('Apiary HQ — Inspection Records', margin, 290);
-  doc.save(apiaryName.replace(/\s+/g,'_')+'_Inspections_'+new Date().toISOString().slice(0,10)+'.pdf');
+  var hivePart = filterHive ? '_'+filterHive.name.replace(/\s+/g,'_') : '_All_Hives';
+  doc.save(apiaryName.replace(/\s+/g,'_')+hivePart+'_Inspections_'+new Date().toISOString().slice(0,10)+'.pdf');
 }
 
 function exportFinancePDF() {
@@ -61,7 +67,7 @@ function exportFinancePDF() {
   var pageW = doc.internal.pageSize.getWidth();
   var margin = 15; var y = 20; var cur = _prefs.currency;
   // Header
-  doc.setFillColor(74, 44, 10); doc.rect(0, 0, pageW, 28, 'F');
+  doc.setFillColor(26, 58, 42); doc.rect(0, 0, pageW, 28, 'F');
   doc.setTextColor(245, 223, 160);
   doc.setFontSize(18); doc.setFont('helvetica','bold');
   doc.text(apiaryName + ' — Financial Report', margin, 12);
@@ -102,4 +108,179 @@ function exportFinancePDF() {
   doc.setTextColor(160,120,80); doc.setFontSize(8);
   doc.text('Apiary HQ — Financial Records', margin, 290);
   doc.save(apiaryName.replace(/\s+/g,'_')+'_Finance_'+new Date().toISOString().slice(0,10)+'.pdf');
+}
+
+// ═══════════════════════════════════════════════════════
+// CSV EXPORTS
+// ═══════════════════════════════════════════════════════
+function csvEscape(val) {
+  if (val === null || val === undefined) return '';
+  var s = String(val).replace(/"/g, '""');
+  return (s.includes(',') || s.includes('"') || s.includes('\n')) ? '"' + s + '"' : s;
+}
+function downloadCSV(filename, rows) {
+  var csv = rows.map(function(r){ return r.map(csvEscape).join(','); }).join('\r\n');
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+
+function exportInspectionsCSV(hiveId) {
+  var apiaryName = document.getElementById('hdr-apiary-name').textContent || 'MyApiary';
+  var filterHive = hiveId ? DATA.hives.find(function(h){return h.id===hiveId;}) : null;
+  var allSorted = DATA.inspections.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  var rows = hiveId ? allSorted.filter(function(i){return i.hiveId===hiveId;}) : allSorted;
+  var headers = ['Date','Hive','Queen Seen','Population (1-5)','Honey Stores (1-5)','Brood Pattern (1-5)','Varroa Level','Temperament','Weather','Fed Today','Feed Qty','Feed Notes','Actions Taken','Notes'];
+  var data = [headers].concat(rows.map(function(i){
+    var hive = DATA.hives.find(function(h){return h.id===i.hiveId;});
+    return [
+      i.date,
+      hive ? hive.name : '',
+      i.queenSeen || i.queen_seen || '',
+      i.population || '',
+      i.honey || '',
+      i.brood || '',
+      i.varroa || '',
+      i.temperament || '',
+      i.weather || '',
+      i.feedType || i.feed_type || '',
+      i.feedQty || i.feed_qty || '',
+      i.feedNotes || i.feed_notes || '',
+      i.actions || '',
+      i.notes || ''
+    ];
+  }));
+  var hivePart = filterHive ? '_'+filterHive.name.replace(/\s+/g,'_') : '_All_Hives';
+  downloadCSV(apiaryName.replace(/\s+/g,'_')+hivePart+'_Inspections_'+new Date().toISOString().slice(0,10)+'.csv', data);
+}
+
+function exportFinanceCSV() {
+  var apiaryName = document.getElementById('hdr-apiary-name').textContent || 'MyApiary';
+  var sorted = DATA.transactions.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  var cur = _prefs.currency;
+  var headers = ['Date','Type','Amount ('+cur+')','Description','Category','Notes','Vendor Name','Vendor Phone','Vendor Website'];
+  var data = [headers].concat(sorted.map(function(t){
+    return [
+      t.date,
+      t.type || '',
+      t.amount || '',
+      t.desc || t.description || '',
+      t.category || '',
+      t.notes || '',
+      t.vendor_name || '',
+      t.vendor_phone || '',
+      t.vendor_website || ''
+    ];
+  }));
+  downloadCSV(apiaryName.replace(/\s+/g,'_')+'_Finance_'+new Date().toISOString().slice(0,10)+'.csv', data);
+}
+
+// ═══════════════════════════════════════════════════════
+// INSPECTION COMPARISON VIEW
+// ═══════════════════════════════════════════════════════
+function openInspCompare() {
+  if (!DATA.hives.length) { alert('No hives yet.'); return; }
+  var hiveOpts = DATA.hives.map(function(h){
+    return '<option value="'+h.id+'">'+esc(h.name)+'</option>';
+  }).join('');
+  var h = '<div class="modal-title">Compare Inspections</div>';
+  h += '<div class="fg"><label>Hive</label><select id="cmp-hive" onchange="renderCmpSelectors()"><option value="">— Pick a hive —</option>'+hiveOpts+'</select></div>';
+  h += '<div id="cmp-selectors" style="display:none">'+
+    '<div class="row2">'+
+      '<div class="fg"><label>Inspection A</label><select id="cmp-a"></select></div>'+
+      '<div class="fg"><label>Inspection B</label><select id="cmp-b"></select></div>'+
+    '</div>'+
+    '<button class="btn btn-p" style="margin-top:4px" onclick="runInspCompare()">Compare →</button>'+
+  '</div>';
+  h += '<div id="cmp-result" style="margin-top:12px"></div>';
+  h += '<button class="btn btn-c" onclick="closeModal()">Close</button>';
+  openModal(h);
+}
+
+function renderCmpSelectors() {
+  var hiveId = document.getElementById('cmp-hive').value;
+  var wrap = document.getElementById('cmp-selectors');
+  if (!hiveId) { wrap.style.display='none'; return; }
+  var insps = DATA.inspections
+    .filter(function(i){return i.hiveId===hiveId;})
+    .sort(function(a,b){return b.date.localeCompare(a.date);});
+  if (insps.length < 2) {
+    wrap.style.display='none';
+    document.getElementById('cmp-result').innerHTML='<div style="font-size:13px;color:var(--txt2);font-style:italic">Need at least 2 inspections for this hive to compare.</div>';
+    return;
+  }
+  var opts = insps.map(function(i){ return '<option value="'+i.id+'">'+fmtDate(i.date)+'</option>'; }).join('');
+  document.getElementById('cmp-a').innerHTML = opts;
+  document.getElementById('cmp-b').innerHTML = opts;
+  // Default B to the second most recent
+  document.getElementById('cmp-b').selectedIndex = 1;
+  wrap.style.display = '';
+  document.getElementById('cmp-result').innerHTML = '';
+}
+
+function runInspCompare() {
+  var aId = document.getElementById('cmp-a').value;
+  var bId = document.getElementById('cmp-b').value;
+  if (aId === bId) { document.getElementById('cmp-result').innerHTML='<div style="font-size:13px;color:var(--red)">Please select two different inspections.</div>'; return; }
+  var a = DATA.inspections.find(function(i){return i.id===aId;});
+  var b = DATA.inspections.find(function(i){return i.id===bId;});
+  if (!a||!b) return;
+
+  function starBar(val) {
+    val = parseInt(val)||0;
+    var filled = '★'.repeat(val);
+    var empty = '☆'.repeat(5-val);
+    return '<span style="color:var(--amber);font-size:14px">'+filled+'</span><span style="color:var(--border);font-size:14px">'+empty+'</span>';
+  }
+  function diff(av, bv) {
+    var an=parseInt(av)||0, bn=parseInt(bv)||0;
+    if (!an||!bn) return '';
+    var d=an-bn;
+    if (d===0) return '<span style="color:var(--txt2);font-size:11px"> =</span>';
+    return d>0
+      ? '<span style="color:var(--moss);font-size:11px"> ▲'+d+'</span>'
+      : '<span style="color:var(--red);font-size:11px"> ▼'+Math.abs(d)+'</span>';
+  }
+  function cell(val) { return '<td style="padding:7px 8px;border-bottom:1px solid var(--border);font-size:13px;color:var(--txt)">'+esc(String(val||'—'))+'</td>'; }
+  function starCell(val, other) { return '<td style="padding:7px 8px;border-bottom:1px solid var(--border)">'+starBar(val)+diff(val,other)+'</td>'; }
+  function hdrCell(val) { return '<th style="padding:7px 8px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);border-bottom:2px solid var(--amber);white-space:nowrap">'+val+'</th>'; }
+
+  var rows = [
+    ['Date',        fmtDate(a.date),                          fmtDate(b.date)],
+    ['Queen',       a.queenSeen||a.queen_seen||'—',           b.queenSeen||b.queen_seen||'—'],
+    ['Temperament', a.temperament||'—',                       b.temperament||'—'],
+    ['Weather',     a.weather||'—',                           b.weather||'—'],
+    ['Varroa',      a.varroa||'—',                            b.varroa||'—'],
+    ['Fed',         a.feedType||a.feed_type||'—',             b.feedType||b.feed_type||'—'],
+    ['Actions',     a.actions||'—',                           b.actions||'—'],
+    ['Notes',       a.notes||'—',                             b.notes||'—'],
+  ];
+  var starRows = [
+    ['Population',  a.population, b.population],
+    ['Honey Stores',a.honey,      b.honey],
+    ['Brood Pattern',a.brood,     b.brood],
+  ];
+
+  var tbl = '<div style="overflow-x:auto;margin-top:4px">'+
+    '<table style="width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden">'+
+    '<thead><tr>'+
+      hdrCell('Metric')+
+      hdrCell('Inspection A · '+fmtDate(a.date))+
+      hdrCell('Inspection B · '+fmtDate(b.date))+
+    '</tr></thead><tbody>';
+
+  // Star rows first
+  starRows.forEach(function(r){
+    tbl += '<tr><td style="padding:7px 8px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--txt2);white-space:nowrap">'+r[0]+'</td>'+
+      starCell(r[1],r[2])+starCell(r[2],r[1])+'</tr>';
+  });
+  // Text rows
+  rows.forEach(function(r){
+    tbl += '<tr><td style="padding:7px 8px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--txt2);white-space:nowrap">'+r[0]+'</td>'+cell(r[1])+cell(r[2])+'</tr>';
+  });
+
+  tbl += '</tbody></table></div>';
+  document.getElementById('cmp-result').innerHTML = tbl;
 }
