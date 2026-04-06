@@ -72,6 +72,7 @@ The service worker must be at `/sw.js`, not `/js/sw.js`.
 | inspections | Inspection logs |
 | treatments | Treatment logs |
 | harvests | Harvest records |
+| feedings | Feeding / supplemental feed logs |
 | transactions | Financial records |
 | reminders | Reminders & tasks |
 | docs | Documents |
@@ -94,6 +95,26 @@ CREATE TABLE user_notes (
 ALTER TABLE user_notes ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can manage own notes"
 ON user_notes FOR ALL
+USING (auth.uid() = user_id)
+WITH CHECK (auth.uid() = user_id);
+```
+
+### feedings table (manually created)
+```sql
+CREATE TABLE feedings (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  hive_id uuid NOT NULL,
+  date date NOT NULL,
+  feed_type text NOT NULL DEFAULT 'Sugar syrup 1:1',
+  amount numeric,
+  unit text,
+  notes text,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE feedings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can manage own feedings"
+ON feedings FOR ALL
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
 ```

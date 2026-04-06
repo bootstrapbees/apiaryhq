@@ -79,6 +79,7 @@ function deleteHive(id) {
     DATA.inspections = DATA.inspections.filter(function(i){return i.hiveId!==id;});
     DATA.treatments = DATA.treatments.filter(function(t){return t.hiveId!==id;});
     DATA.harvests = DATA.harvests.filter(function(v){return v.hiveId!==id;});
+    DATA.feedings = DATA.feedings.filter(function(f){return f.hiveId!==id;});
     renderAll();
   });
 }

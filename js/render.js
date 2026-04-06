@@ -18,6 +18,7 @@ var SVG = {
   doc:      '<svg viewBox="0 0 20 20" fill="none" style="width:22px;height:22px" xmlns="http://www.w3.org/2000/svg"><path d="M5 3h8l4 4v11H5V3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M13 3v4h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="7" y1="10" x2="13" y2="10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="7" y1="13" x2="13" y2="13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
   treatment:'<svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="2" width="4" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7h10l1.5 11H3.5L5 7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><line x1="10" y1="11" x2="10" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="8.5" y1="12.5" x2="11.5" y2="12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
   honey:    '<svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 2L17 6V14L10 18L3 14V6L10 2z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M10 7L12.5 8.5V11.5L10 13L7.5 11.5V8.5L10 7z" fill="currentColor" opacity=".3"/></svg>',
+  feeding:  '<svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 4c-2 0-3.5 1.6-3.5 3.5 0 2 1.5 3.8 3.5 6.5 2-2.7 3.5-4.5 3.5-6.5C13.5 5.6 12 4 10 4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 9v2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
   income:   '<svg viewBox="0 0 20 20" fill="none" style="width:16px;height:16px" xmlns="http://www.w3.org/2000/svg"><path d="M10 15V5m0 0L6 9m4-4l4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   expense:  '<svg viewBox="0 0 20 20" fill="none" style="width:16px;height:16px" xmlns="http://www.w3.org/2000/svg"><path d="M10 5v10m0 0l4-4m-4 4L6 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   remind:   '<svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 3a6 6 0 016 6v3.5l1.5 1.5H2.5L4 12.5V9a6 6 0 016-6z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 17a2 2 0 004 0" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>',
@@ -276,6 +277,31 @@ function renderAll() {
           '</div></div>';
       }).join('')
     : '<div class="empty"><div class="ei">'+icon('harvest')+'</div><div class="et">No harvests yet</div><div class="es">Tap + to log your first harvest</div></div>';
+
+  // ── FEEDING ──
+  var bf = document.getElementById('b-feed');
+  if (bf) bf.textContent = DATA.feedings.length;
+  var sortedFeed = DATA.feedings.slice().sort(function(a, b) { return b.date.localeCompare(a.date); });
+  var fl = document.getElementById('feed-list');
+  if (fl) {
+    fl.innerHTML = sortedFeed.length
+      ? sortedFeed.map(function(f) {
+          var hv = DATA.hives.find(function(x) { return x.id === f.hiveId; });
+          var ftype = f.feedType || f.feed_type || 'Feeding';
+          var amtPart = (f.amount != null && f.amount !== '' && !isNaN(parseFloat(f.amount)))
+            ? ' · ' + parseFloat(f.amount) + ' ' + esc(f.unit || '')
+            : '';
+          return '<div class="harv-row card">' +
+            '<div class="harv-ico">' + SVG.feeding + '</div>' +
+            '<div class="harv-info"><div class="harv-name">' + (hv ? esc(hv.name) : 'Unknown Hive') + '</div>' +
+            '<div class="harv-meta">' + fmtDate(f.date) + ' · ' + esc(ftype) + amtPart + (f.notes ? ' · ' + esc(f.notes) : '') + '</div></div>' +
+            '<div style="display:flex;align-items:center;gap:6px">' +
+            '<button class="icon-btn-sm" onclick="openFeedingModal(DATA.feedings.find(function(x){return x.id===\'' + f.id + '\';}))">' + SVG.edit + '</button>' +
+            '<button class="icon-btn-sm icon-btn-del" onclick="deleteFeeding(\'' + f.id + '\')">' + SVG.trash + '</button>' +
+            '</div></div>';
+        }).join('')
+      : '<div class="empty"><div class="ei">' + icon('feeding') + '</div><div class="et">No feeding records yet</div><div class="es">Tap + to log feeding</div></div>';
+  }
 
   // ── FINANCE ──
   var fb=document.getElementById('b-txn'); if(fb) fb.textContent=DATA.transactions.length;

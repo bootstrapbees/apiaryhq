@@ -75,7 +75,7 @@ function showTabFromMore(page) {
 
 function showInspTab(tab) {
   currentInspTab = tab;
-  ['insp','treat','harvest'].forEach(function(t){
+  ['insp','treat','harvest','feed'].forEach(function(t){
     var el = document.getElementById('insp-sub-'+t);
     var btn = document.getElementById('st-'+t);
     if (el) el.style.display = t === tab ? '' : 'none';
@@ -108,6 +108,7 @@ document.getElementById('fab-btn').addEventListener('click', function() {
     if (currentInspTab === 'insp') openInspChoice(null);
     else if (currentInspTab === 'treat') openTreatmentModal(null);
     else if (currentInspTab === 'harvest') openHarvestModal(null);
+    else if (currentInspTab === 'feed') openFeedingModal(null);
   }
   else if (currentTab === 'fin') openTxnModal(null);
   else if (currentTab === 'docs') {

@@ -6,6 +6,7 @@ function openHiveHistory(hiveId) {
   var hive=DATA.hives.find(function(h){return h.id===hiveId;}); if(!hive) return;
   var insps=DATA.inspections.filter(function(i){return i.hiveId===hiveId;}).sort(function(a,b){return b.date.localeCompare(a.date);});
   var harvs=DATA.harvests.filter(function(v){return v.hiveId===hiveId;}).sort(function(a,b){return b.date.localeCompare(a.date);});
+  var feeds=DATA.feedings.filter(function(f){return f.hiveId===hiveId;}).sort(function(a,b){return b.date.localeCompare(a.date);});
   var treats=DATA.treatments.filter(function(t){return t.hiveId===hiveId;}).sort(function(a,b){return b.date.localeCompare(a.date);});
   var h='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px"><div style="font-family:\'Playfair Display\',serif;font-size:21px;color:var(--bark)">📜 '+esc(hive.name)+'</div><button onclick="closeHiveHistory()" style="background:rgba(74,44,10,.1);border:none;border-radius:10px;padding:7px 13px;font-size:14px;cursor:pointer;color:var(--txt2)">✕ Close</button></div>';
   h+='<div style="font-family:\'Playfair Display\',serif;font-size:16px;color:var(--bark);margin:10px 0 8px">Inspections ('+insps.length+')</div>';
@@ -22,6 +23,13 @@ function openHiveHistory(hiveId) {
     h+='<div class="treat-row card" style="margin-bottom:8px"><div class="treat-ico">💊</div><div class="treat-info"><div class="treat-name">'+esc(t.category||t.product)+'</div><div class="treat-meta">'+fmtDate(t.date)+' · '+esc(t.product)+(t.duration?' · '+esc(t.duration):'')+'</div></div></div>';
   });
   else h+='<div style="font-size:13px;color:var(--txt2);font-style:italic;margin-bottom:10px">No treatments recorded.</div>';
+  h+='<div style="font-family:\'Playfair Display\',serif;font-size:16px;color:var(--bark);margin:10px 0 8px">🥣 Feeding ('+feeds.length+')</div>';
+  if (feeds.length) feeds.forEach(function(f){
+    var ftype=esc(f.feedType||f.feed_type||'Feeding');
+    var amt=(f.amount!=null&&f.amount!==''&&!isNaN(parseFloat(f.amount)))?parseFloat(f.amount)+' '+esc(f.unit||''):'';
+    h+='<div class="harv-row card" style="margin-bottom:8px"><div class="harv-ico" style="font-size:18px">🥣</div><div class="harv-info"><div class="harv-name">'+fmtDate(f.date)+'</div><div class="harv-meta">'+ftype+(amt?' · '+amt:'')+(f.notes?' · '+esc(f.notes):'')+'</div></div></div>';
+  });
+  else h+='<div style="font-size:13px;color:var(--txt2);font-style:italic;margin-bottom:10px">No feeding records.</div>';
   h+='<div style="font-family:\'Playfair Display\',serif;font-size:16px;color:var(--bark);margin:10px 0 8px">🍯 Harvests ('+harvs.length+')</div>';
   if (harvs.length) harvs.forEach(function(v){
     h+='<div class="harv-row card" style="margin-bottom:8px"><div class="harv-ico">🍯</div><div class="harv-info"><div class="harv-name">'+fmtDate(v.date)+'</div><div class="harv-meta">'+esc(v.type||'Honey')+(v.notes?' · '+esc(v.notes):'')+'</div></div><div class="harv-yield">'+v.yield+' '+esc(v.unit)+'</div></div>';

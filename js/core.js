@@ -22,7 +22,7 @@ var _prefs = { units: 'lbs', currency: '$' };
 // ═══════════════════════════════════════════════════════
 var DATA = {
   hives:[], inspections:[], transactions:[], docs:[], assets:[],
-  harvests:[], treatments:[], reminders:[], contacts:[], photos:[]
+  harvests:[], treatments:[], feedings:[], reminders:[], contacts:[], photos:[]
 };
 var PHOTOS = {};
 
@@ -59,11 +59,12 @@ async function loadAllData() {
     dbSelect('assets'),
     dbSelect('harvests'),
     dbSelect('treatments'),
+    dbSelect('feedings'),
     dbSelect('reminders'),
     dbSelect('contacts'),
     dbSelect('photos')
   ]);
-  var [hives,insp,txn,docs,assets,harv,treat,rem,contacts,photos] = results.map(function(r){ return r.status==='fulfilled'?r.value:[]; });
+  var [hives,insp,txn,docs,assets,harv,treat,feed,rem,contacts,photos] = results.map(function(r){ return r.status==='fulfilled'?r.value:[]; });
   DATA.hives = hives;
   DATA.inspections = insp.map(function(i){return{...i,hiveId:i.hive_id,queenSeen:i.queen_seen,weatherSnap:i.weather_snap};});
   DATA.transactions = txn.map(function(t){return{...t,desc:t.description};});
@@ -71,6 +72,7 @@ async function loadAllData() {
   DATA.assets = assets || [];
   DATA.harvests = harv.map(function(v){return{...v,hiveId:v.hive_id};});
   DATA.treatments = treat.map(function(t){return{...t,hiveId:t.hive_id,pestType:t.pest_type,diseaseType:t.disease_type};});
+  DATA.feedings = feed.map(function(f){return{...f,hiveId:f.hive_id,feedType:f.feed_type};});
   DATA.reminders = rem.map(function(r){return{...r,hiveId:r.hive_id,nextDate:r.next_date,remType:r.rem_type,itemName:r.item_name,itemCost:r.item_cost,itemQty:r.item_qty,supplierId:r.supplier_id,addedToFinance:r.added_to_finance};});
   DATA.contacts = contacts || [];
   PHOTOS = {};
@@ -163,7 +165,7 @@ async function signOut() {
   localStorage.removeItem('hkpro_creds');
   await sb.auth.signOut();
   _currentUser = null;
-  DATA = {hives:[],inspections:[],transactions:[],docs:[],assets:[],harvests:[],treatments:[],reminders:[],contacts:[]};
+  DATA = {hives:[],inspections:[],transactions:[],docs:[],assets:[],harvests:[],treatments:[],feedings:[],reminders:[],contacts:[]};
   PHOTOS = {};
   document.getElementById('auth-screen').classList.remove('hidden');
   document.getElementById('main-header').style.display = 'none';

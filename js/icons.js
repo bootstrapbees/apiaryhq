@@ -23,6 +23,8 @@ var ICONS = {
   pollen: '<svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="14" cy="14" r="5" stroke="currentColor" stroke-width="2"/><path d="M14 4v4M14 20v4M4 14H8M20 14h4M7 7l2.8 2.8M18.2 18.2L21 21M7 21l2.8-2.8M18.2 9.8L21 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   
   harvest: '<svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 4s-3 6 0 9 8 0 8 0-3 6 0 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 10c2 0 5.5-1.5 6-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 19c-2 0-5-1.5-5.5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
+
+  feeding: '<svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 6c-3.5 0-6 2.8-6 6.2 0 3.5 2.6 6.8 6 11.2 3.4-4.4 6-7.7 6-11.2C20 8.8 17.5 6 14 6z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 12v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
   
   treatment: '<svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="11" y="4" width="6" height="8" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M8 10h12l2 14H6L8 10z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><line x1="14" y1="15" x2="14" y2="20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="11.5" y1="17.5" x2="16.5" y2="17.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
   

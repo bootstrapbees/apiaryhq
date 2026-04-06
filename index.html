@@ -817,12 +817,13 @@ body.dark .rec-item{background:var(--surface2)}
   <div id="hive-list"></div>
 </div>
 
-<!-- INSPECTIONS (with sub-tabs: Inspections, Treatments, Harvest) -->
+<!-- INSPECTIONS (sub-tabs: Inspections, Treatments, Harvest, Feeding) -->
 <div class="page" id="pg-insp">
   <div class="sub-tabs">
     <button class="sub-tab active" id="st-insp" onclick="showInspTab('insp')"><svg viewBox="0 0 18 18" fill="none" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="2" width="12" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><line x1="6" y1="6" x2="12" y2="6" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6" y1="9" x2="12" y2="9" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="6" y1="12" x2="9" y2="12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Inspections</button>
     <button class="sub-tab" id="st-treat" onclick="showInspTab('treat')"><svg viewBox="0 0 18 18" fill="none" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px" xmlns="http://www.w3.org/2000/svg"><rect x="7" y="2" width="4" height="5" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 6h8l1.5 9H3.5L5 6z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><line x1="9" y1="9" x2="9" y2="12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="7.5" y1="10.5" x2="10.5" y2="10.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Treatments</button>
     <button class="sub-tab" id="st-harvest" onclick="showInspTab('harvest')"><svg viewBox="0 0 18 18" fill="none" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px" xmlns="http://www.w3.org/2000/svg"><path d="M6 3s-2 4 0 6 5 0 5 0-2 4 0 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M9 7c1.5 0 3.5-1 4-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Harvest</button>
+    <button class="sub-tab" id="st-feed" onclick="showInspTab('feed')"><svg viewBox="0 0 18 18" fill="none" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px" xmlns="http://www.w3.org/2000/svg"><path d="M9 14c-2.5 0-4.5-2-4.5-4.5S6.5 5 9 5s4.5 2 4.5 4.5S11.5 14 9 14z" stroke="currentColor" stroke-width="1.4"/><path d="M9 8v3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M6 3c1 2 2 2.5 3 2.5M12 3c-1 2-2 2.5-3 2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Feeding</button>
   </div>
   <!-- Inspections sub-tab -->
   <div id="insp-sub-insp">
@@ -843,6 +844,11 @@ body.dark .rec-item{background:var(--surface2)}
     <div id="harv-sum"></div>
     <div class="sec"><div class="sec-t">Harvest Log</div><span class="badge" id="b-harvest">0</span></div>
     <div id="harv-list"></div>
+  </div>
+  <!-- Feeding sub-tab -->
+  <div id="insp-sub-feed" style="display:none">
+    <div class="sec"><div class="sec-t">Feeding Log</div><span class="badge" id="b-feed">0</span></div>
+    <div id="feed-list"></div>
   </div>
 </div>
 
@@ -1084,6 +1090,7 @@ body.dark .rec-item{background:var(--surface2)}
 <script src="js/inspections.js"></script>
 <script src="js/treatments.js"></script>
 <script src="js/harvest.js"></script>
+<script src="js/feeding.js"></script>
 <script src="js/finance.js"></script>
 <script src="js/reminders.js"></script>
 <script src="js/docs.js"></script>
