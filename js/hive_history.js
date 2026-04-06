@@ -27,7 +27,10 @@ function openHiveHistory(hiveId) {
   if (feeds.length) feeds.forEach(function(f){
     var ftype=esc(f.feedType||f.feed_type||'Feeding');
     var amt=(f.amount!=null&&f.amount!==''&&!isNaN(parseFloat(f.amount)))?parseFloat(f.amount)+' '+esc(f.unit||''):'';
-    h+='<div class="harv-row card" style="margin-bottom:8px"><div class="harv-ico" style="font-size:18px">🥣</div><div class="harv-info"><div class="harv-name">'+fmtDate(f.date)+'</div><div class="harv-meta">'+ftype+(amt?' · '+amt:'')+(f.notes?' · '+esc(f.notes):'')+'</div></div></div>';
+    var sup=f.supplement;
+    var supPart=(sup&&sup!=='None')?' · '+esc(sup):'';
+    var notePart=f.notes?'<div style="font-size:12px;color:var(--txt2);margin-top:4px;white-space:pre-wrap">'+esc(f.notes)+'</div>':'';
+    h+='<div class="harv-row card" style="margin-bottom:8px"><div class="harv-ico" style="font-size:18px">🥣</div><div class="harv-info"><div class="harv-name">'+fmtDate(f.date)+'</div><div class="harv-meta">'+ftype+(amt?' · '+amt:'')+supPart+'</div>'+notePart+'</div></div>';
   });
   else h+='<div style="font-size:13px;color:var(--txt2);font-style:italic;margin-bottom:10px">No feeding records.</div>';
   h+='<div style="font-family:\'Playfair Display\',serif;font-size:16px;color:var(--bark);margin:10px 0 8px">🍯 Harvests ('+harvs.length+')</div>';

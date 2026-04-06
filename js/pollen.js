@@ -2,6 +2,21 @@
 // ═══════════════════════════════════════════════════════
 // POLLEN & FORAGING FORECAST
 // ═══════════════════════════════════════════════════════
+// Tomorrow.io — restrict this key by domain/referrer in their dashboard.
+var TOMORROW_IO_API_KEY = '1XMXbgs6ICD5QY9ws7VwbvDHjOMYevwy';
+
+function getTomorrowIoApiKey() {
+  var embedded = (TOMORROW_IO_API_KEY && String(TOMORROW_IO_API_KEY).trim()) || '';
+  if (embedded) return embedded;
+  var cfg = (typeof window !== 'undefined' && window.APIARY_LOCAL) || {};
+  var k = (cfg.TOMORROW_IO_API_KEY && String(cfg.TOMORROW_IO_API_KEY).trim()) || '';
+  if (k) return k;
+  try {
+    return localStorage.getItem('hkpro_tomorrow_key') || '';
+  } catch (e) {
+    return '';
+  }
+}
 
 var POLLEN_SVG = {
   tree:   '<svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg"><path d="M10 2l5 7H5l5-7z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="currentColor" opacity=".2"/><path d="M10 7l5 7.5H5L10 7z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="currentColor" opacity=".2"/><line x1="10" y1="14.5" x2="10" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
@@ -77,18 +92,10 @@ function pollenBeeTip(days) {
   return { tip:'Moderate mixed pollen activity. Decent foraging conditions — observe entrance traffic to gauge activity.' };
 }
 
-function saveTomorrowKey() {
-  var key = document.getElementById('tomorrow-api-key').value.trim();
-  if (!key) return;
-  localStorage.setItem('hkpro_tomorrow_key', key);
-  document.getElementById('tomorrow-key-status').textContent = 'Saved — reload dashboard to update forecast.';
-  window._pollenData = null;
-}
-
 function loadPollenForecast() {
   var el = document.getElementById('dash-pollen');
   if (!el) return;
-  var apiKey = localStorage.getItem('hkpro_tomorrow_key');
+  var apiKey = getTomorrowIoApiKey();
   if (!apiKey) { renderPollenWidget(el, getAlabamaPollFallback(), 'alabama-seasonal'); return; }
   if (window._pollenData) { renderPollenWidget(el, window._pollenData.days, window._pollenData.source); return; }
   el.innerHTML = '<div style="font-size:12px;color:var(--txt2)">Loading pollen forecast…</div>';
@@ -146,7 +153,7 @@ function renderPollenWidget(el, days, source) {
   }
 
   // Source label
-  html += '<div class="pollen-source">'+(source==='tomorrow'?POLLEN_SVG.sat+' Tomorrow.io live data':POLLEN_SVG.cal+' Alabama seasonal estimate — add API key in Settings for live data')+'</div>';
+  html += '<div class="pollen-source">'+(source==='tomorrow'?POLLEN_SVG.sat+' Tomorrow.io live data':POLLEN_SVG.cal+' Alabama seasonal estimate')+'</div>';
 
   el.innerHTML = html;
 }

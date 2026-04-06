@@ -291,10 +291,13 @@ function renderAll() {
           var amtPart = (f.amount != null && f.amount !== '' && !isNaN(parseFloat(f.amount)))
             ? ' · ' + parseFloat(f.amount) + ' ' + esc(f.unit || '')
             : '';
-          return '<div class="harv-row card">' +
-            '<div class="harv-ico">' + SVG.feeding + '</div>' +
+          var sup = f.supplement;
+          var supPart = (sup && sup !== 'None') ? ' · ' + esc(sup) : '';
+          var noteBlock = f.notes ? '<div style="font-size:12px;color:var(--txt2);margin-top:4px;line-height:1.45;white-space:pre-wrap">' + esc(f.notes) + '</div>' : '';
+          return '<div class="harv-row card" style="align-items:flex-start">' +
+            '<div class="harv-ico" style="margin-top:2px">' + SVG.feeding + '</div>' +
             '<div class="harv-info"><div class="harv-name">' + (hv ? esc(hv.name) : 'Unknown Hive') + '</div>' +
-            '<div class="harv-meta">' + fmtDate(f.date) + ' · ' + esc(ftype) + amtPart + (f.notes ? ' · ' + esc(f.notes) : '') + '</div></div>' +
+            '<div class="harv-meta">' + fmtDate(f.date) + ' · ' + esc(ftype) + amtPart + supPart + '</div>' + noteBlock + '</div>' +
             '<div style="display:flex;align-items:center;gap:6px">' +
             '<button class="icon-btn-sm" onclick="openFeedingModal(DATA.feedings.find(function(x){return x.id===\'' + f.id + '\';}))">' + SVG.edit + '</button>' +
             '<button class="icon-btn-sm icon-btn-del" onclick="deleteFeeding(\'' + f.id + '\')">' + SVG.trash + '</button>' +

@@ -14,10 +14,13 @@ function feedingFormRowHTML(i, r, totalRows) {
   var hiveId = r.hiveId || r.hive_id || '';
   var date = r.date || today;
   var ft = r.feedType || r.feed_type || 'Sugar syrup 1:1';
+  var sup = r.supplement != null && r.supplement !== '' ? r.supplement : 'None';
   var amt = (r.amount != null && r.amount !== '') ? esc(String(r.amount)) : '';
   var un = r.unit || 'gal';
   var notes = r.notes != null ? esc(String(r.notes)) : '';
   var pid = 'fty-' + i;
+  var sid = 'sup-' + i;
+  var supOpts = ['None', 'Honey-B-Healthy', 'Probiotic', 'Essential oils', 'AP23 / patty additive', 'Vitamin B', 'Other'];
   var showRemove = totalRows > 1;
   var h = '<div class="feed-form-block" data-feed-idx="' + i + '"' + (i > 0 ? ' style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(74,44,10,.12)"' : '') + '>';
   if (showRemove) {
@@ -30,7 +33,8 @@ function feedingFormRowHTML(i, r, totalRows) {
     ['gal', 'qt', 'L', 'ml', 'lbs', 'kg', 'patty', 'frame'].map(function(u) {
       return '<option' + (un === u ? ' selected' : '') + '>' + u + '</option>';
     }).join('') + '</select></div></div>';
-  h += '<div class="fg"><label>Notes</label><input id="f-fnotes-' + i + '" value="' + notes + '" placeholder="e.g. Top feeder, stimulated for spring"></div>';
+  h += '<div class="fg"><label>Supplements</label>' + makePills(sid, supOpts, sup) + '</div>';
+  h += '<div class="fg"><label>Observation / Notes</label><textarea id="f-fnotes-' + i + '" rows="3" placeholder="Feed check: uptake, feeder level, robbing, weather, anything unusual…">' + notes + '</textarea></div>';
   h += '</div>';
   return h;
 }
@@ -45,6 +49,7 @@ function collectFeedingRowsFromDOM() {
       hiveId: gv('f-fhive-' + i),
       date: gv('f-fdate-' + i),
       feedType: getPill('fty-' + i) || 'Sugar syrup 1:1',
+      supplement: getPill('sup-' + i) || 'None',
       amount: gv('f-famt-' + i),
       unit: gv('f-funit-' + i),
       notes: gv('f-fnotes-' + i)
@@ -63,6 +68,7 @@ function rebuildFeedingRows(rows) {
       hiveId: r.hiveId,
       date: r.date,
       feedType: r.feedType,
+      supplement: r.supplement,
       amount: r.amount,
       unit: r.unit,
       notes: r.notes
@@ -77,6 +83,7 @@ function appendFeedingFormRow() {
     hiveId: last.hiveId || '',
     date: last.date || new Date().toISOString().slice(0, 10),
     feedType: 'Sugar syrup 1:1',
+    supplement: 'None',
     amount: '',
     unit: last.unit || 'gal',
     notes: ''
@@ -101,6 +108,7 @@ function openFeedingModal(item) {
       hiveId: item.hiveId,
       date: item.date,
       feedType: item.feedType || item.feed_type,
+      supplement: item.supplement,
       amount: item.amount,
       unit: item.unit,
       notes: item.notes
@@ -137,6 +145,7 @@ async function saveFeedingMulti() {
       hive_id: r.hiveId,
       date: r.date,
       feed_type: r.feedType,
+      supplement: r.supplement || 'None',
       amount: amt,
       unit: amt != null ? r.unit : null,
       notes: r.notes
@@ -145,7 +154,7 @@ async function saveFeedingMulti() {
   for (var k = 0; k < payloads.length; k++) {
     var obj = payloads[k];
     var ins = await (typeof dbInsertSafe === 'function' ? dbInsertSafe('feedings', obj) : dbInsert('feedings', obj));
-    if (ins) DATA.feedings.push({ ...ins, hiveId: ins.hive_id, feedType: ins.feed_type });
+    if (ins) DATA.feedings.push({ ...ins, hiveId: ins.hive_id, feedType: ins.feed_type, supplement: ins.supplement });
   }
   closeModal();
   renderAll();
@@ -159,6 +168,7 @@ async function saveFeeding(eid, isEdit) {
     hive_id: gv('f-fhive-0'),
     date: gv('f-fdate-0'),
     feed_type: getPill('fty-0'),
+    supplement: getPill('sup-0') || 'None',
     amount: amt,
     unit: amt != null ? gv('f-funit-0') : null,
     notes: gv('f-fnotes-0')
@@ -167,10 +177,10 @@ async function saveFeeding(eid, isEdit) {
   if (isEdit) {
     await (typeof dbUpdateSafe === 'function' ? dbUpdateSafe('feedings', eid, obj) : dbUpdate('feedings', eid, obj));
     var row = DATA.feedings.find(function(x) { return x.id === eid; });
-    if (row) Object.assign(row, { ...obj, hiveId: obj.hive_id, feedType: obj.feed_type });
+    if (row) Object.assign(row, { ...obj, hiveId: obj.hive_id, feedType: obj.feed_type, supplement: obj.supplement });
   } else {
     var ins = await (typeof dbInsertSafe === 'function' ? dbInsertSafe('feedings', obj) : dbInsert('feedings', obj));
-    if (ins) DATA.feedings.push({ ...ins, hiveId: ins.hive_id, feedType: ins.feed_type });
+    if (ins) DATA.feedings.push({ ...ins, hiveId: ins.hive_id, feedType: ins.feed_type, supplement: ins.supplement });
   }
   closeModal();
   renderAll();

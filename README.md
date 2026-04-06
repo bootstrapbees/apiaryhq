@@ -35,11 +35,11 @@ Apiary HQ is a PWA (Progressive Web App) beekeeping management tool hosted on Cl
     ├── contacts.js     # Supplier/vet/inspector contacts
     ├── hive_history.js # Hive history overlay
     ├── treatments.js   # Treatment + feeding reference data (Dadant/AUBEE)
-    ├── weather.js      # Tomorrow.io weather integration
-    ├── pollen.js       # Pollen & foraging forecast widget
+    ├── weather.js      # Open-Meteo weather (dashboard)
+    ├── pollen.js       # Pollen & foraging forecast widget (Tomorrow.io key in file)
+    ├── feeding.js      # Feeding log modals + multi-row save
     ├── icons.js        # SVG icon library
-    ├── pdf_export.js   # PDF report generation
-    └── hive_history.js # Per-hive history timeline
+    └── pdf_export.js   # PDF report generation
 ```
 
 ---
@@ -107,6 +107,7 @@ CREATE TABLE feedings (
   hive_id uuid NOT NULL,
   date date NOT NULL,
   feed_type text NOT NULL DEFAULT 'Sugar syrup 1:1',
+  supplement text DEFAULT 'None',
   amount numeric,
   unit text,
   notes text,
@@ -117,6 +118,12 @@ CREATE POLICY "Users can manage own feedings"
 ON feedings FOR ALL
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
+```
+
+If you already created `feedings` without `supplement`, run:
+
+```sql
+ALTER TABLE feedings ADD COLUMN IF NOT EXISTS supplement text DEFAULT 'None';
 ```
 
 ---
@@ -153,6 +160,9 @@ WITH CHECK (auth.uid() = user_id);
 ---
 
 ## Tech Notes
+
+### Tomorrow.io (pollen widget)
+`TOMORROW_IO_API_KEY` is set at the top of `js/pollen.js`. Leave it empty to use the Alabama seasonal estimate only (or an old `localStorage` key `hkpro_tomorrow_key` if present). Restrict your key by **HTTP referrer / domain** in the Tomorrow.io dashboard.
 
 ### Weather object structure
 ```javascript

@@ -31,13 +31,6 @@ function showTab(page) {
   if (fab) fab.style.display = (page === 'dash') ? 'none' : '';
   if (page === 'dash') { loadWeather(); loadPollenForecast(); }
   if (page === 'notes') initLibTab();
-  if (page === 'settings') {
-    var k = localStorage.getItem('hkpro_tomorrow_key');
-    var ki = document.getElementById('tomorrow-api-key');
-    var ks = document.getElementById('tomorrow-key-status');
-    if (ki && k) { ki.value = k; }
-    if (ks && k) { ks.textContent = '✅ API key saved'; }
-  }
 }
 
 var _moreTrayOpen = false;
