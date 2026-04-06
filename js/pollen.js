@@ -1,13 +1,13 @@
 // ═══════════════════════════════════════════════════════
-// POLLEN & FORAGING FORECAST - API FIX VERSION
+// POLLEN & FORAGING FORECAST - CLEAN VERSION
 // ═══════════════════════════════════════════════════════
 
-// API Key embedded directly as requested
+// Using your API key from the file
 var TOMORROW_IO_API_KEY = '1XMXbgs6ICD5QY9ws7VwbvDHjOMYevwy';
 
 var POLLEN_SVG = {
   tree:   '<svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg"><path d="M10 2l5 7H5l5-7z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="currentColor" opacity=".2"/><path d="M10 7l5 7.5H5L10 7z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="currentColor" opacity=".2"/><line x1="10" y1="14.5" x2="10" y2="18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
-  grass:  '<svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg"><path d="M10 18V9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M10 11C8 8 5 7 5 7s.5 5 5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" opacity=".15"/><path d="M10 14c2-4 5-4 5-4s-.5 5-5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="currentColor" opacity=".15"/></svg>',
+  grass:  '<svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg"><path d="M10 18V9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M10 11C8 8 5 7 5 7s.5 5 5 5" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="currentColor" opacity=".15"/><path d="M10 14c2-4 5-4 5-4s-.5 5-5 5" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round" fill="currentColor" opacity=".15"/></svg>',
   flower: '<svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="2.5" fill="currentColor" opacity=".35" stroke="currentColor" stroke-width="1.3"/><ellipse cx="10" cy="5" rx="2" ry="3" stroke="currentColor" stroke-width="1.2" opacity=".7"/><ellipse cx="10" cy="15" rx="2" ry="3" stroke="currentColor" stroke-width="1.2" opacity=".7"/><ellipse cx="5" cy="10" rx="3" ry="2" stroke="currentColor" stroke-width="1.2" opacity=".7"/><ellipse cx="15" cy="10" rx="3" ry="2" stroke="currentColor" stroke-width="1.2" opacity=".7"/></svg>',
   low:    '<svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5" opacity=".4"/><circle cx="10" cy="10" r="3" fill="currentColor" opacity=".3"/></svg>',
   bee:    '<svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px;display:block;margin:0 auto" xmlns="http://www.w3.org/2000/svg"><ellipse cx="10" cy="12" rx="4" ry="5" stroke="currentColor" stroke-width="1.5"/><ellipse cx="7.5" cy="8" rx="3" ry="1.5" transform="rotate(-25 7.5 8)" stroke="currentColor" stroke-width="1.3" opacity=".6"/><ellipse cx="12.5" cy="8" rx="3" ry="1.5" transform="rotate(25 12.5 8)" stroke="currentColor" stroke-width="1.3" opacity=".6"/><circle cx="10" cy="6" r="1.8" stroke="currentColor" stroke-width="1.3"/><line x1="8" y1="12" x2="12" y2="12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="8" y1="14.5" x2="12" y2="14.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>',
@@ -80,12 +80,12 @@ function loadPollenForecast() {
   
   el.innerHTML = '<div style=\"font-size:12px;color:var(--txt2)\">Updating data…</div>';
 
-  // FIXED URL: uses the GET method and forecast endpoint
+  // Using GET instead of POST to avoid the 403 Forbidden error
   var url = 'https://api.tomorrow.io/v4/weather/forecast?location=33.6954,-85.7732&fields=treeIndex,grassIndex,weedIndex&timesteps=1d&apikey=' + TOMORROW_IO_API_KEY;
 
   fetch(url)
     .then(function(r) { 
-      if (!r.ok) throw new Error('API Error: ' + r.status);
+      if (!r.ok) throw new Error('Status: ' + r.status);
       return r.json(); 
     })
     .then(function(j) {
@@ -95,10 +95,11 @@ function loadPollenForecast() {
       }
       
       var days = j.timelines.daily.slice(0, 5).map(function(iv) {
-        var v = iv.values;
         return {
           date: new Date(iv.time),
-          tree: v.treeIndex || 0, grass: v.grassIndex || 0, weed: v.weedIndex || 0,
+          tree: iv.values.treeIndex || 0,
+          grass: iv.values.grassIndex || 0,
+          weed: iv.values.weedIndex || 0,
           source: 'tomorrow'
         };
       });
@@ -106,8 +107,7 @@ function loadPollenForecast() {
       window._pollenData = { days: days, source: 'tomorrow' };
       renderPollenWidget(el, days, 'tomorrow');
     })
-    .catch(function(err) { 
-      console.warn('Switching to fallback due to:', err.message);
+    .catch(function() { 
       renderPollenWidget(el, getAlabamaPollFallback(), 'alabama-seasonal'); 
     });
 }
@@ -144,5 +144,4 @@ function renderPollenWidget(el, days, source) {
   el.innerHTML = html;
 }
 
-// Initial trigger
 loadPollenForecast();
