@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════
-// POLLEN & FORAGING FORECAST - EMBEDDED KEY VERSION
+// POLLEN & FORAGING FORECAST - API FIX VERSION
 // ═══════════════════════════════════════════════════════
 
 // API Key embedded directly as requested
@@ -78,17 +78,18 @@ function loadPollenForecast() {
     return; 
   }
   
-  el.innerHTML = '<div style="font-size:12px;color:var(--txt2)">Updating foraging data…</div>';
+  el.innerHTML = '<div style=\"font-size:12px;color:var(--txt2)\">Updating data…</div>';
 
-  // Use the standard GET request for Tomorrow.io v4
+  // FIXED URL: uses the GET method and forecast endpoint
   var url = 'https://api.tomorrow.io/v4/weather/forecast?location=33.6954,-85.7732&fields=treeIndex,grassIndex,weedIndex&timesteps=1d&apikey=' + TOMORROW_IO_API_KEY;
 
   fetch(url)
-    .then(function(r) { return r.json(); })
+    .then(function(r) { 
+      if (!r.ok) throw new Error('API Error: ' + r.status);
+      return r.json(); 
+    })
     .then(function(j) {
-      // Check if Tomorrow.io returned an error code or empty data
-      if (j.code || !j.timelines || !j.timelines.daily) {
-        console.warn('Tomorrow.io API Error:', j.message || 'Check daily limits');
+      if (!j.timelines || !j.timelines.daily) {
         renderPollenWidget(el, getAlabamaPollFallback(), 'alabama-seasonal'); 
         return; 
       }
@@ -97,9 +98,7 @@ function loadPollenForecast() {
         var v = iv.values;
         return {
           date: new Date(iv.time),
-          tree: v.treeIndex || 0,
-          grass: v.grassIndex || 0,
-          weed: v.weedIndex || 0,
+          tree: v.treeIndex || 0, grass: v.grassIndex || 0, weed: v.weedIndex || 0,
           source: 'tomorrow'
         };
       });
@@ -108,7 +107,7 @@ function loadPollenForecast() {
       renderPollenWidget(el, days, 'tomorrow');
     })
     .catch(function(err) { 
-      console.error('Pollen Fetch Failed:', err);
+      console.warn('Switching to fallback due to:', err.message);
       renderPollenWidget(el, getAlabamaPollFallback(), 'alabama-seasonal'); 
     });
 }
@@ -116,34 +115,34 @@ function loadPollenForecast() {
 function renderPollenWidget(el, days, source) {
   var dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   var tip = pollenBeeTip(days);
-  var html = '<div style="display:flex;gap:5px;margin-bottom:10px">';
+  var html = '<div style=\"display:flex;gap:5px;margin-bottom:10px\">';
   
   days.forEach(function(d, i) {
     var maxVal = Math.max(d.tree, d.grass, d.weed);
     var maxLev = pollenLevel(maxVal);
     var label = i===0?'Today':i===1?'Tmrw':dayNames[d.date.getDay()];
-    html += '<div class="pollen-day" style="color:'+maxLev.fill+'">'+
-      '<div class="pollen-date" style="color:var(--txt2)">'+label+'</div>'+
-      '<div class="pollen-icon">'+pollenDayIcon(d.tree, d.grass, d.weed)+'</div>'+
-      '<div class="pollen-bar"><div class="pollen-fill" style="width:'+maxLev.bar+'%;background:'+maxLev.fill+'"></div></div>'+
-      '<div class="pollen-label '+maxLev.cls+'">'+maxLev.label+'</div>'+
+    html += '<div class=\"pollen-day\" style=\"color:'+maxLev.fill+'\">'+
+      '<div class=\"pollen-date\" style=\"color:var(--txt2)\">'+label+'</div>'+
+      '<div class=\"pollen-icon\">'+pollenDayIcon(d.tree, d.grass, d.weed)+'</div>'+
+      '<div class=\"pollen-bar\"><div class=\"pollen-fill\" style=\"width:'+maxLev.bar+'%;background:'+maxLev.fill+'\"></div></div>'+
+      '<div class=\"pollen-label '+maxLev.cls+'\">'+maxLev.label+'</div>'+
     '</div>';
   });
   html += '</div>';
 
   if (days.length) {
     var t = days[0];
-    html += '<div class="pollen-breakdown"><div class="pollen-source-row">';
-    html += '<div style="flex:1;text-align:center">'+POLLEN_SVG.tree+'<div style="color:var(--txt2);font-size:10px">Trees</div><div class="'+pollenLevel(t.tree).cls+'">'+pollenLevel(t.tree).label+'</div></div>';
-    html += '<div style="flex:1;text-align:center">'+POLLEN_SVG.grass+'<div style="color:var(--txt2);font-size:10px">Grass</div><div class="'+pollenLevel(t.grass).cls+'">'+pollenLevel(t.grass).label+'</div></div>';
-    html += '<div style="flex:1;text-align:center">'+POLLEN_SVG.flower+'<div style="color:var(--txt2);font-size:10px">Weeds</div><div class="'+pollenLevel(t.weed).cls+'">'+pollenLevel(t.weed).label+'</div></div>';
+    html += '<div class=\"pollen-breakdown\"><div class=\"pollen-source-row\">';
+    html += '<div style=\"flex:1;text-align:center\">'+POLLEN_SVG.tree+'<div style=\"color:var(--txt2);font-size:10px\">Trees</div><div class=\"'+pollenLevel(t.tree).cls+'\">'+pollenLevel(t.tree).label+'</div></div>';
+    html += '<div style=\"flex:1;text-align:center\">'+POLLEN_SVG.grass+'<div style=\"color:var(--txt2);font-size:10px\">Grass</div><div class=\"'+pollenLevel(t.grass).cls+'\">'+pollenLevel(t.grass).label+'</div></div>';
+    html += '<div style=\"flex:1;text-align:center\">'+POLLEN_SVG.flower+'<div style=\"color:var(--txt2);font-size:10px\">Weeds</div><div class=\"'+pollenLevel(t.weed).cls+'\">'+pollenLevel(t.weed).label+'</div></div>';
     html += '</div></div>';
   }
 
-  if (tip) html += '<div class="pollen-bee-tip">'+POLLEN_SVG.bee+'<span style="flex:1"><strong>Foraging:</strong> '+tip.tip+'</span></div>';
-  html += '<div class="pollen-source">'+(source==='tomorrow'?POLLEN_SVG.sat+' Tomorrow.io live data':POLLEN_SVG.cal+' Alabama seasonal estimate')+'</div>';
+  if (tip) html += '<div class=\"pollen-bee-tip\">'+POLLEN_SVG.bee+'<span style=\"flex:1\"><strong>Foraging:</strong> '+tip.tip+'</span></div>';
+  html += '<div class=\"pollen-source\">'+(source==='tomorrow'?POLLEN_SVG.sat+' Tomorrow.io live data':POLLEN_SVG.cal+' Alabama seasonal estimate')+'</div>';
   el.innerHTML = html;
 }
 
-// Initial load
+// Initial trigger
 loadPollenForecast();
