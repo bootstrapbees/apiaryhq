@@ -1,5 +1,5 @@
 # Apiary HQ — Project Notes & Changelog
-**Current SW Version: apiaryhq-v5.0.1**
+**Current SW Version: apiaryhq-v5.1.3**
 
 ## Project Overview
 Apiary HQ is a PWA (Progressive Web App) beekeeping management tool hosted on Cloudflare Pages with a Supabase backend. Built for both desktop (Mac) and mobile (iPhone) use.
@@ -124,6 +124,13 @@ If you already created `feedings` without `supplement`, run:
 
 ```sql
 ALTER TABLE feedings ADD COLUMN IF NOT EXISTS supplement text DEFAULT 'None';
+```
+
+When **Feed type** or **Supplement** is “Other”, the app stores the free-text label in these columns (nullable when not used):
+
+```sql
+ALTER TABLE feedings ADD COLUMN IF NOT EXISTS feed_other text;
+ALTER TABLE feedings ADD COLUMN IF NOT EXISTS supplement_other text;
 ```
 
 ---

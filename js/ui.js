@@ -68,7 +68,7 @@ function showTabFromMore(page) {
 
 function showInspTab(tab) {
   currentInspTab = tab;
-  ['insp','treat','harvest','feed'].forEach(function(t){
+  ['insp','feed','treat','harvest'].forEach(function(t){
     var el = document.getElementById('insp-sub-'+t);
     var btn = document.getElementById('st-'+t);
     if (el) el.style.display = t === tab ? '' : 'none';
@@ -139,6 +139,10 @@ function makePills(gid, options, selected) {
 function selectPill(gid, btn) {
   document.querySelectorAll('#pill-'+gid+' .pill').forEach(function(p){p.classList.remove('active');});
   btn.classList.add('active');
+  if (typeof syncFeedingOtherRow === 'function') {
+    var mm = String(gid).match(/^(fty|sup)-(\d+)$/);
+    if (mm) syncFeedingOtherRow(mm[2]);
+  }
 }
 function getPill(gid) { var el=document.querySelector('#pill-'+gid+' .pill.active'); return el?el.textContent:''; }
 function makeStars(sid, val) {

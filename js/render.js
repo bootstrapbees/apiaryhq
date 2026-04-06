@@ -37,6 +37,31 @@ function remTypeIcon(remType) {
   return SVG.task;
 }
 
+function feedTypeDisplay(f) {
+  var t = f.feedType || f.feed_type || 'Feeding';
+  if (t === 'Other' && (f.feedOther || f.feed_other)) return f.feedOther || f.feed_other;
+  return t;
+}
+function supplementDisplayLine(f) {
+  var s = f.supplement;
+  if (s === 'Other' && (f.supplementOther || f.supplement_other)) return f.supplementOther || f.supplement_other;
+  if (!s || s === 'None') return '';
+  return s;
+}
+
+function buildHiveExportBarHTML(prefix, pdfFn, csvFn) {
+  var hiveOpts = '<option value="">All Hives</option>' + DATA.hives.map(function(h) {
+    return '<option value="' + h.id + '">' + esc(h.name) + '</option>';
+  }).join('');
+  return '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">' +
+    '<select id="' + prefix + '-export-hive" style="flex:1;min-width:0;padding:8px 10px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--txt);font-family:\'Source Serif 4\',serif;font-size:13px">' + hiveOpts + '</select>' +
+    '<button onclick="' + pdfFn + '(document.getElementById(\'' + prefix + '-export-hive\').value||null)" style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,var(--forest),var(--moss));border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;font-family:\'Source Serif 4\',serif;cursor:pointer;white-space:nowrap">' +
+    SVG.download + ' PDF</button>' +
+    '<button onclick="' + csvFn + '(document.getElementById(\'' + prefix + '-export-hive\').value||null)" style="display:flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,var(--blu),#1a3a7a);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:700;font-family:\'Source Serif 4\',serif;cursor:pointer;white-space:nowrap">' +
+    SVG.download + ' CSV</button>' +
+  '</div>';
+}
+
 function renderAll() {
   var today = new Date().toISOString().slice(0,10);
   var income = DATA.transactions.filter(function(t){return t.type==='income';}).reduce(function(s,t){return s+t.amount;},0);
@@ -172,6 +197,7 @@ function renderAll() {
             '<button class="icon-btn-sm" onclick="event.stopPropagation();openHiveModal(DATA.hives.find(function(h){return h.id===\''+hive.id+'\';}))">'+SVG.edit+'</button>'+
           '</div>'+
           '<div class="row-actions" style="width:100%;margin-top:6px;padding-top:8px;border-top:1px solid var(--border)">'+
+            '<button class="action-btn" onclick="event.stopPropagation();openHiveHistory(\''+hive.id+'\')">📜 History</button>'+
             (needsInstallConfirm?'<button class="action-btn" style="color:#2a7a2a;font-weight:700" onclick="event.stopPropagation();promptInstallReminders(DATA.hives.find(function(h){return h.id===\''+hive.id+'\';}))">📦 Confirm Install</button>':'')+
             '<button class="action-btn" onclick="event.stopPropagation();openSplitModal(\''+hive.id+'\')">✂️ Split</button>'+
             '<button class="action-btn" onclick="event.stopPropagation();openRequeenModal(\''+hive.id+'\')">👑 Requeen</button>'+
@@ -228,6 +254,8 @@ function renderAll() {
 
   // ── TREATMENTS ──
   var tb=document.getElementById('b-treat'); if(tb) tb.textContent=DATA.treatments.length;
+  var texp=document.getElementById('treat-export-bar');
+  if (texp) texp.innerHTML=buildHiveExportBarHTML('treat','exportTreatmentsPDF','exportTreatmentsCSV');
   var sortedTreat=DATA.treatments.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
   var tl=document.getElementById('treat-list');
   if (tl) tl.innerHTML = sortedTreat.length
@@ -262,6 +290,8 @@ function renderAll() {
       '<div style="text-align:center"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;opacity:.65;font-weight:700">Hives</div><div style="font-family:\'Playfair Display\',serif;font-size:20px;color:#d4f0a0;margin-top:2px">'+[...new Set(DATA.harvests.map(function(v){return v.hiveId;}))].length+'</div></div>'+
       '<div style="text-align:center"><div style="font-size:9px;text-transform:uppercase;letter-spacing:1px;opacity:.65;font-weight:700">Latest</div><div style="font-family:\'Playfair Display\',serif;font-size:12px;color:#d4f0a0;margin-top:4px">'+(sortedHarv.length?fmtDate(sortedHarv[0].date):'—')+'</div></div>'+
     '</div></div>';
+  var hexp=document.getElementById('harv-export-bar');
+  if (hexp) hexp.innerHTML=buildHiveExportBarHTML('harv','exportHarvestsPDF','exportHarvestsCSV');
   var vl=document.getElementById('harv-list');
   if (vl) vl.innerHTML = sortedHarv.length
     ? sortedHarv.map(function(v){
@@ -281,18 +311,20 @@ function renderAll() {
   // ── FEEDING ──
   var bf = document.getElementById('b-feed');
   if (bf) bf.textContent = DATA.feedings.length;
+  var fexp = document.getElementById('feed-export-bar');
+  if (fexp) fexp.innerHTML = buildHiveExportBarHTML('feed', 'exportFeedingsPDF', 'exportFeedingsCSV');
   var sortedFeed = DATA.feedings.slice().sort(function(a, b) { return b.date.localeCompare(a.date); });
   var fl = document.getElementById('feed-list');
   if (fl) {
     fl.innerHTML = sortedFeed.length
       ? sortedFeed.map(function(f) {
           var hv = DATA.hives.find(function(x) { return x.id === f.hiveId; });
-          var ftype = f.feedType || f.feed_type || 'Feeding';
+          var ftype = feedTypeDisplay(f);
           var amtPart = (f.amount != null && f.amount !== '' && !isNaN(parseFloat(f.amount)))
             ? ' · ' + parseFloat(f.amount) + ' ' + esc(f.unit || '')
             : '';
-          var sup = f.supplement;
-          var supPart = (sup && sup !== 'None') ? ' · ' + esc(sup) : '';
+          var supLine = supplementDisplayLine(f);
+          var supPart = supLine ? ' · ' + esc(supLine) : '';
           var noteBlock = f.notes ? '<div style="font-size:12px;color:var(--txt2);margin-top:4px;line-height:1.45;white-space:pre-wrap">' + esc(f.notes) + '</div>' : '';
           return '<div class="harv-row card" style="align-items:flex-start">' +
             '<div class="harv-ico" style="margin-top:2px">' + SVG.feeding + '</div>' +

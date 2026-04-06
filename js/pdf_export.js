@@ -177,6 +177,187 @@ function exportFinanceCSV() {
   downloadCSV(apiaryName.replace(/\s+/g,'_')+'_Finance_'+new Date().toISOString().slice(0,10)+'.csv', data);
 }
 
+function exportTreatmentsPDF(hiveId) {
+  if (typeof window.jspdf === 'undefined' && typeof jspdf === 'undefined') {
+    alert('PDF library loading, please try again in a moment.'); return;
+  }
+  var {jsPDF} = window.jspdf || jspdf;
+  var doc = new jsPDF({unit:'mm',format:'a4'});
+  var apiaryName = document.getElementById('hdr-apiary-name').textContent || 'My Apiary';
+  var filterHive = hiveId ? DATA.hives.find(function(h){return h.id===hiveId;}) : null;
+  var reportTitle = filterHive ? apiaryName + ' — ' + filterHive.name + ' Treatments' : apiaryName + ' — All Treatments';
+  var pageW = doc.internal.pageSize.getWidth();
+  var margin = 15; var y = 20;
+  doc.setFillColor(26, 58, 42);
+  doc.rect(0, 0, pageW, 28, 'F');
+  doc.setTextColor(245, 223, 160);
+  doc.setFontSize(18); doc.setFont('helvetica','bold');
+  doc.text(reportTitle, margin, 12);
+  doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.text('Generated: ' + new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}), margin, 20);
+  y = 38; doc.setTextColor(44, 26, 6);
+  var sorted = DATA.treatments.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  sorted = hiveId ? sorted.filter(function(t){return t.hiveId===hiveId;}) : sorted;
+  if (!sorted.length) {
+    doc.setFontSize(12); doc.text('No treatment records found.', margin, y);
+  }
+  sorted.forEach(function(t) {
+    if (y > 265) { doc.addPage(); y = 20; }
+    var hive = DATA.hives.find(function(h){return h.id===t.hiveId;});
+    doc.setFillColor(254, 249, 240); doc.roundedRect(margin, y, pageW-2*margin, 8, 2, 2, 'F');
+    doc.setFontSize(12); doc.setFont('helvetica','bold'); doc.setTextColor(74, 44, 10);
+    doc.text((hive?hive.name:'Unknown') + ' — ' + fmtDate(t.date), margin+3, y+5.5);
+    y += 11;
+    doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(122, 88, 48);
+    doc.text('Category: '+(t.category||'—')+' | Product: '+(t.product||'—'), margin+3, y); y+=5;
+    if (t.duration) { doc.text('Duration: '+t.duration, margin+3, y); y+=5; }
+    if (t.diseaseType||t.disease_type) { doc.text('Disease: '+(t.diseaseType||t.disease_type), margin+3, y); y+=5; }
+    if (t.pestType||t.pest_type) { doc.text('Pest: '+(t.pestType||t.pest_type), margin+3, y); y+=5; }
+    if (t.notes) { var nl=doc.splitTextToSize('Notes: '+t.notes, pageW-2*margin-6); doc.text(nl, margin+3, y); y+=nl.length*4.5; }
+    doc.setDrawColor(232,160,32); doc.setLineWidth(0.3); doc.line(margin, y+2, pageW-margin, y+2);
+    y += 7;
+  });
+  doc.setTextColor(160,120,80); doc.setFontSize(8);
+  doc.text('Apiary HQ — Treatments', margin, 290);
+  var hivePart = filterHive ? '_'+filterHive.name.replace(/\s+/g,'_') : '_All_Hives';
+  doc.save(apiaryName.replace(/\s+/g,'_')+hivePart+'_Treatments_'+new Date().toISOString().slice(0,10)+'.pdf');
+}
+
+function exportTreatmentsCSV(hiveId) {
+  var apiaryName = document.getElementById('hdr-apiary-name').textContent || 'MyApiary';
+  var filterHive = hiveId ? DATA.hives.find(function(h){return h.id===hiveId;}) : null;
+  var sorted = DATA.treatments.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  var rows = hiveId ? sorted.filter(function(t){return t.hiveId===hiveId;}) : sorted;
+  var headers = ['Date','Hive','Category','Product','Duration','Pest Type','Disease Type','Notes'];
+  var data = [headers].concat(rows.map(function(t){
+    var hive = DATA.hives.find(function(h){return h.id===t.hiveId;});
+    return [t.date, hive?hive.name:'', t.category||'', t.product||'', t.duration||'', t.pestType||t.pest_type||'', t.diseaseType||t.disease_type||'', t.notes||''];
+  }));
+  var hivePart = filterHive ? '_'+filterHive.name.replace(/\s+/g,'_') : '_All_Hives';
+  downloadCSV(apiaryName.replace(/\s+/g,'_')+hivePart+'_Treatments_'+new Date().toISOString().slice(0,10)+'.csv', data);
+}
+
+function exportHarvestsPDF(hiveId) {
+  if (typeof window.jspdf === 'undefined' && typeof jspdf === 'undefined') {
+    alert('PDF library loading, please try again in a moment.'); return;
+  }
+  var {jsPDF} = window.jspdf || jspdf;
+  var doc = new jsPDF({unit:'mm',format:'a4'});
+  var apiaryName = document.getElementById('hdr-apiary-name').textContent || 'My Apiary';
+  var filterHive = hiveId ? DATA.hives.find(function(h){return h.id===hiveId;}) : null;
+  var reportTitle = filterHive ? apiaryName + ' — ' + filterHive.name + ' Harvests' : apiaryName + ' — All Harvests';
+  var pageW = doc.internal.pageSize.getWidth();
+  var margin = 15; var y = 20;
+  doc.setFillColor(26, 58, 42);
+  doc.rect(0, 0, pageW, 28, 'F');
+  doc.setTextColor(245, 223, 160);
+  doc.setFontSize(18); doc.setFont('helvetica','bold');
+  doc.text(reportTitle, margin, 12);
+  doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.text('Generated: ' + new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}), margin, 20);
+  y = 38; doc.setTextColor(44, 26, 6);
+  var sorted = DATA.harvests.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  sorted = hiveId ? sorted.filter(function(v){return v.hiveId===hiveId;}) : sorted;
+  if (!sorted.length) {
+    doc.setFontSize(12); doc.text('No harvest records found.', margin, y);
+  }
+  sorted.forEach(function(v) {
+    if (y > 265) { doc.addPage(); y = 20; }
+    var hive = DATA.hives.find(function(h){return h.id===v.hiveId;});
+    doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(74, 44, 10);
+    doc.text((hive?hive.name:'Unknown') + ' — ' + fmtDate(v.date) + ' — ' + v.yield + ' ' + (v.unit||''), margin+3, y);
+    y += 6;
+    doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(122, 88, 48);
+    doc.text('Type: '+(v.type||'Honey'), margin+3, y); y+=5;
+    if (v.notes) { var nl=doc.splitTextToSize('Notes: '+v.notes, pageW-2*margin-6); doc.text(nl, margin+3, y); y+=nl.length*4.5; }
+    y += 4;
+    doc.setDrawColor(232,160,32); doc.line(margin, y, pageW-margin, y);
+    y += 6;
+  });
+  doc.setTextColor(160,120,80); doc.setFontSize(8);
+  doc.text('Apiary HQ — Harvests', margin, 290);
+  var hivePart = filterHive ? '_'+filterHive.name.replace(/\s+/g,'_') : '_All_Hives';
+  doc.save(apiaryName.replace(/\s+/g,'_')+hivePart+'_Harvests_'+new Date().toISOString().slice(0,10)+'.pdf');
+}
+
+function exportHarvestsCSV(hiveId) {
+  var apiaryName = document.getElementById('hdr-apiary-name').textContent || 'MyApiary';
+  var filterHive = hiveId ? DATA.hives.find(function(h){return h.id===hiveId;}) : null;
+  var sorted = DATA.harvests.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  var rows = hiveId ? sorted.filter(function(v){return v.hiveId===hiveId;}) : sorted;
+  var headers = ['Date','Hive','Yield','Unit','Product Type','Notes'];
+  var data = [headers].concat(rows.map(function(v){
+    var hive = DATA.hives.find(function(h){return h.id===v.hiveId;});
+    return [v.date, hive?hive.name:'', v.yield, v.unit||'', v.type||'', v.notes||''];
+  }));
+  var hivePart = filterHive ? '_'+filterHive.name.replace(/\s+/g,'_') : '_All_Hives';
+  downloadCSV(apiaryName.replace(/\s+/g,'_')+hivePart+'_Harvests_'+new Date().toISOString().slice(0,10)+'.csv', data);
+}
+
+function exportFeedingsPDF(hiveId) {
+  if (typeof window.jspdf === 'undefined' && typeof jspdf === 'undefined') {
+    alert('PDF library loading, please try again in a moment.'); return;
+  }
+  var {jsPDF} = window.jspdf || jspdf;
+  var doc = new jsPDF({unit:'mm',format:'a4'});
+  var apiaryName = document.getElementById('hdr-apiary-name').textContent || 'My Apiary';
+  var filterHive = hiveId ? DATA.hives.find(function(h){return h.id===hiveId;}) : null;
+  var reportTitle = filterHive ? apiaryName + ' — ' + filterHive.name + ' Feeding' : apiaryName + ' — All Feeding';
+  var pageW = doc.internal.pageSize.getWidth();
+  var margin = 15; var y = 20;
+  doc.setFillColor(26, 58, 42);
+  doc.rect(0, 0, pageW, 28, 'F');
+  doc.setTextColor(245, 223, 160);
+  doc.setFontSize(18); doc.setFont('helvetica','bold');
+  doc.text(reportTitle, margin, 12);
+  doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.text('Generated: ' + new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}), margin, 20);
+  y = 38; doc.setTextColor(44, 26, 6);
+  var sorted = DATA.feedings.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  sorted = hiveId ? sorted.filter(function(f){return f.hiveId===hiveId;}) : sorted;
+  if (!sorted.length) {
+    doc.setFontSize(12); doc.text('No feeding records found.', margin, y);
+  }
+  sorted.forEach(function(f) {
+    if (y > 260) { doc.addPage(); y = 20; }
+    var hive = DATA.hives.find(function(h){return h.id===f.hiveId;});
+    var ftype = typeof feedTypeDisplay === 'function' ? feedTypeDisplay(f) : (f.feedType||f.feed_type||'');
+    var sup = typeof supplementDisplayLine === 'function' ? supplementDisplayLine(f) : (f.supplement||'');
+    doc.setFontSize(11); doc.setFont('helvetica','bold'); doc.setTextColor(74, 44, 10);
+    doc.text((hive?hive.name:'Unknown') + ' — ' + fmtDate(f.date), margin+3, y);
+    y += 6;
+    doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(122, 88, 48);
+    doc.text('Feed: '+ftype+(f.amount!=null&&f.amount!==''?' · '+f.amount+' '+(f.unit||''):''), margin+3, y); y+=5;
+    if (sup) { doc.text('Supplement: '+sup, margin+3, y); y+=5; }
+    if (f.notes) { var nl=doc.splitTextToSize('Notes: '+f.notes, pageW-2*margin-6); doc.text(nl, margin+3, y); y+=nl.length*4.5; }
+    y += 4;
+    doc.setDrawColor(232,160,32); doc.line(margin, y, pageW-margin, y);
+    y += 6;
+  });
+  doc.setTextColor(160,120,80); doc.setFontSize(8);
+  doc.text('Apiary HQ — Feeding', margin, 290);
+  var hivePart = filterHive ? '_'+filterHive.name.replace(/\s+/g,'_') : '_All_Hives';
+  doc.save(apiaryName.replace(/\s+/g,'_')+hivePart+'_Feeding_'+new Date().toISOString().slice(0,10)+'.pdf');
+}
+
+function exportFeedingsCSV(hiveId) {
+  var apiaryName = document.getElementById('hdr-apiary-name').textContent || 'MyApiary';
+  var filterHive = hiveId ? DATA.hives.find(function(h){return h.id===hiveId;}) : null;
+  var sorted = DATA.feedings.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
+  var rows = hiveId ? sorted.filter(function(f){return f.hiveId===hiveId;}) : sorted;
+  var headers = ['Date','Hive','Feed Type','Feed Other','Supplement','Supplement Other','Amount','Unit','Notes'];
+  var data = [headers].concat(rows.map(function(f){
+    var hive = DATA.hives.find(function(h){return h.id===f.hiveId;});
+    var ft = f.feedType||f.feed_type||'';
+    var fo = f.feedOther||f.feed_other||'';
+    var sup = f.supplement||'';
+    var so = f.supplementOther||f.supplement_other||'';
+    return [f.date, hive?hive.name:'', ft, fo, sup, so, f.amount!=null?f.amount:'', f.unit||'', f.notes||''];
+  }));
+  var hivePart = filterHive ? '_'+filterHive.name.replace(/\s+/g,'_') : '_All_Hives';
+  downloadCSV(apiaryName.replace(/\s+/g,'_')+hivePart+'_Feeding_'+new Date().toISOString().slice(0,10)+'.csv', data);
+}
+
 // ═══════════════════════════════════════════════════════
 // INSPECTION COMPARISON VIEW
 // ═══════════════════════════════════════════════════════

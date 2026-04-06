@@ -85,17 +85,27 @@ async function syncOfflineQueue() {
   if (!_currentUser) return;
   try {
     var db = await openOfflineDB();
+    // Use cursor so we always have the correct primary key (getAll() items may omit keyPath on some browsers).
     var all = await new Promise(function(resolve) {
+      var list = [];
       var tx = db.transaction('queue', 'readonly');
-      var req = tx.objectStore('queue').getAll();
-      req.onsuccess = function() { resolve(req.result); };
+      var req = tx.objectStore('queue').openCursor();
+      req.onsuccess = function(e) {
+        var c = e.target.result;
+        if (c) {
+          list.push({ key: c.primaryKey, item: c.value });
+          c.continue();
+        } else resolve(list);
+      };
       req.onerror = function() { resolve([]); };
     });
 
     if (!all.length) { updatePendingBadge(); return; }
 
     var synced = 0, failed = 0;
-    for (var item of all) {
+    for (var w of all) {
+      var item = w.item;
+      var qkey = w.key;
       try {
         var err = null;
         if (item.action === 'insert') {
@@ -109,10 +119,10 @@ async function syncOfflineQueue() {
           err = res.error;
         }
         if (err) throw err;
-        await _removeQueueItem(item.localId);
+        await _removeQueueItem(qkey);
         synced++;
       } catch(e) {
-        console.warn('Sync failed for item', item.localId, e.message);
+        console.warn('Sync failed for item', qkey, e.message);
         failed++;
       }
     }

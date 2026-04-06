@@ -72,7 +72,7 @@ async function loadAllData() {
   DATA.assets = assets || [];
   DATA.harvests = harv.map(function(v){return{...v,hiveId:v.hive_id};});
   DATA.treatments = treat.map(function(t){return{...t,hiveId:t.hive_id,pestType:t.pest_type,diseaseType:t.disease_type};});
-  DATA.feedings = feed.map(function(f){return{...f,hiveId:f.hive_id,feedType:f.feed_type};});
+  DATA.feedings = feed.map(function(f){return{...f,hiveId:f.hive_id,feedType:f.feed_type,feedOther:f.feed_other,supplementOther:f.supplement_other};});
   DATA.reminders = rem.map(function(r){return{...r,hiveId:r.hive_id,nextDate:r.next_date,remType:r.rem_type,itemName:r.item_name,itemCost:r.item_cost,itemQty:r.item_qty,supplierId:r.supplier_id,addedToFinance:r.added_to_finance};});
   DATA.contacts = contacts || [];
   PHOTOS = {};
