@@ -52,27 +52,28 @@ function loadPollenForecast() {
   var url = 'https://api.tomorrow.io/v4/weather/forecast?location=33.6954,-85.7732&fields=treeIndex,grassIndex,weedIndex&timesteps=1d&apikey=' + TOMORROW_IO_API_KEY;
 
   fetch(url)
-    .then(function(r) { 
+    .then(function(r) {
       if (!r.ok) throw new Error('API_REJECTED');
-      return r.json(); 
+      return r.json();
     })
     .then(function(j) {
-      // Navigate the Tomorrow.io JSON structure carefully
-      var list = j.timelines && j.timelines.daily ? j.timelines.daily : null;
-      
-      if (!list || !list.length) throw new Error('DATA_EMPTY');
-      
-      var days = list.slice(0, 5).map(function(item) {
+      var timeline = j.timelines && j.timelines[0];
+
+      if (!timeline || !timeline.intervals || !timeline.intervals.length) {
+        throw new Error('DATA_EMPTY');
+      }
+
+      var days = timeline.intervals.slice(0, 5).map(function(item) {
         var v = item.values || {};
         return {
-          date: new Date(item.time),
+          date: new Date(item.startTime),
           tree: v.treeIndex || 0,
           grass: v.grassIndex || 0,
           weed: v.weedIndex || 0,
           source: 'tomorrow'
         };
       });
-      
+
       renderPollenWidget(el, days, 'tomorrow');
     })
     .catch(function(err) {
