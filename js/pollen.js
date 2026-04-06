@@ -43,20 +43,60 @@ function getAlabamaPollFallback() {
   return days;
 }
 
+// Cache pollen data for 30 minutes to avoid hitting rate limits
+var POLLEN_CACHE_KEY = 'apiary_pollen_cache';
+var POLLEN_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+function getCachedPollen() {
+  try {
+    var raw = localStorage.getItem(POLLEN_CACHE_KEY);
+    if (!raw) return null;
+    var cached = JSON.parse(raw);
+    if (Date.now() - cached.timestamp > POLLEN_CACHE_TTL) {
+      localStorage.removeItem(POLLEN_CACHE_KEY);
+      return null;
+    }
+    // Restore Date objects
+    cached.days.forEach(function(d) { d.date = new Date(d.date); });
+    return cached;
+  } catch(e) { return null; }
+}
+
+function setCachedPollen(days, source) {
+  try {
+    localStorage.setItem(POLLEN_CACHE_KEY, JSON.stringify({
+      days: days,
+      source: source,
+      timestamp: Date.now()
+    }));
+  } catch(e) { /* storage full or unavailable */ }
+}
+
 function loadPollenForecast() {
   var el = document.getElementById('dash-pollen');
   if (!el) return;
-  
+
+  // Check cache first to avoid rate limiting
+  var cached = getCachedPollen();
+  if (cached && cached.source === 'tomorrow') {
+    console.log('Pollen: using cached Tomorrow.io data');
+    renderPollenWidget(el, cached.days, cached.source);
+    return;
+  }
+
   el.innerHTML = '<div style="font-size:12px;color:var(--txt2);padding:20px;text-align:center">Fetching forecast...</div>';
 
   var url = 'https://api.tomorrow.io/v4/timelines?location=33.6954,-85.7732&fields=treeIndex,grassIndex,weedIndex&timesteps=1d&units=metric&apikey=' + TOMORROW_IO_API_KEY;
 
   fetch(url)
     .then(function(r) {
+      if (r.status === 429) throw new Error('RATE_LIMITED');
       if (!r.ok) throw new Error('API_REJECTED');
       return r.json();
     })
     .then(function(j) {
+      console.log('Pollen API raw response:', JSON.stringify(j).substring(0, 500));
+
       var timeline = j.data && j.data.timelines && j.data.timelines[0];
 
       if (!timeline || !timeline.intervals || !timeline.intervals.length) {
@@ -65,6 +105,7 @@ function loadPollenForecast() {
 
       var days = timeline.intervals.slice(0, 5).map(function(item) {
         var v = item.values || {};
+        console.log('Pollen values for ' + item.startTime + ':', JSON.stringify(v));
         return {
           date: new Date(item.startTime),
           tree: v.treeIndex || 0,
@@ -74,10 +115,27 @@ function loadPollenForecast() {
         };
       });
 
+      // Cache successful response
+      setCachedPollen(days, 'tomorrow');
       renderPollenWidget(el, days, 'tomorrow');
     })
     .catch(function(err) {
-      console.warn('Pollen API issue, using Alabama fallback:', err.message);
+      console.warn('Pollen API issue (' + err.message + '), using Alabama fallback');
+      
+      // If rate limited and we have any cached data (even expired), use it
+      if (err.message === 'RATE_LIMITED') {
+        try {
+          var raw = localStorage.getItem(POLLEN_CACHE_KEY);
+          if (raw) {
+            var old = JSON.parse(raw);
+            old.days.forEach(function(d) { d.date = new Date(d.date); });
+            console.log('Pollen: using expired cache due to rate limit');
+            renderPollenWidget(el, old.days, old.source + ' (cached)');
+            return;
+          }
+        } catch(e) {}
+      }
+      
       renderPollenWidget(el, getAlabamaPollFallback(), 'seasonal');
     });
 }
@@ -124,7 +182,7 @@ function renderPollenWidget(el, days, source) {
   '</div>';
 
   html += '<div style="margin-top:10px;font-size:9px;color:var(--txt3);text-align:right">' + 
-    (source==='tomorrow' ? POLLEN_SVG.sat + ' Tomorrow.io Live' : POLLEN_SVG.cal + ' Seasonal Estimate') + 
+    (source.indexOf('tomorrow') > -1 ? POLLEN_SVG.sat + ' Tomorrow.io Live' : POLLEN_SVG.cal + ' Seasonal Estimate') + 
   '</div>';
 
   el.innerHTML = html;
