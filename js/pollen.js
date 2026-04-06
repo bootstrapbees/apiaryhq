@@ -100,10 +100,33 @@ function loadPollenForecast() {
   if (window._pollenData) { renderPollenWidget(el, window._pollenData.days, window._pollenData.source); return; }
   el.innerHTML = '<div style="font-size:12px;color:var(--txt2)">Loading pollen forecast…</div>';
   var now = new Date(), end = new Date(); end.setDate(end.getDate()+5);
-  fetch('https://api.tomorrow.io/v4/timelines?apikey='+apiKey, {
-    method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json'},
-    body:JSON.stringify({location:[33.6954,-85.7732],fields:['treeIndex','grassIndex','weedIndex'],units:'imperial',timesteps:['1d'],startTime:now.toISOString(),endTime:end.toISOString()})
+ // Replace the existing fetch block with this:
+fetch('https://api.tomorrow.io/v4/weather/forecast?location=33.6954,-85.7732&fields=treeIndex,grassIndex,weedIndex&timesteps=1d&apikey=' + apiKey)
+  .then(function(r) { return r.json(); })
+  .then(function(j) {
+    // The structure for the new 'forecast' endpoint
+    if (j.code || !j.getTimeline || !j.getTimeline.daily) { 
+      renderPollenWidget(el, getAlabamaPollFallback(), 'alabama-seasonal'); 
+      return; 
+    }
+    
+    var days = j.getTimeline.daily.slice(0, 5).map(function(iv) {
+      var v = iv.values;
+      return {
+        date: new Date(iv.time),
+        tree: v.treeIndex || 0,
+        grass: v.grassIndex || 0,
+        weed: v.weedIndex || 0,
+        source: 'tomorrow'
+      };
+    });
+    
+    window._pollenData = { days: days, source: 'tomorrow' };
+    renderPollenWidget(el, days, 'tomorrow');
   })
+  .catch(function() { 
+    renderPollenWidget(el, getAlabamaPollFallback(), 'alabama-seasonal'); 
+  });
   .then(function(r){return r.json();})
   .then(function(j){
     if (j.code||!j.data||!j.data.timelines) { renderPollenWidget(el,getAlabamaPollFallback(),'alabama-seasonal'); return; }
