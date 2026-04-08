@@ -1,20 +1,9 @@
-// Updated feeding.js
-
-function openModal() {
-    // Implementation for opening the modal
-}
-
-function deleteFeeding(id) {
-    // Implementation for deleting feeding with the given id
-}
-
-function editFeeding(id, data) {
-    // Implementation for editing feeding details
-}
-
-function sbClientUsage() {
-    // Implementation for integrating sb client functionality
-}
-
-// Ensure to call these functions where necessary,
-// and include any additional related logic.
+// Other code...
+// sb (was window.supabaseClient)
+// Other code...
+const data = sb.from("table");
+// Other code...
+const user = sb.auth;
+// Other code...
+const data2 = sb.from("table2");
+// Other code...
