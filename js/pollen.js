@@ -1,7 +1,8 @@
 // ═══════════════════════════════════════════════════════
 // APIARY HQ — POLLEN & FORAGING FORECAST
-// Open-Meteo pollen API (free, no key)
-// Falls back to zone-based seasonal estimate
+// Open-Meteo air quality API (free, no key)
+// Falls back to zone-based seasonal estimate if API
+// returns zeros or fails
 // ═══════════════════════════════════════════════════════
 
 var POLLEN_SVG = {
@@ -14,33 +15,26 @@ var POLLEN_SVG = {
   live:   '<svg viewBox="0 0 20 20" fill="none" style="width:12px;height:12px;display:inline-block;vertical-align:-2px" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="3" fill="currentColor" opacity=".8"/><circle cx="10" cy="10" r="6" stroke="currentColor" stroke-width="1.3" opacity=".5"/><circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1" opacity=".2"/></svg>',
 };
 
-// ── Seasonal fallback data (Zone 7b / general southeast) ──
+// ── Seasonal fallback — Zone 7b southeast US ──────────
 function getSeasonalFallback() {
   var days = [];
   for (var i = 0; i < 5; i++) {
     var d = new Date(); d.setDate(d.getDate() + i);
     var mo = d.getMonth() + 1;
     var tree, grass, weed;
-    if (mo <= 2)           { tree=1; grass=0; weed=0; }
-    else if (mo === 3)     { tree=4; grass=1; weed=0; }
-    else if (mo === 4)     { tree=5; grass=2; weed=1; }
-    else if (mo === 5)     { tree=3; grass=4; weed=1; }
-    else if (mo === 6)     { tree=1; grass=5; weed=2; }
-    else if (mo <= 8)      { tree=0; grass=3; weed=2; }
-    else if (mo === 9)     { tree=0; grass=2; weed=4; }
-    else if (mo === 10)    { tree=1; grass=1; weed=5; }
-    else if (mo === 11)    { tree=1; grass=0; weed=2; }
-    else                   { tree=0; grass=0; weed=0; }
-    days.push({ date:d, tree:tree, grass:grass, weed:weed });
+    if (mo <= 2)        { tree=1; grass=0; weed=0; }
+    else if (mo === 3)  { tree=4; grass=1; weed=0; }
+    else if (mo === 4)  { tree=5; grass=2; weed=1; }
+    else if (mo === 5)  { tree=3; grass=4; weed=1; }
+    else if (mo === 6)  { tree=1; grass=5; weed=2; }
+    else if (mo <= 8)   { tree=0; grass=3; weed=2; }
+    else if (mo === 9)  { tree=0; grass=2; weed=4; }
+    else if (mo === 10) { tree=1; grass=1; weed=5; }
+    else if (mo === 11) { tree=1; grass=0; weed=2; }
+    else                { tree=0; grass=0; weed=0; }
+    days.push({ date: d, tree: tree, grass: grass, weed: weed });
   }
   return days;
-}
-
-// ── Convert Open-Meteo pollen index (0–5 scale) to our 0–5 scale ──
-function omPollenToLevel(v) {
-  if (v == null) return 0;
-  // Open-Meteo returns 0,1,2,3,4,5 — maps directly
-  return Math.min(5, Math.max(0, Math.round(v)));
 }
 
 function pollenLevel(v) {
@@ -88,6 +82,16 @@ function pollenBeeTip(days) {
   return { tip: 'Moderate mixed pollen. Decent foraging conditions — watch entrance traffic to gauge activity.' };
 }
 
+// ── grains/m³ → 0-5 level ────────────────────────────
+function grainToLevel(val, highThreshold) {
+  if (val == null || val <= 0) return 0;
+  if (val < highThreshold * 0.05) return 1;
+  if (val < highThreshold * 0.15) return 2;
+  if (val < highThreshold * 0.40) return 3;
+  if (val < highThreshold * 0.75) return 4;
+  return 5;
+}
+
 function loadPollenForecast() {
   var el = document.getElementById('dash-pollen');
   if (!el) return;
@@ -95,7 +99,6 @@ function loadPollenForecast() {
   var lat = parseFloat(localStorage.getItem('apiaryhq_lat'));
   var lng = parseFloat(localStorage.getItem('apiaryhq_lng'));
 
-  // No ZIP set yet — show nothing, weather widget handles the prompt
   if (!lat || !lng) {
     el.innerHTML = '<div style="font-size:12px;color:var(--txt2);font-style:italic;text-align:center;padding:8px 0">Set your ZIP code above to get pollen forecasts.</div>';
     return;
@@ -108,10 +111,10 @@ function loadPollenForecast() {
 
   el.innerHTML = '<div style="font-size:12px;color:var(--txt2)">Loading pollen forecast...</div>';
 
-  // Open-Meteo free pollen API
+  // Use tree_pollen + grass_pollen + weed_pollen — the correct Open-Meteo fields
   var url = 'https://air-quality-api.open-meteo.com/v1/air-quality' +
     '?latitude=' + lat + '&longitude=' + lng +
-    '&hourly=grass_pollen,birch_pollen,alder_pollen,mugwort_pollen,olive_pollen,ragweed_pollen' +
+    '&hourly=tree_pollen,grass_pollen,weed_pollen' +
     '&timezone=auto&forecast_days=5';
 
   fetch(url)
@@ -121,51 +124,41 @@ function loadPollenForecast() {
         renderPollenWidget(el, getSeasonalFallback(), 'seasonal');
         return;
       }
-      // Average daily values from hourly data (noon = index 12 for each day)
-      var days = [];
-      var times = j.hourly.time;
-      var grasses = j.hourly.grass_pollen || [];
-      var trees1  = j.hourly.birch_pollen || [];
-      var trees2  = j.hourly.alder_pollen || [];
-      var weeds1  = j.hourly.mugwort_pollen || [];
-      var weeds2  = j.hourly.ragweed_pollen || [];
 
-      // Group by day — take the max value for the day
+      var times  = j.hourly.time;
+      var trees  = j.hourly.tree_pollen  || [];
+      var grasses = j.hourly.grass_pollen || [];
+      var weeds  = j.hourly.weed_pollen  || [];
+
+      // Group hourly values by day, take daily max
       var dayMap = {};
       for (var i = 0; i < times.length; i++) {
-        var dayKey = times[i].slice(0,10);
-        if (!dayMap[dayKey]) dayMap[dayKey] = { grass:[], tree:[], weed:[] };
-        if (grasses[i] != null) dayMap[dayKey].grass.push(grasses[i]);
-        var treeVal = Math.max(trees1[i] || 0, trees2[i] || 0);
-        if (treeVal > 0) dayMap[dayKey].tree.push(treeVal);
-        var weedVal = Math.max(weeds1[i] || 0, weeds2[i] || 0);
-        if (weedVal > 0) dayMap[dayKey].weed.push(weedVal);
+        var key = times[i].slice(0,10);
+        if (!dayMap[key]) dayMap[key] = { tree:[], grass:[], weed:[] };
+        if (trees[i]   != null) dayMap[key].tree.push(trees[i]);
+        if (grasses[i] != null) dayMap[key].grass.push(grasses[i]);
+        if (weeds[i]   != null) dayMap[key].weed.push(weeds[i]);
       }
 
-      // Pollen grain/m3 thresholds → 0-5 scale
-      function grainToLevel(arr, highThreshold) {
+      function dayMax(arr) {
         if (!arr || !arr.length) return 0;
-        var max = Math.max.apply(null, arr);
-        if (max <= 0)                   return 0;
-        if (max < highThreshold * 0.05) return 1;
-        if (max < highThreshold * 0.15) return 2;
-        if (max < highThreshold * 0.40) return 3;
-        if (max < highThreshold * 0.75) return 4;
-        return 5;
+        return Math.max.apply(null, arr);
       }
 
-      var dayKeys = Object.keys(dayMap).sort().slice(0,5);
-      dayKeys.forEach(function(key) {
+      var days = [];
+      Object.keys(dayMap).sort().slice(0,5).forEach(function(key) {
         var dm = dayMap[key];
         days.push({
-          date: new Date(key + 'T12:00:00'),
-          tree:  grainToLevel(dm.tree,  200),
-          grass: grainToLevel(dm.grass, 100),
-          weed:  grainToLevel(dm.weed,  50)
+          date:  new Date(key + 'T12:00:00'),
+          tree:  grainToLevel(dayMax(dm.tree),  200),
+          grass: grainToLevel(dayMax(dm.grass), 100),
+          weed:  grainToLevel(dayMax(dm.weed),   50)
         });
       });
 
-      if (!days.length) {
+      // If all days are zero (API returned no data for this region) use seasonal
+      var totalPollen = days.reduce(function(s,d){ return s + d.tree + d.grass + d.weed; }, 0);
+      if (!days.length || totalPollen === 0) {
         renderPollenWidget(el, getSeasonalFallback(), 'seasonal');
         return;
       }
@@ -199,8 +192,7 @@ function renderPollenWidget(el, days, source) {
 
   if (days.length) {
     var t = days[0];
-    html += '<div class="pollen-breakdown">';
-    html += '<div class="pollen-source-row">';
+    html += '<div class="pollen-breakdown"><div class="pollen-source-row">';
     html += '<div style="flex:1;text-align:center">'+POLLEN_SVG.tree+'<div style="color:var(--txt2);font-size:10px;margin:2px 0">Trees</div><div class="'+pollenLevel(t.tree).cls+'" style="font-weight:700;font-size:11px">'+pollenLevel(t.tree).label+'</div></div>';
     html += '<div style="flex:1;text-align:center">'+POLLEN_SVG.grass+'<div style="color:var(--txt2);font-size:10px;margin:2px 0">Grass</div><div class="'+pollenLevel(t.grass).cls+'" style="font-weight:700;font-size:11px">'+pollenLevel(t.grass).label+'</div></div>';
     html += '<div style="flex:1;text-align:center">'+POLLEN_SVG.flower+'<div style="color:var(--txt2);font-size:10px;margin:2px 0">Weeds</div><div class="'+pollenLevel(t.weed).cls+'" style="font-weight:700;font-size:11px">'+pollenLevel(t.weed).label+'</div></div>';
