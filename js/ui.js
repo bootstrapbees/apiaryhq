@@ -31,6 +31,14 @@ function showTab(page) {
   if (fab) fab.style.display = (page === 'dash') ? 'none' : '';
   if (page === 'dash') { loadWeather(); loadPollenForecast(); }
   if (page === 'notes') initLibTab();
+  if (page === 'settings') {
+    var savedZip = localStorage.getItem('apiaryhq_zip');
+    var savedName = localStorage.getItem('apiaryhq_location_name');
+    var zi = document.getElementById('settings-zip');
+    var zs = document.getElementById('zip-status');
+    if (zi && savedZip) zi.value = savedZip;
+    if (zs && savedZip) { zs.textContent = '\u2705 Location: ' + (savedName || savedZip); zs.style.color = 'var(--moss)'; }
+  }
 }
 
 var _moreTrayOpen = false;
