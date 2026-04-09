@@ -2,7 +2,7 @@
 // APIARY HQ — Service Worker
 // Bump CACHE_VERSION any time you deploy updated files
 // ═══════════════════════════════════════════════════════
-var CACHE_VERSION = 'apiaryhq-v5.3.5';
+var CACHE_VERSION = 'apiaryhq-v5.3.6';
 
 var EXTERNAL_URLS = [
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
@@ -41,9 +41,7 @@ var STATIC_FILES = [
 self.addEventListener('install', function(e) {
   e.waitUntil(
     caches.open(CACHE_VERSION).then(function(cache) {
-      // Cache local files
       return cache.addAll(STATIC_FILES).then(function() {
-        // Cache external CDN files individually (failures won't block install)
         return Promise.allSettled(
           EXTERNAL_URLS.map(function(url) {
             return fetch(url).then(function(response) {
@@ -69,7 +67,6 @@ self.addEventListener('activate', function(e) {
             .map(function(key) { return caches.delete(key); })
       );
     }).then(function() {
-      // Take control of all open tabs immediately
       return self.clients.claim();
     })
   );
@@ -79,12 +76,9 @@ self.addEventListener('activate', function(e) {
 self.addEventListener('fetch', function(e) {
   var url = e.request.url;
 
-  // Let Supabase API calls always go to network — never cache these
-  // Only bypass cache for Supabase API data calls and weather API — not CDN scripts
   if ((url.includes('supabase.co') && !url.includes('supabase-js')) || url.includes('tomorrow.io')) {
     e.respondWith(
       fetch(e.request).catch(function() {
-        // Network failed — return empty 503 so app handles it gracefully
         return new Response(JSON.stringify({ error: 'offline' }), {
           status: 503,
           headers: { 'Content-Type': 'application/json' }
@@ -94,11 +88,9 @@ self.addEventListener('fetch', function(e) {
     return;
   }
 
-  // For all app files: cache-first, fall back to network
   e.respondWith(
     caches.match(e.request).then(function(cached) {
       if (cached) return cached;
-      // Not in cache yet — fetch and cache it
       return fetch(e.request).then(function(response) {
         if (!response || response.status !== 200 || response.type !== 'basic') {
           return response;
