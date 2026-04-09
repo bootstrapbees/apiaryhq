@@ -968,9 +968,9 @@ body.dark .rec-item{background:var(--surface2)}
       <div style="font-size:13px;color:var(--txt);font-weight:700;margin-bottom:4px">ZIP Code</div>
       <div style="font-size:12px;color:var(--txt2);margin-bottom:10px">Used for local weather and pollen forecasts.</div>
       <div style="display:flex;gap:8px;align-items:center">
-        <input id="settings-zip" type="text" inputmode="numeric" maxlength="5" placeholder="e.g. 35960"
-          style="flex:1;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(232,160,32,.4);background:var(--bg);color:var(--txt);font-size:18px;letter-spacing:4px;font-weight:700;text-align:center">
-        <button onclick="saveZipFromSettings()" class="btn btn-p" style="margin:0;padding:11px 16px;font-size:14px">Save</button>
+        <input id="settings-zip" type="text" inputmode="numeric" maxlength="5" placeholder="35960"
+          style="flex:1;min-width:0;width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(232,160,32,.4);background:var(--bg);color:var(--txt);font-size:20px;letter-spacing:6px;font-weight:700;text-align:center">
+        <button onclick="saveZipFromSettings()" class="btn btn-p" style="margin:0;padding:12px 18px;font-size:14px;flex-shrink:0;white-space:nowrap">Save</button>
       </div>
       <div id="zip-status" style="font-size:12px;color:var(--txt2);margin-top:8px;min-height:16px"></div>
     </div>
