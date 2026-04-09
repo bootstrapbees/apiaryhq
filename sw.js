@@ -2,7 +2,7 @@
 // APIARY HQ — Service Worker
 // Bump CACHE_VERSION any time you deploy updated files
 // ═══════════════════════════════════════════════════════
-var CACHE_VERSION = 'apiaryhq-v5.3.6';
+var CACHE_VERSION = 'apiaryhq-v5.3.7';
 
 var EXTERNAL_URLS = [
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
@@ -37,7 +37,6 @@ var STATIC_FILES = [
   '/js/weather.js'
 ];
 
-// ── Install: cache all static files ─────────────────────
 self.addEventListener('install', function(e) {
   e.waitUntil(
     caches.open(CACHE_VERSION).then(function(cache) {
@@ -58,7 +57,6 @@ self.addEventListener('install', function(e) {
   );
 });
 
-// ── Activate: delete old caches ──────────────────────────
 self.addEventListener('activate', function(e) {
   e.waitUntil(
     caches.keys().then(function(keys) {
@@ -72,11 +70,12 @@ self.addEventListener('activate', function(e) {
   );
 });
 
-// ── Fetch: cache-first for static, network-first for API ─
 self.addEventListener('fetch', function(e) {
   var url = e.request.url;
-
-  if ((url.includes('supabase.co') && !url.includes('supabase-js')) || url.includes('tomorrow.io')) {
+  if ((url.includes('supabase.co') && !url.includes('supabase-js')) ||
+      url.includes('open-meteo.com') ||
+      url.includes('nominatim.openstreetmap.org') ||
+      url.includes('air-quality-api.open-meteo.com')) {
     e.respondWith(
       fetch(e.request).catch(function() {
         return new Response(JSON.stringify({ error: 'offline' }), {
@@ -87,18 +86,13 @@ self.addEventListener('fetch', function(e) {
     );
     return;
   }
-
   e.respondWith(
     caches.match(e.request).then(function(cached) {
       if (cached) return cached;
       return fetch(e.request).then(function(response) {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
+        if (!response || response.status !== 200 || response.type !== 'basic') return response;
         var toCache = response.clone();
-        caches.open(CACHE_VERSION).then(function(cache) {
-          cache.put(e.request, toCache);
-        });
+        caches.open(CACHE_VERSION).then(function(cache) { cache.put(e.request, toCache); });
         return response;
       });
     })
