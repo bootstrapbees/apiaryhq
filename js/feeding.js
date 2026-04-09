@@ -6,12 +6,14 @@ var FEED_TYPES = ['1:1 Syrup','2:1 Syrup','Candy Board','Fondant','Pollen Patty'
 var FEED_UNITS = ['qt','gal','lbs','oz','kg','patties'];
 var FEED_SUPPLEMENTS = ['None','Honey-B-Healthy','HBH Super Plus','HBH Vitamin B','Nozevit Plus','Optima','Complete','AP23 / Brood Builder','Other'];
 
-function openFeedingModal(item) {
+function openFeedingModal(item, keepHive, keepDate) {
   if (!DATA.hives.length) { alert('Please add a hive first!'); return; }
   var edit = !!item;
   var today = new Date().toISOString().slice(0,10);
+  var defaultDate = keepDate || today;
   var opts = DATA.hives.map(function(h) {
-    return '<option value="' + h.id + '"' + (item && item.hiveId === h.id ? ' selected' : '') + '>' + esc(h.name) + '</option>';
+    var sel = (item && item.hiveId === h.id) || (!item && keepHive && keepHive === h.id);
+    return '<option value="' + h.id + '"' + (sel ? ' selected' : '') + '>' + esc(h.name) + '</option>';
   }).join('');
 
   var selectedType = item ? (item.feedType || item.feed_type || '1:1 Syrup') : '1:1 Syrup';
@@ -20,7 +22,7 @@ function openFeedingModal(item) {
 
   var h = '<div class="modal-title">' + (edit ? 'Edit' : 'Log') + ' Feeding</div>';
   h += '<div class="fg"><label>Hive</label><select id="f-feed-hive">' + opts + '</select></div>';
-  h += '<div class="fg"><label>Date</label><input id="f-feed-date" type="date" value="' + (edit ? (item.date || today) : today) + '"></div>';
+  h += '<div class="fg"><label>Date</label><input id="f-feed-date" type="date" value="' + (edit ? (item.date || today) : defaultDate) + '"></div>';
   h += '<div class="fg"><label>Feed Type</label>' + makePills('feedtype', FEED_TYPES, selectedType) + '</div>';
   h += '<div class="fg" id="fg-feed-other" style="' + (selectedType === 'Other' ? '' : 'display:none') + '">';
   h += '<label>Specify Feed Type</label><input id="f-feed-other" value="' + esc(item ? (item.feedOther || item.feed_other || '') : '') + '" placeholder="e.g. Mega Bee patty"></div>';
@@ -32,7 +34,10 @@ function openFeedingModal(item) {
   h += '<div class="fg" id="fg-sup-other" style="' + (selectedSup === 'Other' ? '' : 'display:none') + '">';
   h += '<label>Specify Supplement</label><input id="f-feed-sup-other" value="' + esc(item ? (item.supplementOther || item.supplement_other || '') : '') + '" placeholder="e.g. Fumagilin-B"></div>';
   h += '<div class="fg"><label>Notes</label><textarea id="f-feed-notes" placeholder="Feeder type, observations...">' + esc(item ? (item.notes || '') : '') + '</textarea></div>';
-  h += '<button class="btn btn-p" onclick="saveFeeding(\'' + (edit ? item.id : '') + '\',' + (edit ? 1 : 0) + ')">' + (edit ? 'Save Changes' : 'Log Feeding') + '</button>';
+  h += '<button class="btn btn-p" onclick="saveFeeding(\'' + (edit ? item.id : '') + '\',' + (edit ? 1 : 0) + ',false)">' + (edit ? 'Save Changes' : 'Log Feeding') + '</button>';
+  if (!edit) {
+    h += '<button class="btn" style="background:var(--moss);color:#fff" onclick="saveFeeding(\'\',0,true)">+ Log Another</button>';
+  }
   if (edit) h += '<button class="btn btn-d" onclick="deleteFeeding(\'' + item.id + '\')">Delete</button>';
   h += '<button class="btn btn-c" onclick="closeModal()">Cancel</button>';
 
@@ -54,7 +59,7 @@ function openFeedingModal(item) {
   }, 50);
 }
 
-async function saveFeeding(eid, isEdit) {
+async function saveFeeding(eid, isEdit, logAnother) {
   var hiveId = gv('f-feed-hive');
   var date   = gv('f-feed-date');
   if (!date) { alert('Please enter a date'); return; }
@@ -84,9 +89,9 @@ async function saveFeeding(eid, isEdit) {
     var idx = DATA.feedings.findIndex(function(f) { return f.id === eid; });
     if (idx >= 0) {
       DATA.feedings[idx] = Object.assign(DATA.feedings[idx], obj, {
-        hiveId:         obj.hive_id,
-        feedType:       obj.feed_type,
-        feedOther:      obj.feed_other,
+        hiveId:          obj.hive_id,
+        feedType:        obj.feed_type,
+        feedOther:       obj.feed_other,
         supplementOther: obj.supplement_other
       });
     }
@@ -94,16 +99,21 @@ async function saveFeeding(eid, isEdit) {
     var row = await dbInsert('feedings', obj);
     if (row) {
       DATA.feedings.push(Object.assign({}, row, {
-        hiveId:         row.hive_id,
-        feedType:       row.feed_type,
-        feedOther:      row.feed_other,
+        hiveId:          row.hive_id,
+        feedType:        row.feed_type,
+        feedOther:       row.feed_other,
         supplementOther: row.supplement_other
       }));
     }
   }
 
-  closeModal();
-  renderAll();
+  if (logAnother) {
+    // Re-open a fresh modal keeping the same hive and date
+    openFeedingModal(null, hiveId, date);
+  } else {
+    closeModal();
+    renderAll();
+  }
 }
 
 function deleteFeeding(id) {
