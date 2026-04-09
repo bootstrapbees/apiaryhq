@@ -1,6 +1,6 @@
-
 // ═══════════════════════════════════════════════════════
-// WEATHER
+// APIARY HQ — WEATHER
+// Open-Meteo (free, no key) · ZIP geocoded via Nominatim
 // ═══════════════════════════════════════════════════════
 
 var WX_SVG = {
@@ -58,19 +58,154 @@ function scoreColor(s) {
   return '#EF9A9A';
 }
 
+// ── ZIP entry prompt shown inside the weather widget ────
+function renderZipPrompt(el) {
+  el.className = 'wx-load';
+  el.innerHTML =
+    '<div style="text-align:center;padding:8px 0">'+
+    '<div style="font-size:28px;margin-bottom:8px">📍</div>'+
+    '<div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:6px">Set Your Location</div>'+
+    '<div style="font-size:13px;color:var(--txt2);margin-bottom:14px;line-height:1.5">Enter your ZIP code to get local weather and foraging conditions.</div>'+
+    '<div style="display:flex;gap:8px;align-items:center;max-width:260px;margin:0 auto">'+
+      '<input id="wx-zip-input" type="text" inputmode="numeric" maxlength="5" placeholder="ZIP code"'+
+      ' style="flex:1;padding:12px 14px;border-radius:10px;border:1.5px solid rgba(232,160,32,.5);background:var(--bg);color:var(--txt);font-size:18px;letter-spacing:4px;font-weight:700;text-align:center">'+
+      '<button onclick="saveZipFromWidget()" style="padding:12px 16px;background:var(--amber);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer">Save</button>'+
+    '</div>'+
+    '<div id="wx-zip-err" style="font-size:12px;color:var(--red);margin-top:8px;min-height:16px"></div>'+
+    '</div>';
+  // Allow Enter key to submit
+  setTimeout(function() {
+    var inp = document.getElementById('wx-zip-input');
+    if (inp) inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') saveZipFromWidget(); });
+  }, 50);
+}
+
+// ── Geocode a ZIP via Nominatim, save to localStorage, reload widgets ──
+function geocodeZip(zip, onSuccess, onError) {
+  var url = 'https://nominatim.openstreetmap.org/search?postalcode=' + encodeURIComponent(zip) +
+            '&country=us&format=json&limit=1';
+  fetch(url, { headers: { 'Accept-Language': 'en' } })
+    .then(function(r) { return r.json(); })
+    .then(function(results) {
+      if (!results || !results.length) { onError('ZIP code not found. Please check and try again.'); return; }
+      var r = results[0];
+      var lat = parseFloat(r.lat);
+      var lng = parseFloat(r.lon);
+      var name = r.display_name ? r.display_name.split(',').slice(0,2).join(',').trim() : zip;
+      localStorage.setItem('apiaryhq_zip', zip);
+      localStorage.setItem('apiaryhq_lat', lat);
+      localStorage.setItem('apiaryhq_lng', lng);
+      localStorage.setItem('apiaryhq_location_name', name);
+      onSuccess(lat, lng, name);
+    })
+    .catch(function() { onError('Could not look up ZIP code. Check your connection.'); });
+}
+
+// Called from the weather widget prompt
+function saveZipFromWidget() {
+  var inp = document.getElementById('wx-zip-input');
+  var errEl = document.getElementById('wx-zip-err');
+  if (!inp) return;
+  var zip = inp.value.trim().replace(/\D/g,'');
+  if (zip.length !== 5) {
+    if (errEl) errEl.textContent = 'Please enter a 5-digit ZIP code.';
+    return;
+  }
+  if (errEl) errEl.textContent = '';
+  inp.disabled = true;
+  geocodeZip(zip,
+    function() {
+      // Reset cached weather+pollen so they reload with new location
+      window._wx = null;
+      window._pollenData = null;
+      loadWeather();
+      loadPollenForecast();
+      // Update Settings ZIP field if visible
+      var settingsInp = document.getElementById('settings-zip');
+      if (settingsInp) { settingsInp.value = zip; }
+      var zipStatus = document.getElementById('zip-status');
+      if (zipStatus) { zipStatus.textContent = '\u2705 ZIP ' + zip + ' saved'; zipStatus.style.color = 'var(--moss)'; }
+    },
+    function(msg) {
+      inp.disabled = false;
+      if (errEl) errEl.textContent = msg;
+    }
+  );
+}
+
+// Called from Settings page
+function saveZipFromSettings() {
+  var inp = document.getElementById('settings-zip');
+  var statusEl = document.getElementById('zip-status');
+  if (!inp) return;
+  var zip = inp.value.trim().replace(/\D/g,'');
+  if (zip.length !== 5) {
+    if (statusEl) { statusEl.textContent = 'Please enter a 5-digit ZIP code.'; statusEl.style.color = 'var(--red)'; }
+    return;
+  }
+  if (statusEl) { statusEl.textContent = 'Looking up ZIP code...'; statusEl.style.color = 'var(--txt2)'; }
+  inp.disabled = true;
+  geocodeZip(zip,
+    function(lat, lng, name) {
+      inp.disabled = false;
+      if (statusEl) { statusEl.textContent = '\u2705 Location set: ' + name; statusEl.style.color = 'var(--moss)'; }
+      // Reset cached weather+pollen so they reload fresh
+      window._wx = null;
+      window._pollenData = null;
+    },
+    function(msg) {
+      inp.disabled = false;
+      if (statusEl) { statusEl.textContent = msg; statusEl.style.color = 'var(--red)'; }
+    }
+  );
+}
+
 function loadWeather() {
-  var el = document.getElementById('wx-el'); if (!el) return;
+  var el = document.getElementById('wx-el');
+  if (!el) return;
   if (window._wx) { renderWeather(el); return; }
-  el.className = 'wx-load'; el.textContent = 'Loading weather for Centre, Alabama…';
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=34.1512&longitude=-85.6762&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,apparent_temperature&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FChicago')
+
+  var lat = parseFloat(localStorage.getItem('apiaryhq_lat'));
+  var lng = parseFloat(localStorage.getItem('apiaryhq_lng'));
+  var zip = localStorage.getItem('apiaryhq_zip');
+
+  // No ZIP saved yet — show the entry prompt
+  if (!zip || !lat || !lng) {
+    renderZipPrompt(el);
+    return;
+  }
+
+  el.className = 'wx-load';
+  el.textContent = 'Loading weather...';
+
+  var url = 'https://api.open-meteo.com/v1/forecast' +
+    '?latitude=' + lat + '&longitude=' + lng +
+    '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,apparent_temperature' +
+    '&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto';
+
+  fetch(url)
     .then(function(r) { return r.json(); })
     .then(function(j) {
-      var c=j.current, t=Math.round(c.temperature_2m), f=Math.round(c.apparent_temperature);
-      var w=Math.round(c.wind_speed_10m), h=Math.round(c.relative_humidity_2m), code=c.weather_code;
-      window._wx = { temp:t, feels:f, wind:w, humidity:h, desc:wmoDesc(code), wxSvg:wmoWxSvg(code), score:beeScore(t,w,h,code), col:scoreColor(beeScore(t,w,h,code)), adv:beeAdv(t,w,code) };
+      var c = j.current;
+      var t = Math.round(c.temperature_2m);
+      var f = Math.round(c.apparent_temperature);
+      var w = Math.round(c.wind_speed_10m);
+      var h = Math.round(c.relative_humidity_2m);
+      var code = c.weather_code;
+      var locationName = localStorage.getItem('apiaryhq_location_name') || ('ZIP ' + zip);
+      window._wx = {
+        temp:t, feels:f, wind:w, humidity:h,
+        desc:wmoDesc(code), wxSvg:wmoWxSvg(code),
+        score:beeScore(t,w,h,code), col:scoreColor(beeScore(t,w,h,code)),
+        adv:beeAdv(t,w,code),
+        locationName: locationName, zip: zip
+      };
       renderWeather(el);
     })
-    .catch(function() { el.className='wx-load'; el.textContent='Weather unavailable.'; });
+    .catch(function() {
+      el.className = 'wx-load';
+      el.textContent = 'Weather unavailable. Check your connection.';
+    });
 }
 
 function renderWeather(el) {
@@ -82,7 +217,7 @@ function renderWeather(el) {
       '<div style="flex:1">'+
         '<div style="font-family:\'Playfair Display\',serif;font-size:36px;color:#fff;line-height:1">'+wx.temp+'°F</div>'+
         '<div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:2px">'+wx.desc+' · Feels '+wx.feels+'°F</div>'+
-        '<div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:3px">'+WX_SVG.pin+' Centre, Alabama</div>'+
+        '<div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:3px">'+WX_SVG.pin+' '+esc(wx.locationName)+'</div>'+
       '</div>'+
       '<div style="text-align:center;background:rgba(255,255,255,.15);border-radius:14px;padding:10px 14px;min-width:58px">'+
         '<div style="font-size:22px;font-weight:700;color:'+wx.col+'">'+wx.score+'</div>'+

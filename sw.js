@@ -2,7 +2,7 @@
 // APIARY HQ — Service Worker
 // Bump CACHE_VERSION any time you deploy updated files
 // ═══════════════════════════════════════════════════════
-var CACHE_VERSION = 'apiaryhq-v5.3.5';
+var CACHE_VERSION = 'apiaryhq-v5.3.7';
 
 var EXTERNAL_URLS = [
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
@@ -37,13 +37,10 @@ var STATIC_FILES = [
   '/js/weather.js'
 ];
 
-// ── Install: cache all static files ─────────────────────
 self.addEventListener('install', function(e) {
   e.waitUntil(
     caches.open(CACHE_VERSION).then(function(cache) {
-      // Cache local files
       return cache.addAll(STATIC_FILES).then(function() {
-        // Cache external CDN files individually (failures won't block install)
         return Promise.allSettled(
           EXTERNAL_URLS.map(function(url) {
             return fetch(url).then(function(response) {
@@ -60,7 +57,6 @@ self.addEventListener('install', function(e) {
   );
 });
 
-// ── Activate: delete old caches ──────────────────────────
 self.addEventListener('activate', function(e) {
   e.waitUntil(
     caches.keys().then(function(keys) {
@@ -69,22 +65,19 @@ self.addEventListener('activate', function(e) {
             .map(function(key) { return caches.delete(key); })
       );
     }).then(function() {
-      // Take control of all open tabs immediately
       return self.clients.claim();
     })
   );
 });
 
-// ── Fetch: cache-first for static, network-first for API ─
 self.addEventListener('fetch', function(e) {
   var url = e.request.url;
-
-  // Let Supabase API calls always go to network — never cache these
-  // Only bypass cache for Supabase API data calls and weather API — not CDN scripts
-  if ((url.includes('supabase.co') && !url.includes('supabase-js')) || url.includes('tomorrow.io')) {
+  if ((url.includes('supabase.co') && !url.includes('supabase-js')) ||
+      url.includes('open-meteo.com') ||
+      url.includes('nominatim.openstreetmap.org') ||
+      url.includes('air-quality-api.open-meteo.com')) {
     e.respondWith(
       fetch(e.request).catch(function() {
-        // Network failed — return empty 503 so app handles it gracefully
         return new Response(JSON.stringify({ error: 'offline' }), {
           status: 503,
           headers: { 'Content-Type': 'application/json' }
@@ -93,20 +86,13 @@ self.addEventListener('fetch', function(e) {
     );
     return;
   }
-
-  // For all app files: cache-first, fall back to network
   e.respondWith(
     caches.match(e.request).then(function(cached) {
       if (cached) return cached;
-      // Not in cache yet — fetch and cache it
       return fetch(e.request).then(function(response) {
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
-        }
+        if (!response || response.status !== 200 || response.type !== 'basic') return response;
         var toCache = response.clone();
-        caches.open(CACHE_VERSION).then(function(cache) {
-          cache.put(e.request, toCache);
-        });
+        caches.open(CACHE_VERSION).then(function(cache) { cache.put(e.request, toCache); });
         return response;
       });
     })

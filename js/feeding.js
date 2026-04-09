@@ -108,6 +108,7 @@ async function saveFeeding(eid, isEdit, logAnother) {
   }
 
   if (logAnother) {
+    // Re-open a fresh modal keeping the same hive and date
     openFeedingModal(null, hiveId, date);
   } else {
     closeModal();
