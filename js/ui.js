@@ -21,18 +21,16 @@ function showTab(page) {
       b.classList.toggle('active', b.dataset.moreTab === page);
     });
   }
-  // Special handling for center home button
   var homeBtn = document.getElementById('nav-home-btn');
   if (homeBtn) homeBtn.classList.toggle('active', page === 'dash');
   currentTab = page;
   renderAll();
-  // Hide FAB on dashboard only — it's not needed there
   var fab = document.getElementById('fab-btn');
   if (fab) fab.style.display = (page === 'dash') ? 'none' : '';
   if (page === 'dash') { loadWeather(); loadPollenForecast(); }
   if (page === 'notes') initLibTab();
   if (page === 'settings') {
-    var savedZip = localStorage.getItem('apiaryhq_zip');
+    var savedZip  = localStorage.getItem('apiaryhq_zip');
     var savedName = localStorage.getItem('apiaryhq_location_name');
     var zi = document.getElementById('settings-zip');
     var zs = document.getElementById('zip-status');
@@ -65,10 +63,8 @@ function closeMoreTray() {
 function showTabFromMore(page) {
   closeMoreTray();
   showTab(page);
-  // Highlight the More button since we're on a "more" tab
   var btn = document.getElementById('more-tab-btn');
   if (btn) btn.classList.add('active');
-  // Highlight the tray button
   document.querySelectorAll('.more-tray button').forEach(function(b){
     b.classList.toggle('active', b.dataset.moreTab === page);
   });
@@ -96,9 +92,7 @@ function showDocsTab(tab) {
   updateFabForTab();
 }
 
-function updateFabForTab() {
-  // FAB is always visible when logged in
-}
+function updateFabForTab() {}
 
 // ═══════════════════════════════════════════════════════
 // FAB
@@ -120,7 +114,6 @@ document.getElementById('fab-btn').addEventListener('click', function() {
   else if (currentTab === 'contacts') openContactModal(null);
   else if (currentTab === 'notes') {
     if (window._libTab === 'notes') openNoteModal(null);
-    // Reference tab — no FAB action needed
   }
   else if (currentTab === 'settings') openApiaryRename();
 });
@@ -147,10 +140,6 @@ function makePills(gid, options, selected) {
 function selectPill(gid, btn) {
   document.querySelectorAll('#pill-'+gid+' .pill').forEach(function(p){p.classList.remove('active');});
   btn.classList.add('active');
-  if (typeof syncFeedingOtherRow === 'function') {
-    var mm = String(gid).match(/^(fty|sup)-(\d+)$/);
-    if (mm) syncFeedingOtherRow(mm[2]);
-  }
 }
 function getPill(gid) { var el=document.querySelector('#pill-'+gid+' .pill.active'); return el?el.textContent:''; }
 function makeStars(sid, val) {
@@ -202,10 +191,8 @@ function camSheetAction(source) {
   document.getElementById(inputId).click();
 }
 
-// Wire camera inputs to the same handlers as their gallery counterparts
 document.getElementById('photo-camera').addEventListener('change', function() {
   document.getElementById('photo-file').dataset.ctx = this.dataset.ctx || _camCtx;
-  // Transfer files by triggering the shared handler logic directly
   handlePhotoFiles(this.files, this.dataset.ctx || _camCtx);
   this.value = '';
 });
