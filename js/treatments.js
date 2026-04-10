@@ -590,16 +590,39 @@ var NONCHEMICAL_CONTROLS = [
   }
 ];
 
-// Treatment knowledge base (non-varroa pests and diseases — existing)
+// ── Pest & Disease SVG Illustrations ──────────────────
+var PEST_SVG = {
+  varroa: '<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:72px;height:72px;display:block;margin:0 auto"><!-- Body --><ellipse cx="40" cy="42" rx="18" ry="13" fill="#8B2020" stroke="#5a1010" stroke-width="1.5"/><!-- Head --><ellipse cx="40" cy="28" rx="8" ry="6" fill="#6B1818" stroke="#5a1010" stroke-width="1.2"/><!-- Mouth parts --><line x1="37" y1="24" x2="34" y2="19" stroke="#3a0a0a" stroke-width="1.2" stroke-linecap="round"/><line x1="40" y1="23" x2="40" y2="17" stroke="#3a0a0a" stroke-width="1.2" stroke-linecap="round"/><line x1="43" y1="24" x2="46" y2="19" stroke="#3a0a0a" stroke-width="1.2" stroke-linecap="round"/><!-- Legs left --><line x1="24" y1="36" x2="12" y2="30" stroke="#5a1010" stroke-width="1.5" stroke-linecap="round"/><line x1="23" y1="42" x2="10" y2="40" stroke="#5a1010" stroke-width="1.5" stroke-linecap="round"/><line x1="25" y1="48" x2="13" y2="52" stroke="#5a1010" stroke-width="1.5" stroke-linecap="round"/><line x1="28" y1="52" x2="18" y2="60" stroke="#5a1010" stroke-width="1.5" stroke-linecap="round"/><!-- Legs right --><line x1="56" y1="36" x2="68" y2="30" stroke="#5a1010" stroke-width="1.5" stroke-linecap="round"/><line x1="57" y1="42" x2="70" y2="40" stroke="#5a1010" stroke-width="1.5" stroke-linecap="round"/><line x1="55" y1="48" x2="67" y2="52" stroke="#5a1010" stroke-width="1.5" stroke-linecap="round"/><line x1="52" y1="52" x2="62" y2="60" stroke="#5a1010" stroke-width="1.5" stroke-linecap="round"/><!-- Texture lines on body --><ellipse cx="40" cy="42" rx="10" ry="7" fill="none" stroke="#6B1818" stroke-width="0.8" opacity="0.5"/></svg>',
+
+  shb: '<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:72px;height:72px;display:block;margin:0 auto"><!-- Wing covers (elytra) --><ellipse cx="40" cy="46" rx="16" ry="20" fill="#1a1a1a" stroke="#333" stroke-width="1.5"/><!-- Center line --><line x1="40" y1="26" x2="40" y2="66" stroke="#444" stroke-width="1" stroke-dasharray="2,2"/><!-- Head --><ellipse cx="40" cy="24" rx="10" ry="7" fill="#111" stroke="#333" stroke-width="1.2"/><!-- Antennae --><path d="M35 19 Q28 12 24 8" stroke="#333" stroke-width="1.2" stroke-linecap="round" fill="none"/><circle cx="24" cy="8" r="1.5" fill="#333"/><path d="M45 19 Q52 12 56 8" stroke="#333" stroke-width="1.2" stroke-linecap="round" fill="none"/><circle cx="56" cy="8" r="1.5" fill="#333"/><!-- Legs left --><line x1="26" y1="38" x2="14" y2="34" stroke="#333" stroke-width="1.4" stroke-linecap="round"/><line x1="25" y1="46" x2="12" y2="46" stroke="#333" stroke-width="1.4" stroke-linecap="round"/><line x1="27" y1="54" x2="15" y2="60" stroke="#333" stroke-width="1.4" stroke-linecap="round"/><!-- Legs right --><line x1="54" y1="38" x2="66" y2="34" stroke="#333" stroke-width="1.4" stroke-linecap="round"/><line x1="55" y1="46" x2="68" y2="46" stroke="#333" stroke-width="1.4" stroke-linecap="round"/><line x1="53" y1="54" x2="65" y2="60" stroke="#333" stroke-width="1.4" stroke-linecap="round"/><!-- Sheen highlight --><ellipse cx="36" cy="38" rx="5" ry="8" fill="white" opacity="0.08"/></svg>',
+
+  waxmoth: '<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:72px;height:72px;display:block;margin:0 auto"><!-- Wings --><ellipse cx="28" cy="38" rx="20" ry="10" fill="#b8a878" stroke="#8a7a58" stroke-width="1.2" transform="rotate(-15 28 38)"/><!-- Right wing --><ellipse cx="52" cy="38" rx="20" ry="10" fill="#c8b888" stroke="#8a7a58" stroke-width="1.2" transform="rotate(15 52 38)"/><!-- Body --><ellipse cx="40" cy="44" rx="7" ry="16" fill="#7a6848" stroke="#5a4a28" stroke-width="1.2"/><!-- Head --><circle cx="40" cy="27" r="6" fill="#6a5838" stroke="#5a4a28" stroke-width="1.2"/><!-- Antennae --><path d="M37 22 Q32 15 28 10" stroke="#5a4a28" stroke-width="1" stroke-linecap="round" fill="none"/><path d="M43 22 Q48 15 52 10" stroke="#5a4a28" stroke-width="1" stroke-linecap="round" fill="none"/><!-- Wing veins --><line x1="28" y1="32" x2="15" y2="30" stroke="#8a7a58" stroke-width="0.6" opacity="0.6"/><line x1="28" y1="36" x2="12" y2="38" stroke="#8a7a58" stroke-width="0.6" opacity="0.6"/><line x1="52" y1="32" x2="65" y2="30" stroke="#8a7a58" stroke-width="0.6" opacity="0.6"/><line x1="52" y1="36" x2="68" y2="38" stroke="#8a7a58" stroke-width="0.6" opacity="0.6"/><!-- Body segments --><line x1="34" y1="38" x2="46" y2="38" stroke="#5a4a28" stroke-width="0.7" opacity="0.5"/><line x1="34" y1="44" x2="46" y2="44" stroke="#5a4a28" stroke-width="0.7" opacity="0.5"/><line x1="34" y1="50" x2="46" y2="50" stroke="#5a4a28" stroke-width="0.7" opacity="0.5"/></svg>',
+
+  afb: '<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:72px;height:72px;display:block;margin:0 auto"><!-- Honeycomb cell --><polygon points="40,8 62,20 62,46 40,58 18,46 18,20" fill="#f5e6c0" stroke="#c8860a" stroke-width="2"/><!-- Sunken cappings (AFB symptom) --><ellipse cx="40" cy="33" rx="14" ry="10" fill="#c8860a" opacity="0.2" stroke="#c8860a" stroke-width="1" stroke-dasharray="3,2"/><!-- Ropy mass representation --><path d="M33 36 Q40 42 47 36" stroke="#8B4513" stroke-width="2" stroke-linecap="round" fill="none"/><!-- Bacteria rods (stylized) --><ellipse cx="34" cy="30" rx="3" ry="1.2" fill="#8B2020" opacity="0.7" transform="rotate(-20 34 30)"/><ellipse cx="40" cy="28" rx="3" ry="1.2" fill="#8B2020" opacity="0.7"/><ellipse cx="46" cy="30" rx="3" ry="1.2" fill="#8B2020" opacity="0.7" transform="rotate(20 46 30)"/><ellipse cx="37" cy="34" rx="3" ry="1.2" fill="#8B2020" opacity="0.6" transform="rotate(10 37 34)"/><ellipse cx="43" cy="34" rx="3" ry="1.2" fill="#8B2020" opacity="0.6" transform="rotate(-10 43 34)"/><!-- Warning indicator --><circle cx="58" cy="16" r="10" fill="#DC2626"/><text x="58" y="21" text-anchor="middle" fill="white" font-size="14" font-weight="bold" font-family="sans-serif">!</text></svg>',
+
+  efb: '<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:72px;height:72px;display:block;margin:0 auto"><!-- Honeycomb cell --><polygon points="40,8 62,20 62,46 40,58 18,46 18,20" fill="#f5e6c0" stroke="#c8860a" stroke-width="2"/><!-- Discolored larva (EFB symptom) --><path d="M28 38 Q32 26 40 28 Q48 30 50 38 Q48 44 40 45 Q32 44 28 38" fill="#d4a020" stroke="#a07010" stroke-width="1.2"/><!-- Twisted position --><path d="M32 35 Q40 30 46 38" stroke="#8B6010" stroke-width="1.5" stroke-linecap="round" fill="none" stroke-dasharray="2,1.5"/><!-- Bacteria rods --><ellipse cx="36" cy="34" rx="2.5" ry="1" fill="#D97706" opacity="0.8" transform="rotate(-30 36 34)"/><ellipse cx="42" cy="32" rx="2.5" ry="1" fill="#D97706" opacity="0.8" transform="rotate(15 42 32)"/><ellipse cx="40" cy="38" rx="2.5" ry="1" fill="#D97706" opacity="0.8"/><!-- Warning indicator --><circle cx="58" cy="16" r="10" fill="#D97706"/><text x="58" y="21" text-anchor="middle" fill="white" font-size="14" font-weight="bold" font-family="sans-serif">!</text></svg>',
+
+  chalkbrood: '<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:72px;height:72px;display:block;margin:0 auto"><!-- Cell outline --><polygon points="40,8 62,20 62,46 40,58 18,46 18,20" fill="#f0ece0" stroke="#c8860a" stroke-width="2"/><!-- Chalkbrood mummy --><ellipse cx="40" cy="36" rx="13" ry="9" fill="#e8e4d8" stroke="#b0a890" stroke-width="1.5"/><!-- Mummy texture --><line x1="32" y1="33" x2="34" y2="39" stroke="#b0a890" stroke-width="0.8" opacity="0.6"/><line x1="36" y1="29" x2="37" y2="36" stroke="#b0a890" stroke-width="0.8" opacity="0.6"/><line x1="40" y1="28" x2="41" y2="37" stroke="#b0a890" stroke-width="0.8" opacity="0.6"/><line x1="44" y1="30" x2="43" y2="37" stroke="#b0a890" stroke-width="0.8" opacity="0.6"/><line x1="47" y1="33" x2="46" y2="39" stroke="#b0a890" stroke-width="0.8" opacity="0.6"/><!-- Dark mummies (sporulating) --><ellipse cx="28" cy="52" rx="4" ry="3" fill="#444" stroke="#222" stroke-width="1"/><ellipse cx="38" cy="55" rx="4" ry="3" fill="#555" stroke="#222" stroke-width="1"/><ellipse cx="48" cy="53" rx="4" ry="3" fill="#333" stroke="#222" stroke-width="1"/></svg>',
+
+  sacbrood: '<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:72px;height:72px;display:block;margin:0 auto"><!-- Cell --><polygon points="40,8 62,20 62,46 40,58 18,46 18,20" fill="#f5e6c0" stroke="#c8860a" stroke-width="2"/><!-- Sac larva --><path d="M26 40 Q28 24 40 22 Q52 24 54 40 Q52 52 40 54 Q28 52 26 40" fill="#f0c040" stroke="#c8860a" stroke-width="1.2" opacity="0.9"/><!-- Fluid interior --><ellipse cx="40" cy="38" rx="9" ry="10" fill="#f8d860" opacity="0.6"/><!-- Head darkening --><ellipse cx="40" cy="25" rx="6" ry="4" fill="#8B6010" opacity="0.5"/><!-- Upturned tail --><path d="M40 52 Q40 56 43 58" stroke="#c8860a" stroke-width="1.5" stroke-linecap="round" fill="none"/><!-- Segmentation --><line x1="30" y1="35" x2="50" y2="35" stroke="#c8860a" stroke-width="0.6" opacity="0.4"/><line x1="28" y1="42" x2="52" y2="42" stroke="#c8860a" stroke-width="0.6" opacity="0.4"/></svg>',
+
+  nosema: '<svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:72px;height:72px;display:block;margin:0 auto"><!-- Bee abdomen --><ellipse cx="40" cy="44" rx="22" ry="16" fill="#f5d060" stroke="#c8860a" stroke-width="1.5"/><!-- Abdomen stripes --><line x1="20" y1="40" x2="60" y2="40" stroke="#8B4513" stroke-width="1.5" opacity="0.5"/><line x1="19" y1="46" x2="61" y2="46" stroke="#8B4513" stroke-width="1.5" opacity="0.5"/><line x1="20" y1="52" x2="60" y2="52" stroke="#8B4513" stroke-width="1.5" opacity="0.5"/><!-- Nosema spores --><ellipse cx="32" cy="43" rx="4" ry="2.5" fill="#6B4ECC" opacity="0.75" stroke="#4a30a0" stroke-width="0.8"/><ellipse cx="40" cy="40" rx="4" ry="2.5" fill="#6B4ECC" opacity="0.75" stroke="#4a30a0" stroke-width="0.8"/><ellipse cx="48" cy="43" rx="4" ry="2.5" fill="#6B4ECC" opacity="0.75" stroke="#4a30a0" stroke-width="0.8"/><ellipse cx="36" cy="48" rx="4" ry="2.5" fill="#5B3EBC" opacity="0.65" stroke="#4a30a0" stroke-width="0.8"/><ellipse cx="44" cy="48" rx="4" ry="2.5" fill="#5B3EBC" opacity="0.65" stroke="#4a30a0" stroke-width="0.8"/><!-- Dysentery streaks --><path d="M18 50 Q10 54 6 58" stroke="#8B4513" stroke-width="2" stroke-linecap="round" opacity="0.6"/><path d="M16 44 Q8 46 4 50" stroke="#8B4513" stroke-width="2" stroke-linecap="round" opacity="0.5"/></svg>',
+};
+
+// Treatment knowledge base (non-varroa pests and diseases)
 var PEST_CATEGORIES = {
   'Varroa Mites': {
-    icon:'🔴', type:'pest',
+    svgKey:'varroa', type:'pest',
+    description:'Varroa destructor is a parasitic mite and the single greatest threat to managed honeybee colonies worldwide. Mites are reddish-brown, oval, about 1.1mm wide — visible to the naked eye on adult bees and in brood. They reproduce inside sealed brood cells, feeding on developing pupae and transmitting viruses including Deformed Wing Virus. Left untreated, colonies typically collapse within 1–3 years.',
+    symptoms:'Adult mites visible on adult bees and brood (especially on pupae in uncapped cells). Deformed wings on emerging bees. Sunken or perforated cappings. Reduced colony population, scattered brood pattern. Crawling bees with shriveled wings near the entrance.',
     recommendations:[
       {name:'See Varroa Treatment Guide',note:'Full AUBEE/HBHC treatment protocols are in the 📚 Library tab → Reference.',warn:''}
     ]
   },
   'Tracheal Mites': {
-    icon:'🔴', type:'pest',
+    svgKey:null, type:'pest',
+    description:'Acarapis woodi is a microscopic mite that infests the breathing tubes (tracheae) of adult bees. Once common, tracheal mite populations have declined significantly since the 1990s due to widespread use of Varroa treatments that also suppress them. Still occasionally found, particularly in overwintered colonies with high mite loads.',
+    symptoms:'Crawling bees unable to fly, particularly in early spring. K-wing (disjointed wings held at odd angle). High winter die-off. Adults clustering outside the hive during cold weather. Positive confirmation requires microscopic examination of bee tracheae.',
     recommendations:[
       {name:'Grease Patties (shortening + sugar)',note:'Disrupts mite pheromone detection. Preventative and treatment.',warn:''},
       {name:'Menthol Crystals',note:'Place in hive above frames.',warn:'⚠️ Must be above 59°F (15°C) to vaporize effectively'},
@@ -608,7 +631,9 @@ var PEST_CATEGORIES = {
     ]
   },
   'Small Hive Beetles': {
-    icon:'🟤', type:'pest',
+    svgKey:'shb', type:'pest',
+    description:'Aethina tumida is a small (5-7mm), dark beetle native to sub-Saharan Africa that arrived in the US in the late 1990s. Adults and larvae feed on pollen, honey, and brood. Larvae defecate in honey causing fermentation and sliming — a complete hive can be destroyed in days under severe infestation. Alabama\'s warm, humid climate is ideal for SHB and shortens their lifecycle to ~23 days, making year-round vigilance essential.',
+    symptoms:'Adult beetles running from light when hive is opened. Larvae (cream-colored, 1cm) tunneling through comb and honey. Frothy, fermented honey with unpleasant odor. Bees abandoning sections of comb. Larvae exiting hive to pupate in soil around hive base.',
     recommendations:[
       {name:'Freeman Beetle Trap or Beetle Blaster',note:'Oil trap on bottom board. Replace oil every 2 weeks in Alabama summer heat. Alabama\'s heat shortens the SHB lifecycle to ~23 days — check traps more frequently June–September.',warn:''},
       {name:'Beetle Barn between frames',note:'In-hive trap placed between brood frames. Place 1–2 in the brood area where bees cluster.',warn:''},
@@ -620,7 +645,9 @@ var PEST_CATEGORIES = {
     ]
   },
   'Wax Moths': {
-    icon:'🟡', type:'pest',
+    svgKey:'waxmoth', type:'pest',
+    description:'Greater (Galleria mellonella) and lesser (Achroia grisella) wax moths are scavengers that exploit weakened or undefended colonies. A strong, populous colony will defend against wax moths — infestation is almost always a symptom of a colony problem, not the root cause. Stored, empty equipment is extremely vulnerable. Alabama\'s warm summers accelerate wax moth development dramatically.',
+    symptoms:'Silken tunnels and webbing across comb surfaces. Larvae (white, up to 2.5cm) tunneling through wax and wood. "Bald brood" where cappings are removed by tunneling larvae. Comb destroyed leaving brown, papery webbing. In stored equipment: complete comb destruction within weeks in warm weather.',
     recommendations:[
       {name:'Para-Moth (Paradichlorobenzene) — Stored Equipment ONLY',note:'Per Dadant: 6 tbsp per 15 supers. Duct tape ALL openings making hive as airtight as possible. Reapply crystals as needed. Apply particularly in warm weather. CRITICAL: Air out supers 1–2 weeks before placing back on hive.',warn:'⛔ STORED EQUIPMENT ONLY — toxic to bees. NEVER use in active hives. Air out 1–2 weeks before use on hive.'},
       {name:'B402 Certan (Biological Control)',note:'Per Dadant: Mix 1 part B402 to 19 parts water (5% solution). Apply after frames have been extracted — apply to both sides of each frame. 1 oz fluid per deep frame, 2/3 oz per medium, 1/2 oz per shallow. Allow to dry before putting into storage. Apply once after extraction before any wax moth infestation — gives protection through to next season. Kills young wax moth larvae.',warn:'⚠️ Apply AFTER extraction only. Allow to dry completely before storage. Apply once per season after extraction.'},
@@ -629,7 +656,9 @@ var PEST_CATEGORIES = {
     ]
   },
   'American Foulbrood': {
-    icon:'🔴', type:'disease', notifiable:true,
+    svgKey:'afb', type:'disease', notifiable:true,
+    description:'American Foulbrood (AFB) is caused by the spore-forming bacterium Paenibacillus larvae and is the most serious bacterial disease of honeybees. Spores are extraordinarily resilient — they survive in old equipment for 50+ years. Once a colony is infected, the disease is fatal. AFB is a NOTIFIABLE disease in Alabama and most US states — you are legally required to report suspected cases to your state apiary inspector.',
+    symptoms:'Sunken, greasy-looking, perforated or discolored cappings (brown to black, darker than healthy). Ropy stringy mass when capping is punctured with a toothpick and slowly withdrawn (forms a thread 2-3cm long — the classic "ropiness" test). Characteristic foul odor often described as rotting fish or glue. Brown, melted-looking remains in cells. Scattered brood pattern.',
     recommendations:[
       {name:'Contact State Apiary Inspector IMMEDIATELY',note:'AFB is a notifiable disease. You are legally required to contact your state or local apiary inspector before treating, moving, or destroying any equipment. Alabama Apiary Protection Unit (ADAI): Brittaney Allen, State Survey Coordinator — (334) 240-7172 · brittaney.allen@agi.alabama.gov · agi.alabama.gov/plantprotection/apiary-protection-unit/',warn:'⛔ DO NOT TREAT OR DESTROY EQUIPMENT without contacting your state inspector first — this is the law'},
       {name:'Tetra-B Mix / Oxytetracycline (Preventative Only)',note:'Per Dadant: Three treatments at 4–5 day intervals. Sprinkle recommended dosage around edges of brood box on top bars of frames. Once a week for 3 weeks. Treat spring and fall. IMPORTANT: This is PREVENTATIVE only — does not cure active AFB infection.',warn:'⚠️ PREVENTATIVE USE ONLY — does NOT kill active AFB spores. Do not use as sole treatment for confirmed active infection.'},
@@ -638,7 +667,9 @@ var PEST_CATEGORIES = {
     ]
   },
   'European Foulbrood': {
-    icon:'🟡', type:'disease',
+    svgKey:'efb', type:'disease',
+    description:'European Foulbrood (EFB) is caused by the bacterium Melissococcus plutonius, which competes with larvae for food. Unlike AFB, EFB primarily kills young, unsealed larvae and is not spore-forming — making it less persistent than AFB. EFB is often stress-related and outbreaks are triggered by poor nutrition, dearth conditions, and rapid population changes. Usually recoverable with proper management.',
+    symptoms:'Dead or dying larvae in unsealed cells — twisted or melted in position, often in a spiral. Larvae turn yellow then brown, with a sour (not foul) odor. Larvae lack the ropiness of AFB. Spotty, scattered brood pattern. More common during dearth or rapid buildup in spring.',
     recommendations:[
       {name:'Tetra-B Mix / Oxytetracycline',note:'Per Dadant: Three treatments at 4–5 day intervals. Sprinkle recommended dosage around edges of brood box on top bars of frames. Once a week for 3 weeks. Treat spring and fall. More effective against EFB than AFB.',warn:'⚠️ Follow withdrawal periods before adding honey supers'},
       {name:'Improve Nutrition',note:'Supplement with pollen patties and syrup to reduce nutritional stress — a key driver of EFB outbreaks.',warn:''},
@@ -646,7 +677,9 @@ var PEST_CATEGORIES = {
     ]
   },
   'Chalkbrood': {
-    icon:'🟡', type:'disease',
+    svgKey:'chalkbrood', type:'disease',
+    description:'Chalkbrood is a fungal disease caused by Ascosphaera apis that mummifies bee larvae in a chalky white or grey-black coating. The fungus thrives in cool, damp conditions — most outbreaks occur in spring when temperature fluctuations occur and the cluster cannot keep all brood warm. Usually self-limiting in strong colonies. Hygienic queens that detect and remove infected larvae are the best long-term control.',
+    symptoms:'Hard, chalk-like white mummies in and around cells, often on the landing board and bottom board. Mummies may be white (early stage) or dark grey-black (sporulating, highly infectious). Spotty brood pattern. Worse in spring with temperature swings or in hives with excess moisture.',
     recommendations:[
       {name:'Improve Ventilation',note:'Reduce moisture — add screened bottom board, tilt hive slightly forward to allow condensation to drain.',warn:''},
       {name:'Requeen with Hygienic Stock',note:'Strongest long-term management — hygienic colonies remove chalkbrood mummies before sporulation.',warn:''},
@@ -655,7 +688,9 @@ var PEST_CATEGORIES = {
     ]
   },
   'Sacbrood': {
-    icon:'🟡', type:'disease',
+    svgKey:'sacbrood', type:'disease',
+    description:'Sacbrood is caused by a virus (SBV) that prevents larvae from completing their final molt before pupation. The dead larva fills with fluid, forming a fluid-filled sac beneath the skin. Usually self-limiting — most colonies recover on their own, especially with requeening. Outbreaks often follow periods of stress, dearth, or rapid population change.',
+    symptoms:'Larvae die after cell is capped — capping may be punctured or sunken. Dead larvae appear as a fluid-filled sac with darkened head end and upturned tail. Larvae are easy to remove whole (no ropiness, no foul odor). Scattered pattern of affected cells. Scales dry flat and are easily removed by bees.',
     recommendations:[
       {name:'Requeen',note:'Usually self-limiting but requeening with hygienic stock speeds recovery significantly.',warn:''},
       {name:'Remove Affected Brood',note:'Remove frames with heavy sacbrood symptoms to reduce viral load in colony.',warn:''},
@@ -663,7 +698,9 @@ var PEST_CATEGORIES = {
     ]
   },
   'Nosema': {
-    icon:'🟡', type:'disease',
+    svgKey:'nosema', type:'disease',
+    description:'Nosema is caused by microsporidian fungi — Nosema apis and the more virulent Nosema ceranae — that infect the gut cells of adult bees, impairing digestion and shortening lifespan. N. ceranae is now the dominant species in the US and can cause significant year-round colony losses without obvious dysentery symptoms. Weakened, short-lived workers reduce colony populations and foraging capacity.',
+    symptoms:'Nosema apis: dysentery, brown streaking on hive exterior and frames, bees unable to fly in spring. Nosema ceranae: more subtle — reduced population, poor buildup in spring, excess dead bees, crawling bees. Confirmed only by microscopic examination of bee guts or lab testing. Many colonies have subclinical infections with no obvious external signs.',
     recommendations:[
       {name:'Fumagilin-B',note:'Per Dadant: Can be used spring or fall. Fumagilin-B can be dissolved in water or syrup at room temperature. Consult the product leaflet to ensure the correct quantities of Fumagilin-B and sugar — see product leaflet for proper dosage. Do not guess quantities.',warn:'⚠️ See product leaflet for proper dosage — quantities are critical. Check current legal status in your state before purchase.'},
       {name:'Improve Ventilation & Nutrition',note:'Reduce hive moisture — a primary driver of Nosema. Supplement with pollen patties during dearth periods.',warn:''},
@@ -671,14 +708,18 @@ var PEST_CATEGORIES = {
     ]
   },
   'Deformed Wing Virus': {
-    icon:'🔴', type:'disease',
+    svgKey:null, type:'disease',
+    description:'Deformed Wing Virus (DWV) is the most widespread bee virus globally and is the primary cause of the visible damage associated with high Varroa mite loads. The virus is transmitted and amplified by Varroa mites feeding on developing pupae. DWV can persist in colonies at low levels without symptoms, but becomes devastating when Varroa populations are unmanaged.',
+    symptoms:'Newly emerged bees with shriveled, crumpled, or shortened wings — the hallmark symptom. Bees with distorted abdomens. Crawling bees near entrance. Reduced worker lifespan and foraging ability. Presence of DWV symptoms almost always indicates a Varroa mite problem that has progressed beyond safe thresholds.',
     recommendations:[
       {name:'Treat for Varroa',note:'DWV is transmitted by varroa. Varroa control is the primary treatment.',warn:''},
       {name:'Oxalic Acid Vaporization',note:'Reduces varroa load which carries DWV.',warn:'⚠️ PPE required'}
     ]
   },
   'Ants': {
-    icon:'🟠', type:'pest',
+    svgKey:null, type:'pest',
+    description:'Several ant species including fire ants, carpenter ants, and odorous house ants may establish nests near or in hives, particularly in hive stands and under bottom boards. Ants generally do not directly harm bees but cause stress, steal food, and can overwhelm weak colonies. In Alabama, fire ants are the most aggressive and potentially dangerous species.',
+    symptoms:'Ant trails on or near the hive. Ant nests in or under hive stands. Bees clustering outside (bearding) due to ant disturbance inside. Fire ant mounds within several feet of hive.',
     recommendations:[
       {name:'Cinnamon Around Hive Base',note:'Natural deterrent — sprinkle around stand legs.',warn:''},
       {name:'Oil/Water Barrier on Stand Legs',note:'Place stand legs in containers of oil or water.',warn:''},
@@ -686,7 +727,9 @@ var PEST_CATEGORIES = {
     ]
   },
   'Rodents (Mice/Voles)': {
-    icon:'🟠', type:'pest',
+    svgKey:null, type:'pest',
+    description:'Mice (Mus musculus) and voles commonly invade hives in fall and winter when colonies cluster and entrance traffic drops. They shred comb and frames to build nests, contaminate honey stores, and stress overwintering clusters. In Alabama winters, this is most common from late November through February when bees cluster tightly and cannot easily defend the entrance.',
+    symptoms:'Chewed frames and comb, especially in corners. Nesting material (grass, insulation) inside the hive. Droppings on the bottom board. Disturbed cluster behavior. Mouse-sized entry damage around the entrance.',
     recommendations:[
       {name:'Mouse Guard / Entrance Reducer',note:'Install before winter — allows bees but blocks mice.',warn:''},
       {name:'Raise Hive on Stand',note:'Elevation deters rodent access.',warn:''},

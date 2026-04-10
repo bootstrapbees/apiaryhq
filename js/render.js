@@ -537,17 +537,58 @@ function renderTreatRefLibrary() {
 
   var html = '';
 
-  // Varroa Mite Treatments
-  html += secHeader('lib-sec-mite', '&#128202; Varroa Mite Treatments (AUBEE)');
+  // ── PESTS & DISEASES (first in library) ──
+  html += secHeader('lib-sec-pests', '<svg viewBox="0 0 20 20" fill="none" style="width:15px;height:15px;display:inline-block;vertical-align:-3px;margin-right:5px" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/><line x1="10" y1="6" x2="10" y2="10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="13" r="1" fill="currentColor"/></svg>Pests &amp; Diseases');
+  if (typeof PEST_CATEGORIES !== 'undefined') {
+    Object.keys(PEST_CATEGORIES).forEach(function(key) {
+      var p = PEST_CATEGORIES[key];
+      var svgIll = (p.svgKey && typeof PEST_SVG !== 'undefined' && PEST_SVG[p.svgKey]) ? PEST_SVG[p.svgKey] : '';
+      var pestColor = p.notifiable ? '#DC2626' : (p.type === 'disease' ? '#b45309' : '#6B4ECC');
+      var pestBg = p.notifiable ? 'rgba(220,38,38,.08)' : (p.type === 'disease' ? 'rgba(180,83,9,.08)' : 'rgba(107,78,204,.08)');
+      var typeLabel = p.notifiable ? 'Notifiable Disease' : (p.type === 'disease' ? 'Disease' : 'Pest');
+      html += '<div class="tref-card">' +
+        '<div class="tref-header" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.tref-chevron\').classList.toggle(\'open\')">' +
+          '<div class="tref-ico" style="background:'+pestBg+';color:'+pestColor+'">' +
+            '<svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.6"/><line x1="10" y1="6" x2="10" y2="10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="10" cy="13" r="1" fill="currentColor"/></svg>' +
+          '</div>' +
+          '<div style="flex:1;min-width:0"><div class="tref-name">' + esc(p.name || key) + '</div>' +
+          '<div class="tref-tags">' +
+            '<span class="tref-tag" style="background:'+pestBg+';color:'+pestColor+'">' + typeLabel + '</span>' +
+            (p.notifiable ? '<span class="tref-tag resistance">Reportable</span>' : '') +
+          '</div></div>' +
+          '<span class="tref-chevron">&#9662;</span>' +
+        '</div>' +
+        '<div class="tref-body">' +
+          (svgIll ? '<div style="padding:14px 0 10px;border-bottom:1px solid var(--border);margin-bottom:12px">' + svgIll + '<div style="text-align:center;font-size:10px;color:var(--txt2);margin-top:6px;font-style:italic">Identification reference illustration</div></div>' : '') +
+          (p.description ? '<div class="tref-section"><div class="tref-section-title">What It Is</div><div class="tref-note">' + esc(p.description) + '</div></div>' : '') +
+          (p.symptoms ? '<div class="tref-section"><div class="tref-section-title">Signs &amp; Symptoms</div><div class="tref-note">' + esc(p.symptoms) + '</div></div>' : '') +
+          (p.notifiable ? '<div class="tref-warn" style="background:rgba(220,38,38,.1);border-left-color:#DC2626">⛔ NOTIFIABLE DISEASE — Contact your state apiary inspector before taking any action. Alabama Apiary Unit: (334) 240-7172</div>' : '') +
+          (p.recommendations && p.recommendations.length ? '<div class="tref-section"><div class="tref-section-title">Recommended Treatments</div>' +
+            p.recommendations.map(function(r) {
+              return '<div class="tref-row"><div class="tref-row-ico">&bull;</div><div><strong>' + esc(r.name) + '</strong>' +
+                (r.note ? ' &mdash; ' + esc(r.note) : '') +
+                (r.warn ? '<br><span style="color:#b43c3c;font-size:11px">' + esc(r.warn) + '</span>' : '') +
+              '</div></div>';
+            }).join('') + '</div>' : '') +
+          '<div style="font-size:11px;color:var(--txt2);margin-top:10px;font-style:italic">See Varroa Mite Treatments and Non-Chemical Controls sections below for full dosing instructions, temperature requirements, and safety warnings.</div>' +
+        '</div>' +
+      '</div>';
+    });
+  }
+
+  // ── VARROA MITE TREATMENTS ──
+  html += secHeader('lib-sec-mite', '<svg viewBox="0 0 20 20" fill="none" style="width:15px;height:15px;display:inline-block;vertical-align:-3px;margin-right:5px" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="2" width="4" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7h10l1.5 11H3.5L5 7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><line x1="10" y1="11" x2="10" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="8.5" y1="12.5" x2="11.5" y2="12.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Varroa Mite Treatments (AUBEE)');
   html += VARROA_TREATMENTS.map(function(t) { return trefCard(t); }).join('');
 
-  // Non-Chemical Controls
-  html += secHeader('lib-sec-nonchemical', '&#127807; Non-Chemical Controls');
+  // ── NON-CHEMICAL CONTROLS ──
+  html += secHeader('lib-sec-nonchemical', '<svg viewBox="0 0 20 20" fill="none" style="width:15px;height:15px;display:inline-block;vertical-align:-3px;margin-right:5px" xmlns="http://www.w3.org/2000/svg"><path d="M10 3c0 0-6 4-6 9a6 6 0 0012 0c0-5-6-9-6-9z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>Non-Chemical Controls');
   if (typeof NONCHEMICAL_CONTROLS !== 'undefined') {
     html += NONCHEMICAL_CONTROLS.map(function(c) {
       return '<div class="tref-card">' +
         '<div class="tref-header" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.tref-chevron\').classList.toggle(\'open\')">' +
-          '<div class="tref-ico organic" style="font-size:18px">' + (c.icon || '&#127807;') + '</div>' +
+          '<div class="tref-ico organic">' +
+            '<svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 3c0 0-6 4-6 9a6 6 0 0012 0c0-5-6-9-6-9z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>' +
+          '</div>' +
           '<div style="flex:1;min-width:0"><div class="tref-name">' + esc(c.name) + '</div>' +
           '<div class="tref-tags"><span class="tref-tag organic">Non-Chemical</span></div></div>' +
           '<span class="tref-chevron">&#9662;</span>' +
@@ -562,40 +603,13 @@ function renderTreatRefLibrary() {
     }).join('');
   }
 
-  // Pests & Diseases
-  html += secHeader('lib-sec-pests', '&#129458; Pests & Diseases');
-  if (typeof PEST_CATEGORIES !== 'undefined') {
-    Object.keys(PEST_CATEGORIES).forEach(function(key) {
-      var p = PEST_CATEGORIES[key];
-      html += '<div class="tref-card">' +
-        '<div class="tref-header" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.tref-chevron\').classList.toggle(\'open\')">' +
-          '<div class="tref-ico" style="background:rgba(180,60,60,.1);color:#b43c3c;font-size:18px">' + (p.icon || '&#129458;') + '</div>' +
-          '<div style="flex:1;min-width:0"><div class="tref-name">' + esc(p.name || key) + '</div>' +
-          '<div class="tref-tags"><span class="tref-tag" style="background:rgba(180,60,60,.1);color:#b43c3c">' + esc(p.type || 'pest') + '</span>' +
-          (p.notifiable ? '<span class="tref-tag resistance">Reportable</span>' : '') + '</div></div>' +
-          '<span class="tref-chevron">&#9662;</span>' +
-        '</div>' +
-        '<div class="tref-body">' +
-          (p.symptoms ? '<div class="tref-section"><div class="tref-section-title">Symptoms</div><div class="tref-note">' + esc(p.symptoms) + '</div></div>' : '') +
-          (p.controls && p.controls.length ? '<div class="tref-section"><div class="tref-section-title">Controls</div>' +
-            p.controls.map(function(c) {
-              return '<div class="tref-row"><div class="tref-row-ico">&bull;</div><div><strong>' + esc(c.name) + '</strong>' +
-                (c.note ? ' &mdash; ' + esc(c.note) : '') +
-                (c.warn ? '<br><span style="color:#b43c3c;font-size:11px">' + esc(c.warn) + '</span>' : '') +
-              '</div></div>';
-            }).join('') + '</div>' : '') +
-        '</div>' +
-      '</div>';
-    });
-  }
-
-  // Feeding Guide
-  html += secHeader('lib-sec-feeding', '&#127855; Feeding Guide');
+  // ── FEEDING GUIDE ──
+  html += secHeader('lib-sec-feeding', '<svg viewBox="0 0 20 20" fill="none" style="width:15px;height:15px;display:inline-block;vertical-align:-3px;margin-right:5px" xmlns="http://www.w3.org/2000/svg"><path d="M10 4c-2 0-3.5 1.6-3.5 3.5 0 2 1.5 3.8 3.5 6.5 2-2.7 3.5-4.5 3.5-6.5C13.5 5.6 12 4 10 4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 9v2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Feeding Guide');
   if (typeof ALABAMA_FEEDING_CALENDAR !== 'undefined') {
     html += ALABAMA_FEEDING_CALENDAR.map(function(s) {
       return '<div class="tref-card">' +
         '<div class="tref-header" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.tref-chevron\').classList.toggle(\'open\')">' +
-          '<div class="tref-ico organic" style="font-size:18px">&#128467;</div>' +
+          '<div class="tref-ico organic"><svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="4" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.4"/><line x1="6" y1="2" x2="6" y2="6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="14" y1="2" x2="14" y2="6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="2" y1="9" x2="18" y2="9" stroke="currentColor" stroke-width="1.3"/></svg></div>' +
           '<div style="flex:1;min-width:0"><div class="tref-name">' + esc(s.season || s.months) + '</div>' +
           '<div class="tref-tags"><span class="tref-tag organic">' + esc(s.months || '') + '</span></div></div>' +
           '<span class="tref-chevron">&#9662;</span>' +
@@ -610,13 +624,13 @@ function renderTreatRefLibrary() {
     }).join('');
   }
 
-  // Feeding Supplements
-  html += secHeader('lib-sec-supplements', '&#129514; Feeding Supplements');
+  // ── FEEDING SUPPLEMENTS ──
+  html += secHeader('lib-sec-supplements', '<svg viewBox="0 0 20 20" fill="none" style="width:15px;height:15px;display:inline-block;vertical-align:-3px;margin-right:5px" xmlns="http://www.w3.org/2000/svg"><rect x="8" y="2" width="4" height="6" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 7h10l1.5 11H3.5L5 7z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>Feeding Supplements');
   if (typeof FEEDING_SUPPLEMENTS !== 'undefined') {
     html += FEEDING_SUPPLEMENTS.map(function(s) {
       return '<div class="tref-card">' +
         '<div class="tref-header" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.tref-chevron\').classList.toggle(\'open\')">' +
-          '<div class="tref-ico organic" style="font-size:18px">&#129514;</div>' +
+          '<div class="tref-ico organic"><svg viewBox="0 0 20 20" fill="none" style="width:18px;height:18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 4c-2 0-3.5 1.6-3.5 3.5 0 2 1.5 3.8 3.5 6.5 2-2.7 3.5-4.5 3.5-6.5C13.5 5.6 12 4 10 4z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></div>' +
           '<div style="flex:1;min-width:0"><div class="tref-name">' + esc(s.name) + '</div>' +
           '<div class="tref-tags"><span class="tref-tag organic">Supplement</span></div></div>' +
           '<span class="tref-chevron">&#9662;</span>' +
@@ -631,8 +645,8 @@ function renderTreatRefLibrary() {
     }).join('');
   }
 
-  // Syrup Mixing Guide — inline data (Dadant recommendations)
-  html += secHeader('lib-sec-syrup', '&#127802; Syrup Mixing Guide');
+  // ── SYRUP MIXING GUIDE ──
+  html += secHeader('lib-sec-syrup', '<svg viewBox="0 0 20 20" fill="none" style="width:15px;height:15px;display:inline-block;vertical-align:-3px;margin-right:5px" xmlns="http://www.w3.org/2000/svg"><path d="M10 3C9 3 5 7 5 11a5 5 0 0010 0c0-4-4-8-5-8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><line x1="10" y1="9" x2="10" y2="13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Syrup Mixing Guide');
   var SYRUP_DATA = [
     { name:'1:1 Sugar Syrup (Spring/Summer)', ratio:'1 lb sugar : 1 pt water', use:'Stimulates brood rearing and comb building. Use in spring to stimulate buildup and for new packages/splits. Do not use during honey flow.', temp:'Feed when temps are above 50°F.', note:'Per Dadant: Add Honey-B-Healthy at 1 tsp/qt to stimulate feeding and inhibit fermentation.' },
     { name:'2:1 Sugar Syrup (Fall/Winter)', ratio:'2 lbs sugar : 1 pt water', use:'Winter stores — heavier syrup converts to honey faster with less moisture. Feed in fall to ensure adequate winter stores. Stop feeding when temps drop below 50°F consistently.', temp:'Feed before temps drop below 50°F.', note:'Per Dadant: Feed until bees stop taking it. A light hive in November needs emergency feeding — switch to candy board below 50°F.' },
