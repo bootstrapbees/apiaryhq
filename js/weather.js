@@ -1,6 +1,10 @@
 // ═══════════════════════════════════════════════════════
 // APIARY HQ — WEATHER
-// Open-Meteo (free, no key) · ZIP geocoded via Nominatim
+// Primary:  Open-Meteo (free, no key)
+// Fallback: wttr.in (free, no key)
+// Cache:    localStorage 30-min cache — shows last known
+//           reading with "as of X ago" label if APIs down
+// ZIP geocoded via Nominatim
 // ═══════════════════════════════════════════════════════
 
 var WX_SVG = {
@@ -29,15 +33,29 @@ var WMO_DESC = {
   95:'Thunderstorm',96:'Thunderstorm',99:'Thunderstorm'
 };
 
+// wttr.in weather code → our icon key
+var WTTR_WX = {
+  113:'sun', 116:'pcloud', 119:'cloud', 122:'cloud',
+  143:'fog', 176:'rain', 179:'snow', 182:'rain', 185:'rain',
+  200:'storm', 227:'snow', 230:'snow', 248:'fog', 260:'fog',
+  263:'rain', 266:'rain', 281:'rain', 284:'rain', 293:'rain',
+  296:'rain', 299:'rain', 302:'rain', 305:'rain', 308:'rain',
+  311:'rain', 314:'rain', 317:'rain', 320:'snow', 323:'snow',
+  326:'snow', 329:'snow', 332:'snow', 335:'snow', 338:'snow',
+  350:'rain', 353:'rain', 356:'rain', 359:'rain', 362:'rain',
+  365:'rain', 368:'snow', 371:'snow', 374:'rain', 377:'rain',
+  386:'storm', 389:'storm', 392:'storm', 395:'storm'
+};
+
 function wmoDesc(c) { return WMO_DESC[c] || 'Unknown'; }
 function wmoWxSvg(c) { return WX_SVG[WMO_WX[c] || 'sun']; }
 
 function beeAdv(t, w, code) {
-  if (t < 50)  return { ok:false, m:'Too cold — bees are clustered. No inspections.' };
-  if (t < 55)  return { ok:false, m:'Marginal — bees may be sluggish. Inspect briefly only.' };
-  if (t > 95)  return { ok:false, m:'Very hot — keep inspections short and early morning.' };
-  if (w > 20)  return { ok:false, m:'Too windy — avoid inspections over 15 mph.' };
-  if ([61,63,65,80,81,82,95,96,99].indexOf(code) >= 0) return { ok:false, m:'Rain or storms — postpone inspections.' };
+  if (t < 50)  return { ok:false, m:'Too cold \u2014 bees are clustered. No inspections.' };
+  if (t < 55)  return { ok:false, m:'Marginal \u2014 bees may be sluggish. Inspect briefly only.' };
+  if (t > 95)  return { ok:false, m:'Very hot \u2014 keep inspections short and early morning.' };
+  if (w > 20)  return { ok:false, m:'Too windy \u2014 avoid inspections over 15 mph.' };
+  if ([61,63,65,80,81,82,95,96,99].indexOf(code) >= 0) return { ok:false, m:'Rain or storms \u2014 postpone inspections.' };
   return { ok:true, m:'Good conditions for inspections.' };
 }
 
@@ -58,12 +76,40 @@ function scoreColor(s) {
   return '#EF9A9A';
 }
 
-// ── ZIP entry prompt shown inside the weather widget ────
+// ── localStorage weather cache (30 min) ─────────────
+var WX_CACHE_KEY = 'apiaryhq_wx_cache';
+var WX_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+function saveWxCache(wx) {
+  try {
+    localStorage.setItem(WX_CACHE_KEY, JSON.stringify({ wx: wx, ts: Date.now() }));
+  } catch(e) {}
+}
+
+function loadWxCache() {
+  try {
+    var raw = localStorage.getItem(WX_CACHE_KEY);
+    if (!raw) return null;
+    var obj = JSON.parse(raw);
+    if (!obj || !obj.wx) return null;
+    return obj; // { wx, ts }
+  } catch(e) { return null; }
+}
+
+function cacheAgeLabel(ts) {
+  var mins = Math.round((Date.now() - ts) / 60000);
+  if (mins < 2)  return 'just now';
+  if (mins < 60) return mins + ' min ago';
+  var hrs = Math.round(mins / 60);
+  return hrs + 'h ago';
+}
+
+// ── ZIP entry prompt ─────────────────────────────────
 function renderZipPrompt(el) {
   el.className = 'wx-load';
   el.innerHTML =
     '<div style="text-align:center;padding:8px 0">'+
-    '<div style="font-size:28px;margin-bottom:8px">📍</div>'+
+    '<div style="font-size:28px;margin-bottom:8px">\ud83d\udccd</div>'+
     '<div style="font-size:15px;font-weight:700;color:var(--txt);margin-bottom:6px">Set Your Location</div>'+
     '<div style="font-size:13px;color:var(--txt2);margin-bottom:14px;line-height:1.5">Enter your ZIP code to get local weather and foraging conditions.</div>'+
     '<div style="display:flex;gap:8px;align-items:center;max-width:260px;margin:0 auto">'+
@@ -73,14 +119,13 @@ function renderZipPrompt(el) {
     '</div>'+
     '<div id="wx-zip-err" style="font-size:12px;color:var(--red);margin-top:8px;min-height:16px"></div>'+
     '</div>';
-  // Allow Enter key to submit
   setTimeout(function() {
     var inp = document.getElementById('wx-zip-input');
     if (inp) inp.addEventListener('keydown', function(e) { if (e.key === 'Enter') saveZipFromWidget(); });
   }, 50);
 }
 
-// ── Geocode a ZIP via Nominatim, save to localStorage, reload widgets ──
+// ── Geocode ZIP via Nominatim ────────────────────────
 function geocodeZip(zip, onSuccess, onError) {
   var url = 'https://nominatim.openstreetmap.org/search?postalcode=' + encodeURIComponent(zip) +
             '&country=us&format=json&limit=1';
@@ -101,39 +146,29 @@ function geocodeZip(zip, onSuccess, onError) {
     .catch(function() { onError('Could not look up ZIP code. Check your connection.'); });
 }
 
-// Called from the weather widget prompt
 function saveZipFromWidget() {
   var inp = document.getElementById('wx-zip-input');
   var errEl = document.getElementById('wx-zip-err');
   if (!inp) return;
   var zip = inp.value.trim().replace(/\D/g,'');
-  if (zip.length !== 5) {
-    if (errEl) errEl.textContent = 'Please enter a 5-digit ZIP code.';
-    return;
-  }
+  if (zip.length !== 5) { if (errEl) errEl.textContent = 'Please enter a 5-digit ZIP code.'; return; }
   if (errEl) errEl.textContent = '';
   inp.disabled = true;
   geocodeZip(zip,
     function() {
-      // Reset cached weather+pollen so they reload with new location
       window._wx = null;
       window._pollenData = null;
       loadWeather();
       loadPollenForecast();
-      // Update Settings ZIP field if visible
-      var settingsInp = document.getElementById('settings-zip');
-      if (settingsInp) { settingsInp.value = zip; }
-      var zipStatus = document.getElementById('zip-status');
-      if (zipStatus) { zipStatus.textContent = '\u2705 ZIP ' + zip + ' saved'; zipStatus.style.color = 'var(--moss)'; }
+      var si = document.getElementById('settings-zip');
+      if (si) si.value = zip;
+      var zs = document.getElementById('zip-status');
+      if (zs) { zs.textContent = '\u2705 ZIP ' + zip + ' saved'; zs.style.color = 'var(--moss)'; }
     },
-    function(msg) {
-      inp.disabled = false;
-      if (errEl) errEl.textContent = msg;
-    }
+    function(msg) { inp.disabled = false; if (errEl) errEl.textContent = msg; }
   );
 }
 
-// Called from Settings page
 function saveZipFromSettings() {
   var inp = document.getElementById('settings-zip');
   var statusEl = document.getElementById('zip-status');
@@ -149,7 +184,6 @@ function saveZipFromSettings() {
     function(lat, lng, name) {
       inp.disabled = false;
       if (statusEl) { statusEl.textContent = '\u2705 Location set: ' + name; statusEl.style.color = 'var(--moss)'; }
-      // Reset cached weather+pollen so they reload fresh
       window._wx = null;
       window._pollenData = null;
     },
@@ -160,6 +194,47 @@ function saveZipFromSettings() {
   );
 }
 
+// ── Build wx object from Open-Meteo response ─────────
+function wxFromOpenMeteo(j, zip) {
+  var c = j.current;
+  var t = Math.round(c.temperature_2m);
+  var f = Math.round(c.apparent_temperature);
+  var w = Math.round(c.wind_speed_10m);
+  var h = Math.round(c.relative_humidity_2m);
+  var code = c.weather_code;
+  var locationName = localStorage.getItem('apiaryhq_location_name') || ('ZIP ' + zip);
+  return {
+    temp:t, feels:f, wind:w, humidity:h,
+    desc:wmoDesc(code), wxSvg:wmoWxSvg(code),
+    score:beeScore(t,w,h,code), col:scoreColor(beeScore(t,w,h,code)),
+    adv:beeAdv(t,w,code), locationName:locationName, zip:zip,
+    source:'open-meteo'
+  };
+}
+
+// ── Build wx object from wttr.in response ────────────
+function wxFromWttr(j, zip) {
+  try {
+    var cur = j.current_condition[0];
+    var t = Math.round(parseFloat(cur.temp_F));
+    var f = Math.round(parseFloat(cur.FeelsLikeF));
+    var w = Math.round(parseFloat(cur.windspeedMiles));
+    var h = parseInt(cur.humidity, 10);
+    var code = parseInt(cur.weatherCode, 10);
+    var desc = cur.weatherDesc && cur.weatherDesc[0] ? cur.weatherDesc[0].value : 'Unknown';
+    var locationName = localStorage.getItem('apiaryhq_location_name') || ('ZIP ' + zip);
+    var wxKey = WTTR_WX[code] || 'pcloud';
+    return {
+      temp:t, feels:f, wind:w, humidity:h,
+      desc:desc, wxSvg:WX_SVG[wxKey],
+      score:beeScore(t,w,h,code), col:scoreColor(beeScore(t,w,h,code)),
+      adv:beeAdv(t,w,code), locationName:locationName, zip:zip,
+      source:'wttr'
+    };
+  } catch(e) { return null; }
+}
+
+// ── Main load function with fallback chain ───────────
 function loadWeather() {
   var el = document.getElementById('wx-el');
   if (!el) return;
@@ -169,55 +244,75 @@ function loadWeather() {
   var lng = parseFloat(localStorage.getItem('apiaryhq_lng'));
   var zip = localStorage.getItem('apiaryhq_zip');
 
-  // No ZIP saved yet — show the entry prompt
-  if (!zip || !lat || !lng) {
-    renderZipPrompt(el);
+  if (!zip || !lat || !lng) { renderZipPrompt(el); return; }
+
+  // Check cache first — if fresh (<30 min) use it immediately
+  var cached = loadWxCache();
+  if (cached && (Date.now() - cached.ts) < WX_CACHE_TTL) {
+    window._wx = cached.wx;
+    renderWeather(el);
     return;
   }
 
   el.className = 'wx-load';
   el.textContent = 'Loading weather...';
 
-  var url = 'https://api.open-meteo.com/v1/forecast' +
+  // 1. Try Open-Meteo
+  var omUrl = 'https://api.open-meteo.com/v1/forecast' +
     '?latitude=' + lat + '&longitude=' + lng +
     '&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code,apparent_temperature' +
     '&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto';
 
-  fetch(url)
+  fetch(omUrl)
     .then(function(r) { return r.json(); })
     .then(function(j) {
-      var c = j.current;
-      var t = Math.round(c.temperature_2m);
-      var f = Math.round(c.apparent_temperature);
-      var w = Math.round(c.wind_speed_10m);
-      var h = Math.round(c.relative_humidity_2m);
-      var code = c.weather_code;
-      var locationName = localStorage.getItem('apiaryhq_location_name') || ('ZIP ' + zip);
-      window._wx = {
-        temp:t, feels:f, wind:w, humidity:h,
-        desc:wmoDesc(code), wxSvg:wmoWxSvg(code),
-        score:beeScore(t,w,h,code), col:scoreColor(beeScore(t,w,h,code)),
-        adv:beeAdv(t,w,code),
-        locationName: locationName, zip: zip
-      };
+      if (!j.current) throw new Error('no data');
+      var wx = wxFromOpenMeteo(j, zip);
+      window._wx = wx;
+      saveWxCache(wx);
       renderWeather(el);
     })
     .catch(function() {
-      el.className = 'wx-load';
-      el.textContent = 'Weather unavailable. Check your connection.';
+      // 2. Fallback: wttr.in
+      var wttrUrl = 'https://wttr.in/' + lat + ',' + lng + '?format=j1';
+      fetch(wttrUrl)
+        .then(function(r) { return r.json(); })
+        .then(function(j) {
+          var wx = wxFromWttr(j, zip);
+          if (!wx) throw new Error('no data');
+          window._wx = wx;
+          saveWxCache(wx);
+          renderWeather(el);
+        })
+        .catch(function() {
+          // 3. Final fallback: show cached reading if available
+          var stale = loadWxCache();
+          if (stale && stale.wx) {
+            stale.wx._staleLabel = 'Last reading: ' + cacheAgeLabel(stale.ts);
+            window._wx = stale.wx;
+            renderWeather(el);
+          } else {
+            el.className = 'wx-load';
+            el.textContent = 'Weather unavailable. Check your connection.';
+          }
+        });
     });
 }
 
 function renderWeather(el) {
   var wx = window._wx; if (!wx) return;
   el.className = 'wx-card';
+  var staleNote = wx._staleLabel
+    ? '<div style="font-size:10px;color:rgba(255,255,255,.45);margin-top:2px">' + wx._staleLabel + '</div>'
+    : '';
   el.innerHTML =
     '<div style="display:flex;align-items:center;gap:14px">'+
       wx.wxSvg+
       '<div style="flex:1">'+
-        '<div style="font-family:\'Playfair Display\',serif;font-size:36px;color:#fff;line-height:1">'+wx.temp+'°F</div>'+
-        '<div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:2px">'+wx.desc+' · Feels '+wx.feels+'°F</div>'+
+        '<div style="font-family:\'Playfair Display\',serif;font-size:36px;color:#fff;line-height:1">'+wx.temp+'\u00b0F</div>'+
+        '<div style="font-size:13px;color:rgba(255,255,255,.85);margin-top:2px">'+wx.desc+' \u00b7 Feels '+wx.feels+'\u00b0F</div>'+
         '<div style="font-size:11px;color:rgba(255,255,255,.55);margin-top:3px">'+WX_SVG.pin+' '+esc(wx.locationName)+'</div>'+
+        staleNote+
       '</div>'+
       '<div style="text-align:center;background:rgba(255,255,255,.15);border-radius:14px;padding:10px 14px;min-width:58px">'+
         '<div style="font-size:22px;font-weight:700;color:'+wx.col+'">'+wx.score+'</div>'+

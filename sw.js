@@ -1,8 +1,8 @@
 // ═══════════════════════════════════════════════════════
-// APIARY HQ — Service Worker
-// Bump CACHE_VERSION any time you deploy updated files
+// APIARY HQ — Service Worker v5.3.9
+// Bump CACHE_VERSION on every deployment
 // ═══════════════════════════════════════════════════════
-var CACHE_VERSION = 'apiaryhq-v5.3.8';
+var CACHE_VERSION = 'apiaryhq-v5.3.9';
 
 var EXTERNAL_URLS = [
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
@@ -72,10 +72,11 @@ self.addEventListener('activate', function(e) {
 
 self.addEventListener('fetch', function(e) {
   var url = e.request.url;
+  // Always go to network for API calls — never serve stale cached API responses
   if ((url.includes('supabase.co') && !url.includes('supabase-js')) ||
       url.includes('open-meteo.com') ||
       url.includes('nominatim.openstreetmap.org') ||
-      url.includes('air-quality-api.open-meteo.com')) {
+      url.includes('wttr.in')) {
     e.respondWith(
       fetch(e.request).catch(function() {
         return new Response(JSON.stringify({ error: 'offline' }), {
@@ -86,6 +87,7 @@ self.addEventListener('fetch', function(e) {
     );
     return;
   }
+  // Cache-first for all static app files
   e.respondWith(
     caches.match(e.request).then(function(cached) {
       if (cached) return cached;

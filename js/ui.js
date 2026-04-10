@@ -40,7 +40,7 @@ function showTab(page) {
 }
 
 var _moreTrayOpen = false;
-var _moreTabs = ['hives','fin','remind','docs','contacts','notes','settings'];
+var _moreTabs = ['insp','hives','fin','remind','docs','contacts','notes','settings'];
 
 function toggleMoreTray() {
   _moreTrayOpen ? closeMoreTray() : openMoreTray();

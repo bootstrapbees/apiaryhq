@@ -764,7 +764,8 @@ body.dark .rec-item{background:var(--surface2)}
 <div class="more-tray-backdrop" id="more-tray-backdrop" onclick="closeMoreTray()">
   <div class="more-tray" onclick="event.stopPropagation()">
     <div class="more-tray-grid">
-      <button onclick="showTabFromMore('hives')" data-more-tab="hives"><span class="ic ahq-icon"><svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 3L21 7.5V16.5L14 21L7 16.5V7.5L14 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 9L17.5 11V15L14 17L10.5 15V11L14 9Z" fill="currentColor" opacity=".3"/></svg></span>Hives</button>
+      <button onclick="showTabFromMore('insp')" data-more-tab="insp"><span class="ic ahq-icon"><svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="2" width="16" height="24" rx="3" stroke="currentColor" stroke-width="2"/><line x1="10" y1="9" x2="18" y2="9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="10" y1="13" x2="18" y2="13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><line x1="10" y1="17" x2="14" y2="17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>Inspect</button>
+          <button onclick="showTabFromMore('hives')" data-more-tab="hives"><span class="ic ahq-icon"><svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 3L21 7.5V16.5L14 21L7 16.5V7.5L14 3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 9L17.5 11V15L14 17L10.5 15V11L14 9Z" fill="currentColor" opacity=".3"/></svg></span>Hives</button>
       <button onclick="showTabFromMore('fin')" data-more-tab="fin"><span class="ic ahq-icon"><svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="6" width="22" height="16" rx="3" stroke="currentColor" stroke-width="2"/><path d="M3 11h22" stroke="currentColor" stroke-width="1.8"/><circle cx="9" cy="17" r="2" fill="currentColor" opacity=".5"/><rect x="14" y="15.5" width="7" height="3" rx="1.5" fill="currentColor" opacity=".5"/></svg></span>Finance</button>
       <button onclick="showTabFromMore('remind')" data-more-tab="remind"><span class="ic ahq-icon"><svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 4a7 7 0 017 7v4l2 2H5l2-2v-4a7 7 0 017-7z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 22a2 2 0 004 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>Reminders</button>
       <button onclick="showTabFromMore('docs')" data-more-tab="docs"><span class="ic ahq-icon"><svg viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7 4h10l4 4v16H7V4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M17 4v4h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><line x1="10" y1="13" x2="18" y2="13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><line x1="10" y1="17" x2="18" y2="17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>Docs</button>
@@ -922,14 +923,12 @@ body.dark .rec-item{background:var(--surface2)}
       <label style="font-size:12px;color:var(--txt2);white-space:nowrap">Jump to:</label>
       <select id="lib-jump-select" onchange="jumpToLibSection(this.value)" style="flex:1;padding:8px 10px;border-radius:10px;border:1px solid rgba(74,44,10,.2);background:var(--warm);color:var(--bark);font-size:13px;font-family:'Source Serif 4',serif">
         <option value="">— Select a section —</option>
-        <option value="lib-sec-mite">📊 Varroa Mite Thresholds</option>
-        <option value="lib-sec-nonchemical">🌿 Non-Chemical Controls</option>
-        <option value="lib-sec-chemical">💊 Chemical Treatments</option>
-        <option value="lib-sec-pests">🪲 Pests &amp; Diseases</option>
-        <option value="lib-sec-feeding">🍯 Feeding Guide</option>
-        <option value="lib-sec-supplements">🧪 Feeding Supplements</option>
-              <option value="lib-sec-syrup">&#127802; Syrup Mixing Guide</option>
-      </select>
+<option value="lib-sec-pests">&bull; Pests &amp; Diseases</option>
+<option value="lib-sec-mite">&bull; Varroa Treatments</option>
+<option value="lib-sec-nonchemical">&bull; Non-Chemical Controls</option>
+<option value="lib-sec-feeding">&bull; Feeding Guide</option>
+<option value="lib-sec-supplements">&bull; Supplements</option>
+<option value="lib-sec-syrup">&bull; Syrup Mixing Guide</option>      </select>
     </div>
     <div id="lib-ref-list"></div>
   </div>
