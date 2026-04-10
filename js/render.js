@@ -634,10 +634,34 @@ function renderTreatRefLibrary() {
   // Syrup Mixing Guide — inline data (Dadant recommendations)
   html += secHeader('lib-sec-syrup', '&#127802; Syrup Mixing Guide');
   var SYRUP_DATA = [
-    { name:'1:1 Sugar Syrup (Spring/Summer)', ratio:'1 lb sugar : 1 pt water', use:'Stimulates brood rearing and comb building. Use in spring to stimulate buildup and for new packages/splits. Do not use during honey flow.', temp:'Feed when temps are above 50°F.', note:'Per Dadant: Add Honey-B-Healthy at 1 tsp/qt to stimulate feeding and inhibit fermentation.' },
-    { name:'2:1 Sugar Syrup (Fall/Winter)', ratio:'2 lbs sugar : 1 pt water', use:'Winter stores — heavier syrup converts to honey faster with less moisture. Feed in fall to ensure adequate winter stores. Stop feeding when temps drop below 50°F consistently.', temp:'Feed before temps drop below 50°F.', note:'Per Dadant: Feed until bees stop taking it. A light hive in November needs emergency feeding — switch to candy board below 50°F.' },
-    { name:'Candy Board (Winter Emergency)', ratio:'10 lbs sugar : 1/2 cup water', use:'Emergency winter feed when temps are too cold for syrup. Bees consume as needed. Place directly above cluster.', temp:'Use when temps consistently below 50°F.', note:'Mix sugar and water to stiff dough, press into mold or rimmed board. Let dry 24 hours. Place rim-side down over cluster.' },
-    { name:'Fondant / Sugar Brick', ratio:'4 lbs sugar : 1/4 cup water', use:'Similar to candy board — emergency winter or early spring feed. Easy to make in bulk.', temp:'Any temperature — solid feed.', note:'Boil to soft ball stage (235-240°F), cool to 110°F, beat until creamy white, pour into molds.' }
+    {
+      name: '1:1 Sugar Syrup (Spring / Stimulation)',
+      ratio: '1 cup sugar : 1 cup water',
+      use: 'Stimulates brood rearing and comb building. Mimics a light nectar flow. Use in spring for buildup, new packages, splits, and nucs. Stop feeding when a strong nectar flow begins to prevent syrup from getting into honey supers.',
+      temp: 'Feed when temps are consistently above 50°F.',
+      note: 'Per Dadant: For 1 gallon, use 10⅔ cups sugar to 10⅔ cups water. Heat gently until dissolved — do not boil. Add Honey-B-Healthy (1 tsp/qt) to stimulate feeding. Ratios are equal parts by volume OR weight — cups to cups, or pounds to pounds.'
+    },
+    {
+      name: '2:1 Sugar Syrup (Fall / Winter Stores)',
+      ratio: '2 cups sugar : 1 cup water',
+      use: 'Builds winter stores. Heavier syrup is easier for bees to process and cap quickly before cold sets in. Feed after the last honey harvest in fall. Stop when bees stop taking it or temps drop below 50°F consistently.',
+      temp: 'Feed before temps drop consistently below 50°F.',
+      note: '2 cups sugar to 1 cup water (by volume), or 2 lbs sugar to 1 lb water (by weight). Stir into warm water until fully dissolved — do not boil. Boiling creates HMF compounds harmful to bees. Add Honey-B-Healthy to slow fermentation.'
+    },
+    {
+      name: 'No-Cook Candy Board (Winter Emergency)',
+      ratio: '10 lbs sugar : 2 cups water',
+      use: 'Emergency winter feed when temps are too cold for liquid syrup. Bees consume it as needed directly above the cluster. Also absorbs excess hive moisture. Place candy-side down directly above the top bars, replacing the inner cover.',
+      temp: 'Use when temps are consistently below 50°F and liquid feeding is no longer practical.',
+      note: 'Mix sugar with just enough water to clump — start with 2 cups per 10 lbs, add sparingly. Optional: 1 tsp white vinegar (mold inhibitor) and 1 tsp Honey-B-Healthy. Press firmly into a candy board frame lined with tissue paper. Allow 24 hours to dry and harden before placing on hive.'
+    },
+    {
+      name: 'Cooked Fondant / Sugar Candy',
+      ratio: '5 lbs sugar : 1⅓ cups water',
+      use: 'Cooked alternative to the no-cook candy board. Harder set, longer lasting. Pour into molds or a candy board frame. Bees eat through it as needed in cold weather.',
+      temp: 'Use in winter when liquid feeding is not possible.',
+      note: 'Combine sugar and water in a heavy pot. Bring to a boil stirring constantly, then stop stirring and cook to 234–248°F (soft to firm ball stage) using a candy thermometer. Remove from heat, cool to around 200°F, then beat or pour into molds. Do not overheat above 250°F — creates HMF harmful to bees.'
+    }
   ];
   html += SYRUP_DATA.map(function(s) {
     return '<div class="tref-card">' +
