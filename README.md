@@ -1,66 +1,76 @@
-# Apiary HQ — Project Notes & Changelog
-**Current SW Version: apiaryhq-v5.1.3**
+# Apiary HQ
 
-## Project Overview
-Apiary HQ is a PWA (Progressive Web App) beekeeping management tool hosted on Cloudflare Pages with a Supabase backend. Built for both desktop (Mac) and mobile (iPhone) use.
+**A Progressive Web App for beekeeping management**
+Built by Bootstrap Beekeeping · © 2026 Bootstrap Beekeeping. All rights reserved.
 
-- **URL:** Cloudflare Pages deployment
-- **Supabase Project:** https://czejecgdyxklfulndhpp.supabase.co
-- **GitHub:** bootstrapbees / apiaryhq (private)
-- **Copyright:** © 2026 Bootstrap Beekeeping. All rights reserved.
+---
+
+## Overview
+
+Apiary HQ is a full-featured beekeeping management PWA designed for real-world use in the field. It runs on iPhone, Mac, and any modern browser — and works offline. Data is synced to Supabase when connectivity returns. The app is built with vanilla JavaScript, no frameworks, and deployed to Cloudflare Pages.
+
+- **Stack:** Vanilla JS PWA · Supabase (Postgres + Storage) · Cloudflare Pages
+- **Deployment:** Auto-deploy from `main` branch via Cloudflare Pages
+- **Supabase:** `https://czejecgdyxklfulndhpp.supabase.co`
+- **Reference sources:** AUBEE 5-phase Varroa protocol · HBHC 8th Edition · Dadant & Sons catalog
+- **Disclaimer:** This app references publicly available information from Dadant & Sons and AUBEE. It is not affiliated with or endorsed by either organization.
 
 ---
 
 ## File Structure
+
 ```
-/ (root)
-├── index.html          # App shell, CSS, HTML structure
-├── styles.css          # Global styles
-├── manifest.json       # PWA manifest (name: "ApiaryHQ")
-├── sw.js               # Service Worker — bump CACHE_VERSION on every deploy
-├── ApiaryHQ.jpg        # App logo
+apiaryhq/
+├── index.html              # App shell — HTML structure + script tags
+├── styles.css              # Global stylesheet
+├── manifest.json           # PWA manifest (name: "ApiaryHQ", no space)
+├── sw.js                   # Service Worker — bump CACHE_VERSION every deploy
+├── ApiaryHQ.jpg            # App icon / logo
 └── js/
-    ├── offline.js      # IndexedDB offline queue + auto-sync
-    ├── core.js         # Supabase init, auth, data loading
-    ├── ui.js           # Tab switching, modals, photo picker
-    ├── hives.js        # Hive + inspection modals
-    ├── guided_inspection.js  # Step-by-step inspection flow
-    ├── inspections.js  # Smart reminders from inspections
-    ├── render.js       # All list/card rendering + reference library
-    ├── notes.js        # My Notes (Supabase-backed, cross-device)
-    ├── harvest.js      # Harvest logging
-    ├── reminders.js    # Reminders & tasks
-    ├── finance.js      # Income/expense tracking
-    ├── docs.js         # Documents & brand assets
-    ├── contacts.js     # Supplier/vet/inspector contacts
-    ├── hive_history.js # Hive history overlay
-    ├── treatments.js   # Treatment + feeding reference data (Dadant/AUBEE)
-    ├── weather.js      # Open-Meteo weather (dashboard)
-    ├── pollen.js       # Pollen & foraging forecast widget (Tomorrow.io key in file)
-    ├── feeding.js      # Feeding log modals + multi-row save
-    ├── icons.js        # SVG icon library
-    └── pdf_export.js   # PDF report generation
+    ├── core.js             # Supabase init, auth, data loading, preferences
+    ├── ui.js               # Tab/nav system, modals, photo picker
+    ├── render.js           # All list + card rendering, reference library
+    ├── hives.js            # Hive add/edit modal, split + requeen flows
+    ├── inspections.js      # Inspection modal, smart auto-reminders
+    ├── guided_inspection.js# Step-by-step hands-free inspection flow
+    ├── hive_history.js     # Hive history overlay sheet
+    ├── treatments.js       # Treatment modal + full AUBEE/HBHC reference data
+    ├── feeding.js          # Feeding log modal (+ Log Another flow)
+    ├── harvest.js          # Harvest logging modal
+    ├── finance.js          # Income/expense tracking
+    ├── reminders.js        # Reminders + tasks modal
+    ├── docs.js             # Documents + brand asset management
+    ├── contacts.js         # Supplier/vet/inspector contacts
+    ├── notes.js            # My Notes (Supabase-backed, cross-device)
+    ├── offline.js          # IndexedDB offline queue + auto-sync
+    ├── weather.js          # Weather widget — Open-Meteo + wttr.in fallback
+    ├── pollen.js           # Pollen & foraging forecast — zone-based seasonal
+    ├── zones.js            # USDA hardiness zone data (used by pollen.js)
+    ├── pdf_export.js       # PDF + CSV export for all record types
+    ├── icons.js            # SVG icon library
+    └── [future] guided_inspection.js — Web Speech API hands-free mode
 ```
 
 ---
 
-## Deployment Rules
+## Deployment
 
-### ⚠️ ALWAYS bump sw.js CACHE_VERSION on every deployment
-```javascript
-var CACHE_VERSION = 'apiaryhq-v3.3';  // increment each deploy: v3.4, v3.5...
-```
-Version plan: v3.1 → v3.9, then v4.0 → v4.9, etc.
+### Current Service Worker Version: `apiaryhq-v5.4.0`
 
-### Deployment checklist
-1. Upload changed files to Cloudflare Pages (drag & drop)
-2. Edit `sw.js` — bump CACHE_VERSION
-3. Upload `sw.js`
-4. Hard refresh browser after deploy (Cmd+Shift+R on Mac)
-5. On iPhone — clear Safari cache or delete/re-add PWA if needed
+### Rules — follow every time
 
-### sw.js goes at ROOT — not in /js/ folder
-The service worker must be at `/sw.js`, not `/js/sw.js`.
+1. Edit files locally in GitHub Desktop
+2. **Always bump `CACHE_VERSION` in `sw.js`** before pushing — without this, users get stale cached files
+3. Push via GitHub Desktop (never via GitHub API for files over ~50KB)
+4. Cloudflare Pages auto-deploys from `main` within ~60 seconds
+5. Hard refresh after deploy: `Cmd+Shift+R` on Mac
+6. On iPhone: clear Safari cache or delete + re-add PWA if changes don't appear
+
+### Large file rule
+Files over ~50KB (currently `render.js`, `treatments.js`, `index.html`) must be pushed via **GitHub Desktop only** — the GitHub API truncates large files causing white screen errors.
+
+### sw.js location
+Must be at `/sw.js` in the repo root — not inside `/js/`. The browser only registers service workers from the root scope.
 
 ---
 
@@ -68,134 +78,113 @@ The service worker must be at `/sw.js`, not `/js/sw.js`.
 
 | Table | Purpose |
 |-------|---------|
-| hives | Hive records |
-| inspections | Inspection logs |
-| treatments | Treatment logs |
-| harvests | Harvest records |
-| feedings | Feeding / supplemental feed logs |
-| transactions | Financial records |
-| reminders | Reminders & tasks |
-| docs | Documents |
-| assets | Brand assets |
-| photos | Inspection/hive photos |
-| contacts | Suppliers, vets, inspectors |
-| user_notes | My Notes (cross-device) |
+| `hives` | Hive records |
+| `inspections` | Inspection logs with photos |
+| `treatments` | Treatment + IPM logs |
+| `harvests` | Harvest records |
+| `feedings` | Feeding + supplement logs |
+| `transactions` | Financial income/expense records |
+| `reminders` | Reminders and tasks |
+| `docs` | Uploaded documents (licenses, certs, etc.) |
+| `assets` | Brand assets (logos, graphics) |
+| `photos` | Inspection and hive photos |
+| `contacts` | Suppliers, vets, inspectors |
+| `user_notes` | My Notes tab (cross-device sync) |
 
-### user_notes table (manually created)
-```sql
-CREATE TABLE user_notes (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
-  title text NOT NULL,
-  category text DEFAULT 'Misc',
-  source text,
-  body text,
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE user_notes ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can manage own notes"
-ON user_notes FOR ALL
-USING (auth.uid() = user_id)
-WITH CHECK (auth.uid() = user_id);
-```
+### Row Level Security
+All tables use RLS with `auth.uid() = user_id` policies. Every table enforces user data isolation — users can only read and write their own records.
 
-### feedings table (manually created)
-```sql
-CREATE TABLE feedings (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
-  hive_id uuid NOT NULL,
-  date date NOT NULL,
-  feed_type text NOT NULL DEFAULT 'Sugar syrup 1:1',
-  supplement text DEFAULT 'None',
-  amount numeric,
-  unit text,
-  notes text,
-  created_at timestamptz DEFAULT now()
-);
-ALTER TABLE feedings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Users can manage own feedings"
-ON feedings FOR ALL
-USING (auth.uid() = user_id)
-WITH CHECK (auth.uid() = user_id);
-```
-
-If you already created `feedings` without `supplement`, run:
-
-```sql
-ALTER TABLE feedings ADD COLUMN IF NOT EXISTS supplement text DEFAULT 'None';
-```
-
-When **Feed type** or **Supplement** is “Other”, the app stores the free-text label in these columns (nullable when not used):
-
-```sql
-ALTER TABLE feedings ADD COLUMN IF NOT EXISTS feed_other text;
-ALTER TABLE feedings ADD COLUMN IF NOT EXISTS supplement_other text;
-```
-
----
-
-## Changelog
-
-### Session — March 25–26, 2026 (v3.1 → v3.3)
-
-**Bug Fixes**
-- Fixed weather showing "undefined" in regular and guided inspection — `WX.icon` → `WX.wxSvg`
-- Fixed Notes not syncing cross-device — rewrote `notes.js` to use Supabase `user_notes` table
-- Fixed Library "Jump to Category" — added `jumpToLibSection()` and section IDs to `render.js`
-- Fixed camera/photo picker rendering behind modal — dynamically injected at `document.body` level; removed `backdrop-filter` stacking contexts from all overlays
-- Fixed nav icons floating on mobile scroll — flex layout on body; `.page.active` is its own scroll container
-- Fixed FAB (+ button) hidden on dashboard only, visible on all other tabs
-- Fixed offline badge and sync toast not showing — HTML elements were missing from `index.html`
-- Fixed offline writes failing silently — replaced `navigator.onLine` trust with try/catch + 5s timeout on all Supabase calls
-- Fixed PDF header color — changed from dark brown `(74,44,10)` to forest green `(26,58,42)`
-
-**New Features**
-- **Offline-first** (`offline.js`) — IndexedDB queue for inspections, harvests, reminders, transactions; auto-syncs on reconnect; pending badge + toast notifications
-- **Inspection photo capture** — Add Photo button in regular inspection (`hives.js`) and guided inspection Step 5 (`guided_inspection.js`); photos saved to Supabase on submit
-- **Service Worker** (`sw.js`) — caches all app files + CDN scripts for true offline app loading
-- **Varroa Status widget** on dashboard — shows each hive's latest Varroa reading color coded green/yellow/red per AUBEE levels with date
-- **Quick Actions widget** on dashboard — New Inspection and Log Harvest buttons (only shows when hives exist)
-
----
-
-## Planned Features (Future Sessions)
-- **Hands-free guided inspection** — Web Speech API (text-to-speech + voice recognition); works offline
-- **AI apiary summary** — Claude API analyzes inspection history for seasonal health summary (requires Anthropic API credits)
-- Offline queue end-to-end field testing
-
----
-
-## Tech Notes
-
-### Tomorrow.io (pollen widget)
-`TOMORROW_IO_API_KEY` is set at the top of `js/pollen.js`. Leave it empty to use the Alabama seasonal estimate only (or an old `localStorage` key `hkpro_tomorrow_key` if present). Restrict your key by **HTTP referrer / domain** in the Tomorrow.io dashboard.
-
-### Weather object structure
+### Offline-safe DB wrappers (`offline.js`)
+Use these instead of raw Supabase calls for any write operations that should queue offline:
 ```javascript
-window._wx = {
-  temp, feels, wind, humidity,
-  desc,       // text description
-  wxSvg,      // SVG icon string — use wxSvg NOT .icon
-  score, col, adv
-}
+dbInsertSafe(table, obj)
+dbUpdateSafe(table, id, obj)
+dbDeleteSafe(table, id)
 ```
+These try Supabase first, fall back to IndexedDB queue, and auto-sync on reconnect.
 
-### Offline-safe DB wrappers (offline.js)
-Use these for tables that should support offline writes:
-- `dbInsertSafe(table, obj)`
-- `dbUpdateSafe(table, id, obj)`
-- `dbDeleteSafe(table, id)`
+---
 
-### Photo system
-- `PHOTOS` object keyed by `context_id`
-- `buildGallery(tid)` renders photo grid for a given context
-- `showPhotoSourcePicker(tid, 'photo')` opens camera/library picker
-- Photos saved to `photos` table on record save
+## Weather & Pollen
 
-### Service Worker cache bypass
-Supabase API calls (`*.supabase.co`) and Tomorrow.io always go to network.
-CDN scripts (Supabase JS, jsPDF) are cached on SW install.
+### Weather — `weather.js`
+- **Primary:** Open-Meteo (`api.open-meteo.com`) — free, no API key
+- **Fallback:** wttr.in — free, no API key
+- **Final fallback:** localStorage cache of last successful reading with "as of X ago" label
+- Cache TTL: 30 minutes. Always fetches fresh on dashboard load if cache is stale.
+- ZIP geocoded via Nominatim (free, no key). Coordinates saved to localStorage.
 
-### FAB (+ button)
-Hidden on dashboard tab, visible on all other tabs. Controlled in `ui.js` `showTab()` function.
+### Pollen — `pollen.js` + `zones.js`
+- **No external API** — pure zone-based seasonal estimates derived from latitude
+- Zone groups: A (3–4, northern US) · B (5–6, mid US) · C (7–8, southeast) · D (9–10, deep south/SW)
+- Monthly pollen levels and forage plant tips per zone stored in `zones.js`
+- `getZoneData(lat)` in `zones.js` returns 5-day forecast + foraging tip for the user's zone
+
+### ZIP entry
+- User enters ZIP once in the weather widget or Settings → Location
+- `geocodeZip()` in `weather.js` calls Nominatim, saves lat/lng/location name to localStorage
+- Both weather and pollen use the same saved coordinates automatically
+
+---
+
+## Reference Library
+
+The reference library in the Library tab is sourced from:
+- **AUBEE** — Alabama Certified Beekeeper training curriculum (Varroa thresholds, IPM)
+- **HBHC 8th Edition** — Hive and the Honeybee
+- **Dadant & Sons** — Product catalog and application guidelines
+
+### Library sections (in order)
+1. Pests & Diseases — SVG illustrations, descriptions, symptoms, recommended treatments
+2. Varroa Mite Treatments — full AUBEE protocol with thresholds, warnings, temperatures
+3. Non-Chemical Controls — drone comb removal, splits, requeening
+4. Feeding Guide — seasonal Alabama feeding calendar
+5. Feeding Supplements — HBH, AP23, Nozevit, Optima, etc.
+6. Syrup Mixing Guide — Dadant ratios for 1:1, 2:1, candy board, fondant
+
+---
+
+## Key Technical Patterns
+
+### Navigation
+- Bottom nav: `Inspect | Home (raised center) | Hives | Finance | More`
+- More tray contains: Inspect, Hives, Finance, Reminders, Docs, Contacts, Notes, Settings
+- `_moreTabs` array in `ui.js` controls which tabs appear in More tray
+
+### Photo Picker
+- Single `<input type="file" accept="image/*">` — no custom camera sheet
+- Device presents native picker (iPhone: Take Photo / Photo Library / Files)
+- `showPhotoSourcePicker(tid, target)` in `ui.js` triggers the correct input directly
+
+### PDF Export
+- Uses jsPDF from CDN (cached by service worker)
+- Star ratings rendered as `n/5` plain text (not emoji — causes strikethrough in jsPDF)
+- Available for: Inspections, Treatments, Harvests, Feedings, Finance
+
+### Reminders
+- Each reminder card has inline **Edit / ✓ Done / Del** buttons
+- Completing a supply or treatment reminder prompts to add cost to Finance
+- Auto-reminders created from inspection saves (queen cage check, feed checks, mite baseline)
+
+---
+
+## Roadmap
+
+### Up Next
+- Onboarding slide deck (5 swipeable slides, localStorage, auto-suppress)
+- Hands-free guided inspection via Web Speech API
+- ZIP zone tailoring Phase 2 — feeding calendar, treatment windows, forage plants matched to zone
+
+### Medium Term
+- Dashboard AI hive summary (rule-based, offline) + pro-tier AI narrative via Anthropic API
+- Multi-apiary support — header switcher, `apiaries` table, `apiary_id` on hives
+- Receipt photo capture in Finance — Supabase Storage `receipts` bucket, optional OCR
+- Stripe monetization — free/pro/lifetime tiers
+
+---
+
+## Supabase Keep-Alive
+
+A Cloudflare Worker (`supabase-keep-alive`) pings the Supabase project every 5 days to prevent free-tier pauses:
+- **Cron:** `0 12 */5 * *`
+- **Target:** `https://czejecgdyxklfulndhpp.supabase.co`
