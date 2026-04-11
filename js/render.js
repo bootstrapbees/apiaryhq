@@ -385,14 +385,21 @@ function renderAll() {
       var cls=days<0?'remind-overdue':days<=7?'remind-soon':'remind-ok';
       var color=days<0?'var(--red)':days<=7?'var(--amber)':'var(--moss)';
       var dayLabel=days<0?Math.abs(days)+'d overdue':days===0?'Today':days+'d';
-      rHtml+='<div class="remind-row card '+cls+'" onclick="openReminderModal(DATA.reminders.find(function(x){return x.id===\''+r.id+'\';}))">'+
+      rHtml+='<div class="remind-row card '+cls+'">'+
         '<div class="remind-type-ico" style="color:'+color+'">'+remTypeIcon(r.remType)+'</div>'+
-        '<div style="flex:1;min-width:0">'+
+        '<div style="flex:1;min-width:0" onclick="openReminderModal(DATA.reminders.find(function(x){return x.id===\''+r.id+'\';}))">'+
           '<div class="hname">'+esc(r.notes||r.itemName||r.remType)+'</div>'+
           '<div class="hmeta">'+(hive?esc(hive.name)+' · ':'')+fmtDate(r.nextDate)+(r.itemCost?' · '+cur+parseFloat(r.itemCost).toFixed(2):'')+'</div>'+
           '<div style="margin-top:4px"><span class="rem-type-tag rt-'+r.remType.toLowerCase().split(' ')[0]+'">'+esc(r.remType)+'</span></div>'+
         '</div>'+
-        '<span class="due-chip" style="color:'+color+';background:'+color+'1a">'+dayLabel+'</span>'+
+        '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">'+
+          '<span class="due-chip" style="color:'+color+';background:'+color+'1a">'+dayLabel+'</span>'+
+          '<div style="display:flex;gap:5px">'+
+            '<button class="action-btn" style="font-size:11px;padding:4px 8px" onclick="event.stopPropagation();openReminderModal(DATA.reminders.find(function(x){return x.id===\''+r.id+'\';}))">Edit</button>'+
+            '<button class="action-btn" style="font-size:11px;padding:4px 8px;color:var(--moss)" onclick="event.stopPropagation();completeReminder(\''+r.id+'\')">✓ Done</button>'+
+            '<button class="action-btn action-btn-del" style="font-size:11px;padding:4px 8px" onclick="event.stopPropagation();deleteReminder(\''+r.id+'\')">Del</button>'+
+          '</div>'+
+        '</div>'+
       '</div>';
     });
     if (completed.length) {

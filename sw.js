@@ -2,7 +2,7 @@
 // APIARY HQ — Service Worker v5.3.9
 // Bump CACHE_VERSION on every deployment
 // ═══════════════════════════════════════════════════════
-var CACHE_VERSION = 'apiaryhq-v5.3.9';
+var CACHE_VERSION = 'apiaryhq-v5.4.0';
 
 var EXTERNAL_URLS = [
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
@@ -34,6 +34,7 @@ var STATIC_FILES = [
   '/js/hive_history.js',
   '/js/pdf_export.js',
   '/js/pollen.js',
+  '/js/zones.js',
   '/js/weather.js'
 ];
 
