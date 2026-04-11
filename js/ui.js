@@ -166,44 +166,26 @@ function confirmDelete(message, onConfirm) {
 function runDelete() { if(_pendingDeleteFn){_pendingDeleteFn();_pendingDeleteFn=null;} closeModal(); }
 
 // ═══════════════════════════════════════════════════════
-// CAMERA SOURCE PICKER
+// PHOTO PICKER — single input, device picks camera/gallery
 // ═══════════════════════════════════════════════════════
 var _camCtx = null, _camTarget = 'photo';
 function showPhotoSourcePicker(tid, target) {
   _camCtx = tid;
   _camTarget = target || 'photo';
-  document.getElementById('cam-sheet').style.display = '';
-}
-function closeCamSheet() {
-  document.getElementById('cam-sheet').style.display = 'none';
-}
-function camSheetAction(source) {
-  closeCamSheet();
-  var inputId;
-  if (_camTarget === 'photo') {
-    inputId = source === 'camera' ? 'photo-camera' : 'photo-file';
-    document.getElementById(inputId).dataset.ctx = _camCtx;
-  } else if (_camTarget === 'doc') {
-    inputId = source === 'camera' ? 'doc-camera' : 'doc-file';
-  } else if (_camTarget === 'asset') {
-    inputId = source === 'camera' ? 'asset-camera' : 'asset-file';
+  if (target === 'doc') {
+    var di = document.getElementById('doc-file');
+    if (di) di.click();
+  } else if (target === 'asset') {
+    var ai = document.getElementById('asset-file');
+    if (ai) ai.click();
+  } else {
+    var pi = document.getElementById('photo-file');
+    if (pi) { pi.dataset.ctx = tid; pi.click(); }
   }
-  document.getElementById(inputId).click();
 }
-
-document.getElementById('photo-camera').addEventListener('change', function() {
-  document.getElementById('photo-file').dataset.ctx = this.dataset.ctx || _camCtx;
-  handlePhotoFiles(this.files, this.dataset.ctx || _camCtx);
-  this.value = '';
-});
-document.getElementById('doc-camera').addEventListener('change', function() {
-  if (this.files[0]) { _docFile = this.files[0]; var pv=document.getElementById('doc-preview'); if(pv) pv.innerHTML='<img src="'+URL.createObjectURL(this.files[0])+'" style="width:100%;border-radius:12px;margin-top:10px">'; }
-  this.value = '';
-});
-document.getElementById('asset-camera').addEventListener('change', function() {
-  if (this.files[0]) { _assetFile = this.files[0]; var pv=document.getElementById('asset-preview'); if(pv) pv.innerHTML='<img src="'+URL.createObjectURL(this.files[0])+'" style="width:100%;border-radius:12px;margin-top:10px;max-height:180px;object-fit:contain">'; }
-  this.value = '';
-});
+// Legacy cam-sheet stubs — no-ops, sheet is removed
+function closeCamSheet() {}
+function camSheetAction() {}
 
 // ═══════════════════════════════════════════════════════
 // PHOTO GALLERY (MODAL)
