@@ -1,8 +1,8 @@
 // ═══════════════════════════════════════════════════════
-// APIARY HQ — Service Worker v5.3.9
+// APIARY HQ — Service Worker v5.4.1
 // Bump CACHE_VERSION on every deployment
 // ═══════════════════════════════════════════════════════
-var CACHE_VERSION = 'apiaryhq-v5.4.0';
+var CACHE_VERSION = 'apiaryhq-v5.4.1';
 
 var EXTERNAL_URLS = [
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',

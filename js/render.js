@@ -655,10 +655,38 @@ function renderTreatRefLibrary() {
   // ── SYRUP MIXING GUIDE ──
   html += secHeader('lib-sec-syrup', '<svg viewBox="0 0 20 20" fill="none" style="width:15px;height:15px;display:inline-block;vertical-align:-3px;margin-right:5px" xmlns="http://www.w3.org/2000/svg"><path d="M10 3C9 3 5 7 5 11a5 5 0 0010 0c0-4-4-8-5-8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><line x1="10" y1="9" x2="10" y2="13" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Syrup Mixing Guide');
   var SYRUP_DATA = [
-    { name:'1:1 Sugar Syrup (Spring/Summer)', ratio:'1 lb sugar : 1 pint (2 cups) water  —  or by volume: 2¼ cups sugar : 2 cups water', use:'Stimulates brood rearing and comb building. Use in spring to stimulate buildup and for new packages/splits. Do not use during honey flow.', temp:'Feed when temps are above 50°F.', note:'Per Dadant: Add Honey-B-Healthy at 1 tsp/qt to stimulate feeding and inhibit fermentation. Heat water first to help sugar dissolve — do not boil.' },
-    { name:'2:1 Sugar Syrup (Fall/Winter)', ratio:'2 lbs sugar : 1 pint (2 cups) water  —  or by volume: 4½ cups sugar : 2 cups water', use:'Winter stores — heavier syrup converts to honey faster with less moisture. Feed in fall to ensure adequate winter stores. Stop feeding when temps drop below 50°F consistently.', temp:'Feed before temps drop below 50°F.', note:'Per Dadant: Feed until bees stop taking it. A light hive in November needs emergency feeding — switch to candy board below 50°F. Heat water first to dissolve the higher sugar load.' },
-    { name:'Candy Board (Winter Emergency)', ratio:'10 lbs sugar : 1/2 cup water', use:'Emergency winter feed when temps are too cold for syrup. Bees consume as needed. Place directly above cluster.', temp:'Use when temps consistently below 50°F.', note:'Mix sugar and water to stiff dough, press into mold or rimmed board. Let dry 24 hours. Place rim-side down over cluster.' },
-    { name:'Fondant / Sugar Brick', ratio:'4 lbs sugar : 1/4 cup water', use:'Similar to candy board — emergency winter or early spring feed. Easy to make in bulk.', temp:'Any temperature — solid feed.', note:'Boil to soft ball stage (235-240°F), cool to 110°F, beat until creamy white, pour into molds.' }
+    {
+      name: '1:1 Sugar Syrup (Spring / Summer)',
+      ratio: 'By weight: 1 lb sugar + 1 pint water (16 fl oz / 2 cups)  —  By volume: 2¼ cups sugar + 2 cups water',
+      use: 'Stimulates brood rearing, wax production, and comb building. Use in early spring to stimulate buildup, and for new packages and splits throughout spring. Stop feeding once a nectar flow begins — bees will store syrup as honey.',
+      temp: 'Feed only when temps are consistently above 50°F. Below 50°F bees cannot take syrup effectively.',
+      mixing: 'Heat water until hot but not boiling. Pour sugar into hot water and stir until fully dissolved. Do not boil — boiling caramelizes the sugar and produces HMF (hydroxymethylfurfural) which is toxic to bees at high levels. Cool before filling feeder.',
+      note: 'Per Dadant: Add Honey-B-Healthy (essential oil supplement) at 1 tsp per quart of finished syrup to stimulate feeding and inhibit fermentation in the feeder.'
+    },
+    {
+      name: '2:1 Sugar Syrup (Fall / Winter)',
+      ratio: 'By weight: 2 lbs sugar + 1 pint water (16 fl oz / 2 cups)  —  By volume: 4½ cups sugar + 2 cups water',
+      use: 'Winter stores — thicker syrup is closer to honey in moisture content and requires less energy for bees to convert and cap. Feed in late summer and fall to build winter stores. Target 40–50 lbs capped honey for Alabama winters.',
+      temp: 'Feed before temps drop below 50°F consistently. Once cold weather sets in switch to candy board or fondant.',
+      mixing: 'Heat water until very hot. Add sugar gradually, stirring continuously — the higher sugar load requires more heat to dissolve fully. Do not boil. Cool before filling feeder.',
+      note: 'Per Dadant: Feed until bees stop taking it. A light hive in November needs emergency feeding — if temps are already below 50°F use a candy board placed directly over the cluster instead of syrup.'
+    },
+    {
+      name: 'Candy Board (Winter Emergency)',
+      ratio: '10 lbs granulated sugar + ½ cup water',
+      use: 'Emergency winter feed when temps are too cold for syrup. Bees consume it directly as needed without having to process liquid. Place rim-side down directly above the winter cluster so bees can reach it without breaking cluster.',
+      temp: 'Use when temps are consistently below 50°F and syrup feeding is no longer practical.',
+      mixing: 'Mix sugar and water to a stiff dough — consistency similar to wet sand. Press firmly into a rimmed board or shallow frame. Let dry and harden at room temperature for 24 hours before placing in hive.',
+      note: 'Do not use fondant recipe (boiled) for candy boards — the no-cook dough method is simpler and equally effective for winter emergency feeding.'
+    },
+    {
+      name: 'Fondant / Sugar Brick',
+      ratio: '4 lbs granulated sugar + ¼ cup water',
+      use: 'Similar purpose to candy board — emergency winter or early spring solid feed. Slightly denser than candy board dough. Good for making in bulk and storing.',
+      temp: 'Any temperature — solid feed requires no minimum temp.',
+      mixing: 'Combine sugar and water in saucepan. Bring to soft ball stage (235–240°F) using a candy thermometer. Remove from heat, cool to 110°F without stirring. Beat vigorously until mixture turns creamy white and thickens. Pour into molds and allow to harden.',
+      note: 'Do not skip the thermometer — temperature accuracy is critical. Under-cooked fondant stays sticky; over-cooked becomes too hard for bees to work.'
+    }
   ];
   html += SYRUP_DATA.map(function(s) {
     return '<div class="tref-card">' +
@@ -672,6 +700,7 @@ function renderTreatRefLibrary() {
         '<div class="tref-section"><div class="tref-section-title">Ratio</div><div class="tref-note">' + esc(s.ratio) + '</div></div>' +
         '<div class="tref-section"><div class="tref-section-title">When to Use</div><div class="tref-note">' + esc(s.use) + '</div></div>' +
         '<div class="tref-section"><div class="tref-section-title">Temperature</div><div class="tref-note">' + esc(s.temp) + '</div></div>' +
+        (s.mixing ? '<div class="tref-section"><div class="tref-section-title">How to Mix</div><div class="tref-note">' + esc(s.mixing) + '</div></div>' : '') +
         (s.note ? '<div class="tref-warn">' + esc(s.note) + '</div>' : '') +
       '</div>' +
     '</div>';

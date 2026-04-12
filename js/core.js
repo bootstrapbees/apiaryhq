@@ -195,6 +195,14 @@ async function showApp(user) {
   if (dt) dt.classList.toggle('on', _dark);
   // Load logo
   renderHeaderLogo(meta.logo_url);
+  // Sync ZIP from Supabase user metadata — always use Supabase as source of truth
+  // This ensures ZIP stays in sync across all devices automatically
+  if (meta.zip && meta.lat && meta.lng) {
+    localStorage.setItem('apiaryhq_zip', meta.zip);
+    localStorage.setItem('apiaryhq_lat', meta.lat);
+    localStorage.setItem('apiaryhq_lng', meta.lng);
+    if (meta.location_name) localStorage.setItem('apiaryhq_location_name', meta.location_name);
+  }
   document.getElementById('app-loading').classList.add('hidden');
   document.getElementById('main-header').style.display = '';
   document.getElementById('main-nav').style.display = '';

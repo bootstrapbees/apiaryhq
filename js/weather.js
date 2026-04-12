@@ -184,8 +184,18 @@ function saveZipFromSettings() {
     function(lat, lng, name) {
       inp.disabled = false;
       if (statusEl) { statusEl.textContent = '\u2705 Location set: ' + name; statusEl.style.color = 'var(--moss)'; }
+      // Clear both memory cache and localStorage cache so weather reloads fresh
       window._wx = null;
       window._pollenData = null;
+      try { localStorage.removeItem(WX_CACHE_KEY); } catch(e) {}
+      // Reload both widgets immediately
+      loadWeather();
+      loadPollenForecast();
+      // Save ZIP to Supabase user metadata so it syncs across devices
+      if (typeof sb !== 'undefined' && sb.auth) {
+        sb.auth.updateUser({ data: { zip: zip, lat: lat, lng: lng, location_name: name } })
+          .catch(function() {}); // silent fail — localStorage is already updated
+      }
     },
     function(msg) {
       inp.disabled = false;
