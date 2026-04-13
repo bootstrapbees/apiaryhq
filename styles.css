@@ -59,7 +59,10 @@ body {
   font-family:'Source Serif 4',Georgia,serif;
   background:var(--bg);
   color:var(--txt);
-  min-height:100vh;
+  height:100vh;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
   -webkit-font-smoothing:antialiased;
 }
 
@@ -197,7 +200,7 @@ header {
 
 /* ─── PAGES ─── */
 .page{display:none;padding:14px 14px 90px}
-.page.active{display:block}
+.page.active{display:block;flex:1;overflow-y:auto;min-height:0}
 
 /* ─── CARDS ─── */
 .card {
