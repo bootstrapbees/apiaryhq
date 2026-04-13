@@ -53,6 +53,7 @@
 
 /* ─── RESET ─── */
 *{box-sizing:border-box;margin:0;padding:0}
+html{height:100%}
 
 /* ─── BASE ─── */
 body {
@@ -193,7 +194,8 @@ header {
   .more-tray-backdrop{display:none!important}
   .more-icon{width:18px;height:18px}
   header{padding:14px 24px 10px}
-  .page{padding:24px 32px 80px}
+  .page{padding:24px 32px 80px;overflow-y:auto}
+  body{overflow:hidden}
   .hdr-h1{font-size:22px}
   .hdr-logo,.hdr-logo-placeholder{width:46px;height:46px}
 }
