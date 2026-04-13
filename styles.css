@@ -60,10 +60,7 @@ body {
   font-family:'Source Serif 4',Georgia,serif;
   background:var(--bg);
   color:var(--txt);
-  height:100vh;
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
+  min-height:100vh;
   -webkit-font-smoothing:antialiased;
 }
 
@@ -194,15 +191,14 @@ header {
   .more-tray-backdrop{display:none!important}
   .more-icon{width:18px;height:18px}
   header{padding:14px 24px 10px}
-  .page{padding:24px 32px 80px;overflow-y:auto}
-  body{overflow:hidden}
+  .page{padding:24px 32px 80px}
   .hdr-h1{font-size:22px}
   .hdr-logo,.hdr-logo-placeholder{width:46px;height:46px}
 }
 
 /* ─── PAGES ─── */
 .page{display:none;padding:14px 14px 90px}
-.page.active{display:block;flex:1;overflow-y:auto;min-height:0}
+.page.active{display:block;min-height:calc(100vh - 154px)}
 
 /* ─── CARDS ─── */
 .card {
