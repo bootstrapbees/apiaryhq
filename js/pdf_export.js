@@ -102,7 +102,8 @@ function exportFinancePDF() {
     doc.setFont('helvetica','normal'); doc.setTextColor(120,88,48);
     doc.text(t.category||'', pageW-margin-55, y);
     y += descLines.length>1 ? descLines.length*4.5 : 6;
-    doc.setDrawColor(232,160,32); doc.setLineWidth(0.1); doc.line(margin, y-1, pageW-margin, y-1);
+    doc.setDrawColor(232,160,32); doc.setLineWidth(0.1); doc.line(margin, y+2, pageW-margin, y+2);
+    y += 5;
   });
   doc.setTextColor(160,120,80); doc.setFontSize(8);
   doc.text('Apiary HQ — Financial Records', margin, 290);
