@@ -230,6 +230,25 @@ function openInspModal(item) {
   '</div>';
   // ── FRAME LOGGING SECTION ──
   var existingBoxData = (edit && (item.box_data||item.boxData)) ? deserializeFrameBoxes(item.box_data||item.boxData) : null;
+  if (!existingBoxData) {
+    // New inspection — carry forward foundation types from last inspection for this hive
+    var lastInsp = DATA.inspections
+      .filter(function(x){ return x.hiveId === (edit ? item.hiveId : gv('f-ihive')); })
+      .sort(function(a,b){ return b.date.localeCompare(a.date); })[0];
+    var priorBoxData = (lastInsp && (lastInsp.box_data||lastInsp.boxData))
+      ? deserializeFrameBoxes(lastInsp.box_data||lastInsp.boxData) : null;
+    if (priorBoxData) {
+      // Copy foundation only, leave everything else blank
+      existingBoxData = priorBoxData.map(function(box) {
+        return {
+          label: box.label,
+          frames: box.frames.map(function(fr) {
+            return { foundation: fr.foundation||'', contents:[], pattern:'', queenCell:'None', notes:'' };
+          })
+        };
+      });
+    }
+  }
   initFrameBoxes(existingBoxData);
   h += '<div style="background:var(--warn-bg);border-radius:12px;padding:12px 14px;margin-bottom:2px">';
   h += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--forest);margin-bottom:10px">🖼️ Frame Map</div>';
