@@ -228,6 +228,13 @@ function openInspModal(item) {
       '<div class="fg"><label>Feed Notes</label><input id="f-ifdnotes" value="'+esc(feedNote)+'" placeholder="e.g. jar nearly empty"></div>'+
     '</div>'+
   '</div>';
+  // ── FRAME LOGGING SECTION ──
+  var existingBoxData = (edit && (item.box_data||item.boxData)) ? deserializeFrameBoxes(item.box_data||item.boxData) : null;
+  initFrameBoxes(existingBoxData);
+  h += '<div style="background:var(--warn-bg);border-radius:12px;padding:12px 14px;margin-bottom:2px">';
+  h += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--forest);margin-bottom:10px">🖼️ Frame Map</div>';
+  h += '<div id="frame-section-wrap"></div>';
+  h += '</div>';
   h += '<div class="fg"><label>Actions Taken</label><textarea id="f-iact" placeholder="e.g. Added super, treated for varroa…">'+(edit?esc(item.actions||''):'')+'</textarea></div>';
   h += '<div class="fg"><label>Notes</label><textarea id="f-inotes" placeholder="Observations…">'+(edit?esc(item.notes||''):'')+'</textarea></div>';
   h += '<div class="fg"><label>Inspection Photos</label>'+
@@ -243,6 +250,7 @@ function openInspModal(item) {
   if (edit) h += '<button class="btn btn-d" onclick="deleteInsp(\''+item.id+'\')">Delete</button>';
   h += '<button class="btn btn-c" onclick="closeModal()">Cancel</button>';
   openModal(h);
+  renderFrameSection();
 }
 
 async function saveInsp(tid, isEdit) {
@@ -251,15 +259,15 @@ async function saveInsp(tid, isEdit) {
   var WX=window._wx;
   var ws=WX?{temp:WX.temp,desc:WX.desc,wind:WX.wind,score:WX.score}:null;
   var feedType = getPill('ifd')||'None';
-  var obj={hive_id:hiveId,date,weather_snap:ws,weather:getPill('iwx'),queen_seen:getPill('iq'),population:getStar('ip'),honey:getStar('ih'),brood:getStar('ib'),temperament:getPill('itm'),varroa:getPill('iv'),feed_type:feedType==='None'?null:feedType,feed_qty:gv('f-ifdqty')||null,feed_notes:gv('f-ifdnotes')||null,actions:gv('f-iact'),notes:gv('f-inotes')};
+  var obj={hive_id:hiveId,date,weather_snap:ws,weather:getPill('iwx'),queen_seen:getPill('iq'),population:getStar('ip'),honey:getStar('ih'),brood:getStar('ib'),temperament:getPill('itm'),varroa:getPill('iv'),feed_type:feedType==='None'?null:feedType,feed_qty:gv('f-ifdqty')||null,feed_notes:gv('f-ifdnotes')||null,actions:gv('f-iact'),notes:gv('f-inotes'),box_data:serializeFrameBoxes()};
   if (isEdit) {
     await (typeof dbUpdateSafe==='function'?dbUpdateSafe('inspections',tid,obj):dbUpdate('inspections',tid,obj));
-    Object.assign(DATA.inspections.find(function(x){return x.id===tid;}), {...obj,hiveId:obj.hive_id,queenSeen:obj.queen_seen,weatherSnap:obj.weather_snap,feedType:obj.feed_type,feedQty:obj.feed_qty,feedNotes:obj.feed_notes});
+    Object.assign(DATA.inspections.find(function(x){return x.id===tid;}), {...obj,hiveId:obj.hive_id,queenSeen:obj.queen_seen,weatherSnap:obj.weather_snap,feedType:obj.feed_type,feedQty:obj.feed_qty,feedNotes:obj.feed_notes,boxData:obj.box_data});
   } else {
     var row=await (typeof dbInsertSafe==='function'?dbInsertSafe('inspections',obj):dbInsert('inspections',obj));
     if (row) {
       if (PHOTOS[tid]) { for(var p of PHOTOS[tid]){var s=await dbInsert('photos',{context_id:row.id,data_url:p.dataUrl}); if(s){PHOTOS[row.id]=PHOTOS[row.id]||[];PHOTOS[row.id].push({id:s.id,dataUrl:p.dataUrl});}} delete PHOTOS[tid]; }
-      DATA.inspections.push({...row,hiveId:row.hive_id,queenSeen:row.queen_seen,weatherSnap:row.weather_snap,feedType:row.feed_type,feedQty:row.feed_qty,feedNotes:row.feed_notes});
+      DATA.inspections.push({...row,hiveId:row.hive_id,queenSeen:row.queen_seen,weatherSnap:row.weather_snap,feedType:row.feed_type,feedQty:row.feed_qty,feedNotes:row.feed_notes,boxData:row.box_data});
       await autoGenerateReminders(row, obj);
     }
   }
