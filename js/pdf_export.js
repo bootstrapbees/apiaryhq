@@ -1,7 +1,167 @@
 
 // ═══════════════════════════════════════════════════════
-// PDF EXPORT
+// FRAME MAP — PDF RENDERING
 // ═══════════════════════════════════════════════════════
+var FRAME_ABBR = {
+  undrawn:'UD', drawing:'DR', empty_drawn:'ED', brood_worker:'WB',
+  brood_drone:'DB', eggs:'EG', larvae:'LV', honey_capped:'CH',
+  honey_uncap:'UH', pollen:'PL',
+};
+var FRAME_PDF_COLORS = {
+  undrawn:[232,237,232], drawing:[255,248,220], empty_drawn:[255,250,205],
+  brood_worker:[200,134,10], brood_drone:[139,94,10], eggs:[212,240,212],
+  larvae:[168,219,168], honey_capped:[245,166,35], honey_uncap:[255,208,128],
+  pollen:[232,160,32],
+};
+// 0=solid 1=h-lines 2=v-lines 3=diagonal 4=crosshatch 5=dots
+var FRAME_HATCH = {
+  undrawn:0, drawing:1, empty_drawn:2, brood_worker:0, brood_drone:3,
+  eggs:4, larvae:5, honey_capped:0, honey_uncap:1, pollen:3,
+};
+
+function drawHatch(doc, type, x, y, w, h, r, g, b) {
+  var sp = 2.5;
+  doc.setDrawColor(Math.max(0,r-40), Math.max(0,g-40), Math.max(0,b-40));
+  doc.setLineWidth(0.25);
+  if (type===1) { for(var ly=y+sp;ly<y+h;ly+=sp) doc.line(x,ly,x+w,ly); }
+  else if (type===2) { for(var lx=x+sp;lx<x+w;lx+=sp) doc.line(lx,y,lx,y+h); }
+  else if (type===3) { for(var d=-h;d<w+h;d+=sp){ var x1=x+d,y1=y,x2=x+d-h,y2=y+h; if(x1>x+w){y1+=(x1-(x+w));x1=x+w;} if(x2<x){y2-=(x-x2);x2=x;} if(x1>=x&&x2<=x+w+1)doc.line(x1,y1,x2,y2); } }
+  else if (type===4) { for(var ly2=y+sp;ly2<y+h;ly2+=sp)doc.line(x,ly2,x+w,ly2); for(var lx2=x+sp;lx2<x+w;lx2+=sp)doc.line(lx2,y,lx2,y+h); }
+  else if (type===5) { doc.setFillColor(Math.max(0,r-50),Math.max(0,g-50),Math.max(0,b-50)); for(var dy=y+2;dy<y+h;dy+=sp) for(var dx=x+2;dx<x+w;dx+=sp) doc.circle(dx,dy,0.3,'F'); }
+}
+
+function drawFrameMap(doc, insp, startY, margin, pageW) {
+  var boxData = null;
+  if (insp.box_data||insp.boxData) { try{ boxData=JSON.parse(insp.box_data||insp.boxData); }catch(e){} }
+  if (!boxData||!boxData.length) return startY;
+  var y = startY;
+  var contentW = pageW - 2*margin;
+
+  // Section header
+  doc.setFillColor(26,58,42);
+  doc.roundedRect(margin, y, contentW, 7, 1, 1, 'F');
+  doc.setTextColor(245,223,160); doc.setFontSize(9); doc.setFont('helvetica','bold');
+  doc.text('Frame Map', margin+3, y+4.8);
+  y += 10;
+
+  boxData.forEach(function(box) {
+    if (y > 245) { doc.addPage(); y=20; }
+    // Box label
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(45,106,79);
+    doc.text(box.label.toUpperCase(), margin, y+3.5);
+    y += 6;
+    var numFrames = box.frames.length;
+    var frameW = (contentW - (numFrames-1)*1) / numFrames;
+    var frameH = 16;
+
+    box.frames.forEach(function(fr, fi) {
+      var fx = margin + fi*(frameW+1);
+      var primary = (fr.contents&&fr.contents.length) ? fr.contents[0] : 'undrawn';
+      var rgb = FRAME_PDF_COLORS[primary]||[232,237,232];
+      var hatch = FRAME_HATCH[primary]||0;
+      var isDark = (primary==='brood_worker'||primary==='brood_drone'||primary==='honey_capped'||primary==='pollen');
+      // Background
+      doc.setFillColor(rgb[0],rgb[1],rgb[2]);
+      doc.setDrawColor(180,180,180); doc.setLineWidth(0.3);
+      doc.roundedRect(fx, y, frameW, frameH, 1, 1, 'FD');
+      if (hatch>0) drawHatch(doc, hatch, fx, y, frameW, frameH, rgb[0], rgb[1], rgb[2]);
+      // Frame number
+      doc.setFontSize(5.5); doc.setFont('helvetica','bold');
+      doc.setTextColor(isDark?255:60, isDark?255:60, isDark?255:60);
+      doc.text(String(fi+1), fx+frameW/2, y+3.5, {align:'center'});
+      // Primary abbr
+      doc.setFontSize(6); doc.setFont('helvetica','bold');
+      doc.text(FRAME_ABBR[primary]||'??', fx+frameW/2, y+8.5, {align:'center'});
+      // Secondary abbr
+      if (fr.contents&&fr.contents.length>1) {
+        doc.setFontSize(4.5); doc.setFont('helvetica','normal');
+        doc.text(FRAME_ABBR[fr.contents[1]]||'', fx+frameW/2, y+12, {align:'center'});
+      }
+      // Queen cell badge
+      if (fr.queenCell&&fr.queenCell!=='None') {
+        doc.setFillColor(192,57,43);
+        doc.roundedRect(fx+0.5, y+frameH-4.5, frameW-1, 4, 0.5, 0.5, 'F');
+        doc.setFontSize(4); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+        doc.text('QC:'+fr.queenCell.slice(0,3).toUpperCase(), fx+frameW/2, y+frameH-1.8, {align:'center'});
+      }
+    });
+    y += frameH+3;
+
+    // Foundation row
+    doc.setFontSize(4.5); doc.setFont('helvetica','normal'); doc.setTextColor(100,100,100);
+    box.frames.forEach(function(fr, fi) {
+      if (fr.foundation) {
+        var fx = margin + fi*(frameW+1);
+        var fA = fr.foundation==='Plastic'?'PL':fr.foundation==='Wax'?'WX':fr.foundation==='Foundationless'?'FL':'DC';
+        doc.text(fA, fx+frameW/2, y, {align:'center'});
+      }
+    });
+    y += 4;
+
+    // Frame notes detail
+    var detailFrames = box.frames.filter(function(fr){
+      return (fr.queenCell&&fr.queenCell!=='None')||fr.pattern||fr.notes;
+    });
+    if (detailFrames.length) {
+      doc.setFontSize(6.5); doc.setFont('helvetica','bold'); doc.setTextColor(44,26,6);
+      doc.text('Frame Notes:', margin, y+3); y+=5;
+      detailFrames.forEach(function(fr) {
+        var fi = box.frames.indexOf(fr);
+        var parts = [];
+        if (fr.pattern) parts.push('Pattern: '+fr.pattern);
+        if (fr.queenCell&&fr.queenCell!=='None') parts.push('Queen Cell: '+fr.queenCell);
+        if (fr.notes) parts.push(fr.notes);
+        doc.setFontSize(6); doc.setFont('helvetica','normal'); doc.setTextColor(80,60,20);
+        var lines = doc.splitTextToSize('Frame '+(fi+1)+': '+parts.join(' · '), contentW-4);
+        doc.text(lines, margin+2, y+3); y += lines.length*3.5+1;
+      });
+      y += 2;
+    }
+    y += 4;
+  });
+
+  // Legend box
+  if (y>250) { doc.addPage(); y=20; }
+  doc.setFillColor(248,246,240);
+  doc.roundedRect(margin, y, contentW, 18, 1, 1, 'F');
+  doc.setDrawColor(200,180,140); doc.setLineWidth(0.2);
+  doc.roundedRect(margin, y, contentW, 18, 1, 1, 'D');
+  doc.setFontSize(6); doc.setFont('helvetica','bold'); doc.setTextColor(74,44,10);
+  doc.text('Key:', margin+2, y+4);
+  var legendItems = [
+    {abbr:'UD',label:'Undrawn',       color:[232,237,232],hatch:0},
+    {abbr:'DR',label:'Drawing',       color:[255,248,220],hatch:1},
+    {abbr:'ED',label:'Empty Drawn',   color:[255,250,205],hatch:2},
+    {abbr:'WB',label:'Worker Brood',  color:[200,134,10], hatch:0},
+    {abbr:'DB',label:'Drone Brood',   color:[139,94,10],  hatch:3},
+    {abbr:'EG',label:'Eggs',          color:[212,240,212],hatch:4},
+    {abbr:'LV',label:'Larvae',        color:[168,219,168],hatch:5},
+    {abbr:'CH',label:'Capped Honey',  color:[245,166,35], hatch:0},
+    {abbr:'UH',label:'Uncapped Honey',color:[255,208,128],hatch:1},
+    {abbr:'PL',label:'Pollen',        color:[232,160,32], hatch:3},
+  ];
+  var colW = contentW/5; var row=0; var col=0;
+  legendItems.forEach(function(item) {
+    var lx=margin+2+col*colW; var ly=y+7+row*5;
+    doc.setFillColor(item.color[0],item.color[1],item.color[2]);
+    doc.setDrawColor(160,160,160); doc.setLineWidth(0.2);
+    doc.roundedRect(lx, ly-2.5, 4, 3.5, 0.3, 0.3, 'FD');
+    if (item.hatch>0) drawHatch(doc, item.hatch, lx, ly-2.5, 4, 3.5, item.color[0], item.color[1], item.color[2]);
+    doc.setFontSize(5.5); doc.setFont('helvetica','bold'); doc.setTextColor(40,40,40);
+    doc.text(item.abbr, lx+5, ly);
+    doc.setFont('helvetica','normal');
+    doc.text(item.label, lx+9, ly);
+    col++; if(col>=5){col=0;row++;}
+  });
+  y += 21;
+  // Footnote
+  doc.setFontSize(5.5); doc.setFont('helvetica','italic'); doc.setTextColor(140,120,80);
+  doc.text('Foundation: PL=Plastic  WX=Wax  FL=Foundationless  DC=Drawn Comb  |  QC=Queen Cell (type shown)  |  Pattern & notes shown in Frame Notes above', margin, y);
+  y += 6;
+  return y;
+}
+
+
 function exportInspectionsPDF(hiveId) {
   if (typeof window.jspdf === 'undefined' && typeof jspdf === 'undefined') {
     alert('PDF library loading, please try again in a moment.'); return;
@@ -46,6 +206,8 @@ function exportInspectionsPDF(hiveId) {
     if (i.varroa) { doc.text('Varroa: '+i.varroa, margin+3, y); y+=5; }
     if (i.actions) { var aLines=doc.splitTextToSize('Actions: '+i.actions, pageW-2*margin-6); doc.text(aLines, margin+3, y); y+=aLines.length*4.5; }
     if (i.notes) { doc.setTextColor(120,88,48); var nLines=doc.splitTextToSize('Notes: '+i.notes, pageW-2*margin-6); doc.text(nLines, margin+3, y); y+=nLines.length*4.5; }
+    // Frame map
+    y = drawFrameMap(doc, i, y+2, margin, pageW);
     doc.setDrawColor(232,160,32); doc.setLineWidth(0.3); doc.line(margin, y+2, pageW-margin, y+2);
     y += 7;
   });
