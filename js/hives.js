@@ -7,8 +7,8 @@ function openHiveModal(hive) {
   var tid = edit ? hive.id : ('h'+Date.now());
   var h = '<div class="modal-title">'+(edit?'Edit':'Add')+' Hive</div>';
   h += '<div class="fg"><label>Hive Name</label><input id="f-hname" value="'+esc(hive?hive.name:'')+'" placeholder="e.g. Queen Beatrice"></div>';
-  h += '<div class="fg"><label>Location</label><input id="f-hloc" value="'+esc(hive?hive.location||'')+'" placeholder="e.g. North Orchard"></div>';
-  h += '<div class="row2"><div class="fg"><label>Year Est.</label><input id="f-hyear" type="number" value="'+esc(hive?hive.year||'')+'" placeholder="'+new Date().getFullYear()+'"></div><div class="fg"><label>Boxes</label><input id="f-hboxes" type="number" value="'+esc(hive?hive.boxes||'')+'" placeholder="2"></div></div>';
+  h += '<div class="fg"><label>Location</label><input id="f-hloc" value="'+esc(hive?hive.location||'':'')+'" placeholder="e.g. North Orchard"></div>';
+  h += '<div class="row2"><div class="fg"><label>Year Est.</label><input id="f-hyear" type="number" value="'+esc(hive?hive.year||'':'')+'" placeholder="'+new Date().getFullYear()+'"></div><div class="fg"><label>Boxes</label><input id="f-hboxes" type="number" value="'+esc(hive?hive.boxes||'':'')+'" placeholder="2"></div></div>';
   h += '<div class="fg"><label>Installation Date <span style="font-size:11px;color:var(--txt2);font-weight:400">(package or nuc)</span></label><input id="f-hinstall" type="date" value="'+esc(hive?hive.install_date||'':'')+'"></div>';
   h += '<div class="fg"><label>Species</label>'+makePills('hsp',['Italian','Carniolan','Buckfast','Russian','Other'],hive?hive.species||'Italian':'Italian')+'</div>';
   h += '<div class="fg"><label>Status</label>'+makePills('hst',['Healthy','Monitoring','Weak','Queenless'],hive?hive.status||'Healthy':'Healthy')+'</div>';
@@ -47,22 +47,14 @@ async function saveHive(tid, isEdit) {
       }
     }
     if (installDate && installDate !== prevInstall) {
-      closeModal();
-      promptInstallReminders(hv);
-      renderAll();
-      return;
+      closeModal(); promptInstallReminders(hv); renderAll(); return;
     }
   } else {
     var row = await dbInsert('hives', obj);
     if (row) {
       if (PHOTOS[tid]) { for(var p of PHOTOS[tid]){await dbInsert('photos',{context_id:row.id,data_url:p.dataUrl});} delete PHOTOS[tid]; }
       DATA.hives.push(row);
-      if (installDate) {
-        closeModal();
-        promptInstallReminders(row);
-        renderAll();
-        return;
-      }
+      if (installDate) { closeModal(); promptInstallReminders(row); renderAll(); return; }
     }
   }
   closeModal(); renderAll();
@@ -94,17 +86,13 @@ function promptInstallReminders(hive) {
     'Confirm Installation</div>';
   h += '<div style="font-size:13px;color:var(--txt2);margin-bottom:14px;line-height:1.6">'+
     'Package installed <strong>'+fmtDate(installDate)+'</strong> in <strong>'+esc(hive.name)+'</strong>.<br>'+
-    'The following smart reminders will be created — confirm or skip below.'+
-  '</div>';
+    'The following smart reminders will be created — confirm or skip below.</div>';
   h += '<div style="background:var(--wax);border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;flex-direction:column;gap:9px">';
   reminders.forEach(function(r) {
     h += '<div style="display:flex;align-items:flex-start;gap:10px">'+
       '<span style="font-size:16px;flex-shrink:0;margin-top:1px">'+r.icon+'</span>'+
-      '<div>'+
-        '<div style="font-size:13px;font-weight:700;color:var(--txt)">'+esc(r.label)+'</div>'+
-        '<div style="font-size:11px;color:var(--txt2);margin-top:2px">'+fmtDate(r.date)+' &nbsp;·&nbsp; '+esc(r.desc)+'</div>'+
-      '</div>'+
-    '</div>';
+      '<div><div style="font-size:13px;font-weight:700;color:var(--txt)">'+esc(r.label)+'</div>'+
+      '<div style="font-size:11px;color:var(--txt2);margin-top:2px">'+fmtDate(r.date)+' &nbsp;·&nbsp; '+esc(r.desc)+'</div></div></div>';
   });
   h += '</div>';
   h += '<button class="btn btn-p" onclick="confirmInstallReminders(\''+hive.id+'\')">✅ Confirm &amp; Create Reminders</button>';
@@ -116,12 +104,12 @@ function promptInstallReminders(hive) {
 function buildInstallReminderList(hive) {
   var d = hive.install_date;
   return [
-    { icon:'🐝', label:'Queen Cage Check',       date:addDays(d,4),  type:'Inspection', desc:'Check candy plug is being worked. Do NOT manually release yet unless plug is completely untouched.' },
-    { icon:'👑', label:'Queen Release Confirm',   date:addDays(d,8),  type:'Inspection', desc:'Confirm queen has been released and accepted. Look for eggs or young larvae as proof.' },
-    { icon:'🍯', label:'Feed Check — Day 4',      date:addDays(d,4),  type:'Task',       desc:'Check quart jar / feeder level. Refill 1:1 syrup as needed.' },
-    { icon:'🍯', label:'Feed Check — Day 8',      date:addDays(d,8),  type:'Task',       desc:'Check feeder level. Refill 1:1 syrup as needed.' },
-    { icon:'🍯', label:'Feed Check — Day 14',     date:addDays(d,14), type:'Task',       desc:'Check feeder level. Consider adding protein patty if population is slow to build.' },
-    { icon:'🔬', label:'Varroa Baseline Wash',    date:addDays(d,22), type:'Treatment',  desc:'First alcohol wash — broodless window post-install. Target <2% (under 2 mites per 100 bees).' },
+    { icon:'🐝', label:'Queen Cage Check',     date:addDays(d,4),  type:'Inspection', desc:'Check candy plug is being worked. Do NOT manually release yet unless plug is completely untouched.' },
+    { icon:'👑', label:'Queen Release Confirm', date:addDays(d,8),  type:'Inspection', desc:'Confirm queen has been released and accepted. Look for eggs or young larvae as proof.' },
+    { icon:'🍯', label:'Feed Check — Day 4',   date:addDays(d,4),  type:'Task',       desc:'Check quart jar / feeder level. Refill 1:1 syrup as needed.' },
+    { icon:'🍯', label:'Feed Check — Day 8',   date:addDays(d,8),  type:'Task',       desc:'Check feeder level. Refill 1:1 syrup as needed.' },
+    { icon:'🍯', label:'Feed Check — Day 14',  date:addDays(d,14), type:'Task',       desc:'Check feeder level. Consider adding protein patty if population is slow to build.' },
+    { icon:'🔬', label:'Varroa Baseline Wash', date:addDays(d,22), type:'Treatment',  desc:'First alcohol wash — broodless window post-install. Target <2% (under 2 mites per 100 bees).' },
   ];
 }
 
@@ -131,15 +119,13 @@ async function confirmInstallReminders(hiveId) {
   var reminders = buildInstallReminderList(hive);
   var added = 0;
   for (var r of reminders) {
-    var obj = {
-      hive_id: hiveId, next_date: r.date, rem_type: r.type,
-      notes: hive.name + ': ' + r.label + ' — ' + r.desc,
-      item_name: r.label.startsWith('Feed') ? 'Sugar syrup (1:1)' : null,
-      item_cost: null, item_qty: null, supplier_id: null, completed: false, added_to_finance: false
-    };
+    var obj = { hive_id:hiveId, next_date:r.date, rem_type:r.type,
+      notes:hive.name+': '+r.label+' — '+r.desc,
+      item_name:r.label.startsWith('Feed')?'Sugar syrup (1:1)':null,
+      item_cost:null, item_qty:null, supplier_id:null, completed:false, added_to_finance:false };
     var row = await dbInsert('reminders', obj);
     if (row) {
-      DATA.reminders.push({...row, hiveId:row.hive_id, nextDate:row.next_date, remType:row.rem_type, itemName:row.item_name, itemCost:null, itemQty:null, supplierId:null, addedToFinance:false});
+      DATA.reminders.push({...row,hiveId:row.hive_id,nextDate:row.next_date,remType:row.rem_type,itemName:row.item_name,itemCost:null,itemQty:null,supplierId:null,addedToFinance:false});
       added++;
     }
   }
@@ -244,20 +230,16 @@ function openInspModal(item) {
       ? deserializeFrameBoxes(lastInsp.box_data||lastInsp.boxData) : null;
     if (priorBoxData) {
       existingBoxData = priorBoxData.map(function(box) {
-        return {
-          label: box.label,
-          frames: box.frames.map(function(fr) {
-            return { foundation: fr.foundation||'', contents:[], pattern:'', queenCell:'None', notes:'' };
-          })
-        };
+        return { label:box.label, frames:box.frames.map(function(fr){
+          return { foundation:fr.foundation||'', contents:[], pattern:'', queenCell:'None', notes:'' };
+        })};
       });
     }
   }
   initFrameBoxes(existingBoxData);
   h += '<div style="background:var(--warn-bg);border-radius:12px;padding:12px 14px;margin-bottom:2px">';
   h += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--forest);margin-bottom:10px">🖼️ Frame Map</div>';
-  h += '<div id="frame-section-wrap"></div>';
-  h += '</div>';
+  h += '<div id="frame-section-wrap"></div></div>';
   h += '<div class="fg"><label>Actions Taken</label><textarea id="f-iact" placeholder="e.g. Added super, treated for varroa…">'+(edit?esc(item.actions||''):'')+'</textarea></div>';
   h += '<div class="fg"><label>Notes</label><textarea id="f-inotes" placeholder="Observations…">'+(edit?esc(item.notes||''):'')+'</textarea></div>';
   h += '<div class="fg"><label>Inspection Photos</label>'+
@@ -342,7 +324,7 @@ function openSplitModal(hiveId) {
   h += '<div style="font-size:13px;color:var(--txt2);margin-bottom:14px">Splitting from <strong>'+esc(parentHive.name)+'</strong>. A new hive record will be created for the split.</div>';
   h += '<div class="fg"><label>Split Date</label><input id="f-splitdate" type="date" value="'+today+'"></div>';
   h += '<div class="fg"><label>New Hive Name</label><input id="f-splitname" placeholder="e.g. Queen Beatrice II" value="'+esc(parentHive.name)+' Split"></div>';
-  h += '<div class="fg"><label>New Hive Location</label><input id="f-splitloc" placeholder="e.g. South Orchard" value="'+esc(parentHive.location||'')+'"></div>';
+  h += '<div class="fg"><label>New Hive Location</label><input id="f-splitloc" placeholder="e.g. South Orchard" value="'+esc(parentHive.location||'':'')+'"></div>';
   h += '<div class="fg"><label>Queen Strategy</label>'+makePills('sqsrc',['Walk-away (raise own queen)','Purchased queen','Raised cell from colony'],'Walk-away (raise own queen)')+'</div>';
   h += '<div class="fg"><label>Lineage / Notes</label><textarea id="f-splitnotes" placeholder="e.g. Daughter of Queen Beatrice — VSH genetics."></textarea></div>';
   h += '<button class="btn btn-p" onclick="saveSplit(\''+hiveId+'\')">Save Split &amp; Create New Hive</button>';
@@ -353,18 +335,15 @@ function openSplitModal(hiveId) {
 async function saveSplit(parentHiveId) {
   var parentHive = DATA.hives.find(function(h){return h.id===parentHiveId;});
   if (!parentHive) return;
-  var splitDate = gv('f-splitdate');
-  var newName   = gv('f-splitname');
-  if (!newName)   { alert('Please enter a name for the new hive'); return; }
+  var splitDate = gv('f-splitdate'), newName = gv('f-splitname');
+  if (!newName) { alert('Please enter a name for the new hive'); return; }
   if (!splitDate) { alert('Please enter the split date'); return; }
-  var queenSrc  = getPill('sqsrc');
-  var notes     = gv('f-splitnotes');
+  var queenSrc = getPill('sqsrc'), notes = gv('f-splitnotes');
   var newHiveObj = {
-    name: newName, location: gv('f-splitloc'), year: new Date(splitDate).getFullYear(),
-    boxes: 1, species: parentHive.species || 'Italian', status: 'Monitoring',
-    notes: 'Split from '+parentHive.name+' on '+splitDate+(notes?'. '+notes:''),
-    install_date: splitDate, install_confirmed: true,
-    parent_hive_id: parentHiveId, queen_source: queenSrc
+    name:newName, location:gv('f-splitloc'), year:new Date(splitDate).getFullYear(),
+    boxes:1, species:parentHive.species||'Italian', status:'Monitoring',
+    notes:'Split from '+parentHive.name+' on '+splitDate+(notes?'. '+notes:''),
+    install_date:splitDate, install_confirmed:true, parent_hive_id:parentHiveId, queen_source:queenSrc
   };
   var newHiveRow = await dbInsert('hives', newHiveObj);
   if (!newHiveRow) { alert('Error creating split hive — please try again'); return; }
@@ -372,7 +351,7 @@ async function saveSplit(parentHiveId) {
   var reminders = buildSplitReminderList(newHiveRow, queenSrc);
   var added = 0;
   for (var r of reminders) {
-    var obj = { hive_id: newHiveRow.id, next_date: r.date, rem_type: 'Inspection', notes: newName+': '+r.label+' — '+r.desc, item_name:null, item_cost:null, item_qty:null, supplier_id:null, completed:false, added_to_finance:false };
+    var obj = {hive_id:newHiveRow.id,next_date:r.date,rem_type:'Inspection',notes:newName+': '+r.label+' — '+r.desc,item_name:null,item_cost:null,item_qty:null,supplier_id:null,completed:false,added_to_finance:false};
     var row = await dbInsert('reminders', obj);
     if (row) { DATA.reminders.push({...row,hiveId:row.hive_id,nextDate:row.next_date,remType:row.rem_type,itemName:null,itemCost:null,itemQty:null,supplierId:null,addedToFinance:false}); added++; }
   }
@@ -434,13 +413,13 @@ async function saveRequeen(hiveId) {
   var oldQ=getPill('rqold'), src=getPill('rqsrc'), marked=getPill('rqmark'), markId=gv('f-rqmarkid'), notes=gv('f-rqnotes');
   var eventNote = '[Requeened '+rqDate+'] Old queen: '+oldQ+'. New queen: '+src+(marked==='Yes'&&markId?' (marked: '+markId+')':marked==='Yes'?' (marked)':'')+(notes?'. '+notes:'.');
   var updatedNotes = (hive.notes ? hive.notes.trim()+'\n' : '') + eventNote;
-  var rqMeta = { status: 'Monitoring', notes: updatedNotes };
+  var rqMeta = { status:'Monitoring', notes:updatedNotes };
   await dbUpdate('hives', hiveId, rqMeta);
   Object.assign(hive, rqMeta);
   var rems = buildRequeenReminderList(hive, rqDate, src);
   var added = 0;
   for (var r of rems) {
-    var obj = { hive_id:hiveId, next_date:r.date, rem_type:'Inspection', notes:hive.name+': '+r.label+' — '+r.desc, item_name:null, item_cost:null, item_qty:null, supplier_id:null, completed:false, added_to_finance:false };
+    var obj = {hive_id:hiveId,next_date:r.date,rem_type:'Inspection',notes:hive.name+': '+r.label+' — '+r.desc,item_name:null,item_cost:null,item_qty:null,supplier_id:null,completed:false,added_to_finance:false};
     var row = await dbInsert('reminders', obj);
     if (row) { DATA.reminders.push({...row,hiveId:row.hive_id,nextDate:row.next_date,remType:row.rem_type,itemName:null,itemCost:null,itemQty:null,supplierId:null,addedToFinance:false}); added++; }
   }

@@ -189,7 +189,7 @@ function renderGuidedStep() {
 
   var prog = '<div class="ginsp-progress">';
   for (var i=1; i<=total; i++) {
-    prog += '<div class="ginsp-step-dot '+(i<s?'done':i===s?'active':'')+'""></div>';
+    prog += '<div class="ginsp-step-dot '+(i<s?'done':i===s?'active':'')+'"></div>';
   }
   prog += '</div>';
 
