@@ -272,7 +272,7 @@ function renderGuidedStep() {
           if (e.target.classList.contains('pill')) { calcGiMitePct(); }
         });
       }
-    }, 100);
+    }, 300);
   }
 
   var nav = '<div class="ginsp-nav">';
