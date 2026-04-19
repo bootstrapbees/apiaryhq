@@ -7,14 +7,12 @@ function openHiveModal(hive) {
   var tid = edit ? hive.id : ('h'+Date.now());
   var h = '<div class="modal-title">'+(edit?'Edit':'Add')+' Hive</div>';
   h += '<div class="fg"><label>Hive Name</label><input id="f-hname" value="'+esc(hive?hive.name:'')+'" placeholder="e.g. Queen Beatrice"></div>';
-  h += '<div class="fg"><label>Location</label><input id="f-hloc" value="'+esc(hive?hive.location||'':'')+'" placeholder="e.g. North Orchard"></div>';
-  h += '<div class="row2"><div class="fg"><label>Year Est.</label><input id="f-hyear" type="number" value="'+esc(hive?hive.year||'':'')+'" placeholder="'+new Date().getFullYear()+'"></div><div class="fg"><label>Boxes</label><input id="f-hboxes" type="number" value="'+esc(hive?hive.boxes||'':'')+'" placeholder="2"></div></div>';
-  // Installation date — drives queen-release and feed auto-reminders
+  h += '<div class="fg"><label>Location</label><input id="f-hloc" value="'+esc(hive?hive.location||':'')+'" placeholder="e.g. North Orchard"></div>';
+  h += '<div class="row2"><div class="fg"><label>Year Est.</label><input id="f-hyear" type="number" value="'+esc(hive?hive.year||':'')+'" placeholder="'+new Date().getFullYear()+'"></div><div class="fg"><label>Boxes</label><input id="f-hboxes" type="number" value="'+esc(hive?hive.boxes||':'')+'" placeholder="2"></div></div>';
   h += '<div class="fg"><label>Installation Date <span style="font-size:11px;color:var(--txt2);font-weight:400">(package or nuc)</span></label><input id="f-hinstall" type="date" value="'+esc(hive?hive.install_date||'':'')+'"></div>';
   h += '<div class="fg"><label>Species</label>'+makePills('hsp',['Italian','Carniolan','Buckfast','Russian','Other'],hive?hive.species||'Italian':'Italian')+'</div>';
   h += '<div class="fg"><label>Status</label>'+makePills('hst',['Healthy','Monitoring','Weak','Queenless'],hive?hive.status||'Healthy':'Healthy')+'</div>';
   h += '<div class="fg"><label>Notes</label><textarea id="f-hnotes">'+esc(hive?hive.notes||'':'')+'</textarea></div>';
-  // Photo area
   h += '<div class="fg"><label>Hive Photos</label>'+
     '<div style="margin-bottom:8px;display:flex;gap:8px">'+
     '<button type="button" onclick="showPhotoSourcePicker(\''+tid+'\',\'photo\')" style="display:flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(135deg,var(--honey),var(--amber));border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;font-family:\'Source Serif 4\',serif;cursor:pointer;flex:1;justify-content:center">'+
@@ -48,7 +46,6 @@ async function saveHive(tid, isEdit) {
         }
       }
     }
-    // If install date was newly added or changed, prompt for install reminders
     if (installDate && installDate !== prevInstall) {
       closeModal();
       promptInstallReminders(hv);
@@ -60,7 +57,6 @@ async function saveHive(tid, isEdit) {
     if (row) {
       if (PHOTOS[tid]) { for(var p of PHOTOS[tid]){await dbInsert('photos',{context_id:row.id,data_url:p.dataUrl});} delete PHOTOS[tid]; }
       DATA.hives.push(row);
-      // If install date provided on new hive, prompt for install reminders
       if (installDate) {
         closeModal();
         promptInstallReminders(row);
@@ -87,13 +83,10 @@ function deleteHive(id) {
 // ═══════════════════════════════════════════════════════
 // CONFIRM INSTALLATION FLOW
 // ═══════════════════════════════════════════════════════
-
-// Called from hive card "Confirm Install" button OR after saveHive detects a new install date
 function promptInstallReminders(hive) {
   var installDate = hive.install_date;
   if (!installDate) return;
   var reminders = buildInstallReminderList(hive);
-
   var h = '<div class="modal-title" style="display:flex;align-items:center;gap:10px">'+
     '<svg viewBox="0 0 24 24" fill="none" style="width:22px;height:22px;color:var(--amber)" xmlns="http://www.w3.org/2000/svg">'+
     '<path d="M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>'+
@@ -103,8 +96,6 @@ function promptInstallReminders(hive) {
     'Package installed <strong>'+fmtDate(installDate)+'</strong> in <strong>'+esc(hive.name)+'</strong>.<br>'+
     'The following smart reminders will be created — confirm or skip below.'+
   '</div>';
-
-  // Preview list
   h += '<div style="background:var(--wax);border-radius:12px;padding:12px 14px;margin-bottom:16px;display:flex;flex-direction:column;gap:9px">';
   reminders.forEach(function(r) {
     h += '<div style="display:flex;align-items:flex-start;gap:10px">'+
@@ -116,7 +107,6 @@ function promptInstallReminders(hive) {
     '</div>';
   });
   h += '</div>';
-
   h += '<button class="btn btn-p" onclick="confirmInstallReminders(\''+hive.id+'\')">✅ Confirm &amp; Create Reminders</button>';
   h += '<button class="btn btn-c" onclick="skipInstallReminders()">Skip for Now</button>';
   h += '<button class="btn btn-d" onclick="dismissInstallReminders(\''+hive.id+'\')">Don\'t Ask Again for This Hive</button>';
@@ -142,54 +132,52 @@ async function confirmInstallReminders(hiveId) {
   var added = 0;
   for (var r of reminders) {
     var obj = {
-      hive_id:          hiveId,
-      next_date:        r.date,
-      rem_type:         r.type,
-      notes:            hive.name + ': ' + r.label + ' — ' + r.desc,
-      item_name:        r.label.startsWith('Feed') ? 'Sugar syrup (1:1)' : null,
-      item_cost:        null,
-      item_qty:         null,
-      supplier_id:      null,
-      completed:        false,
-      added_to_finance: false
+      hive_id: hiveId, next_date: r.date, rem_type: r.type,
+      notes: hive.name + ': ' + r.label + ' — ' + r.desc,
+      item_name: r.label.startsWith('Feed') ? 'Sugar syrup (1:1)' : null,
+      item_cost: null, item_qty: null, supplier_id: null, completed: false, added_to_finance: false
     };
     var row = await dbInsert('reminders', obj);
     if (row) {
-      DATA.reminders.push({
-        ...row,
-        hiveId: row.hive_id, nextDate: row.next_date, remType: row.rem_type,
-        itemName: row.item_name, itemCost: null, itemQty: null, supplierId: null,
-        addedToFinance: false
-      });
+      DATA.reminders.push({...row, hiveId:row.hive_id, nextDate:row.next_date, remType:row.rem_type, itemName:row.item_name, itemCost:null, itemQty:null, supplierId:null, addedToFinance:false});
       added++;
     }
   }
-  // Mark hive so card stops showing the Confirm Install button
   await dbUpdate('hives', hiveId, { install_confirmed: true });
   hive.install_confirmed = true;
-  closeModal();
-  renderAll();
+  closeModal(); renderAll();
   if (added > 0) showAutoRemindToast(added + ' installation reminders created');
 }
 
-function skipInstallReminders() {
-  // Just dismiss — hive card will still show the button next visit
-  closeModal();
-  renderAll();
-}
+function skipInstallReminders() { closeModal(); renderAll(); }
 
 async function dismissInstallReminders(hiveId) {
-  // Permanently suppress the Confirm Install button for this hive
   await dbUpdate('hives', hiveId, { install_confirmed: true });
   var hive = DATA.hives.find(function(h){return h.id===hiveId;});
   if (hive) hive.install_confirmed = true;
-  closeModal();
-  renderAll();
+  closeModal(); renderAll();
 }
 
 // ═══════════════════════════════════════════════════════
-// INSPECTION MODAL  (unchanged — preserved exactly)
+// INSPECTION MODAL
 // ═══════════════════════════════════════════════════════
+function calcMitePct() {
+  var cnt = parseInt(document.getElementById('f-imitecount').value) || 0;
+  var sEl = document.querySelector('#iv-samplesize .pill.active');
+  var sz = sEl ? parseInt(sEl.textContent) : 300;
+  var pct = (cnt / sz) * 100;
+  var res = document.getElementById('iv-pct-result');
+  if (!res) return;
+  var label = pct < 2 ? '✅ Low (<2%)' : pct < 4 ? '⚠️ Medium (2–4%)' : '🚨 High (>4%)';
+  var col = pct < 2
+    ? 'background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bd)'
+    : pct < 4
+    ? 'background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-bd)'
+    : 'background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)';
+  res.innerHTML = '<div style="' + col + ';border-radius:10px;padding:10px 12px">' + cnt + ' / ' + sz + ' = ' + pct.toFixed(2) + '% — ' + label + '</div>';
+  res.style.display = '';
+}
+
 function openInspModal(item) {
   if (!DATA.hives.length) { alert('Please add a hive first!'); return; }
   var edit = !!item;
@@ -215,7 +203,25 @@ function openInspModal(item) {
   h += '<div class="fg"><label>Honey Stores</label>'+makeStars('ih',edit?item.honey:3)+'</div>';
   h += '<div class="fg"><label>Brood Pattern</label>'+makeStars('ib',edit?item.brood:3)+'</div>';
   h += '<div class="fg"><label>Temperament</label>'+makePills('itm',['Calm','Moderate','Defensive'],edit?item.temperament||'Calm':'Calm')+'</div>';
-  h += '<div class="fg"><label>Varroa Level</label>'+makePills('iv',['Not checked','Low (<2%)','Medium (2-4%)','High (>4%)'],edit?item.varroa||'Not checked':'Not checked')+'</div>';
+  // ── VARROA / MITE WASH SECTION ──
+  var editWashDone = edit && item.mite_count != null;
+  var editMiteCount = edit && item.mite_count != null ? item.mite_count : 0;
+  var editSampleSize = edit && item.sample_size ? item.sample_size : 300;
+  var editMitePct = edit && item.mite_pct != null ? item.mite_pct : null;
+  h += '<div style="background:var(--surface2);border-radius:12px;padding:12px 14px;margin-bottom:2px;border:1px solid #E4EDE4">';
+  h += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--forest);margin-bottom:10px">🔬 Varroa Monitoring</div>';
+  h += '<div class="fg" style="margin-bottom:8px"><label>Alcohol Wash Performed?</label>'+makePills('iv-washdone',['No','Yes'],editWashDone?'Yes':'No')+'</div>';
+  h += '<div id="iv-wash-fields" style="'+(editWashDone?'':'display:none')+';">';
+  h += '<div class="row2">';
+  h += '<div class="fg"><label>Mites Counted</label><input id="f-imitecount" type="number" min="0" max="999" value="'+editMiteCount+'" placeholder="0" oninput="calcMitePct()"></div>';
+  h += '<div class="fg"><label>Sample Size</label>'+makePills('iv-samplesize',['100','300'],String(editSampleSize))+'</div>';
+  h += '</div>';
+  h += '<div id="iv-pct-result" style="border-radius:10px;padding:10px 12px;margin-top:4px;font-size:14px;font-weight:700;text-align:center;'+(editMitePct!=null?'':'display:none')+'">';
+  if (editMitePct!=null) {
+    var pctColor = editMitePct < 2 ? 'background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bd)' : editMitePct < 4 ? 'background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-bd)' : 'background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)';
+    h += '<div style="'+pctColor+';border-radius:10px;padding:10px 12px">'+editMiteCount+' / '+editSampleSize+' = '+Number(editMitePct).toFixed(2)+'% — '+(editMitePct < 2 ? '✅ Low (<2%)' : editMitePct < 4 ? '⚠️ Medium (2–4%)' : '🚨 High (>4%)')+'</div>';
+  }
+  h += '</div></div></div>';
   // ── FEEDING SECTION ──
   var feedType = edit ? (item.feed_type||'None') : 'None';
   var feedQty  = edit ? (item.feed_qty||'') : '';
@@ -231,14 +237,12 @@ function openInspModal(item) {
   // ── FRAME LOGGING SECTION ──
   var existingBoxData = (edit && (item.box_data||item.boxData)) ? deserializeFrameBoxes(item.box_data||item.boxData) : null;
   if (!existingBoxData) {
-    // New inspection — carry forward foundation types from last inspection for this hive
     var lastInsp = DATA.inspections
       .filter(function(x){ return x.hiveId === (edit ? item.hiveId : gv('f-ihive')); })
       .sort(function(a,b){ return b.date.localeCompare(a.date); })[0];
     var priorBoxData = (lastInsp && (lastInsp.box_data||lastInsp.boxData))
       ? deserializeFrameBoxes(lastInsp.box_data||lastInsp.boxData) : null;
     if (priorBoxData) {
-      // Copy foundation only, leave everything else blank
       existingBoxData = priorBoxData.map(function(box) {
         return {
           label: box.label,
@@ -270,6 +274,26 @@ function openInspModal(item) {
   h += '<button class="btn btn-c" onclick="closeModal()">Cancel</button>';
   openModal(h);
   renderFrameSection();
+  setTimeout(function() {
+    var washEl = document.getElementById('iv-washdone');
+    var szEl = document.getElementById('iv-samplesize');
+    if (washEl) {
+      washEl.addEventListener('click', function(e) {
+        if (e.target.classList.contains('pill')) {
+          var show = e.target.textContent === 'Yes';
+          var wf = document.getElementById('iv-wash-fields');
+          var pr = document.getElementById('iv-pct-result');
+          if (wf) wf.style.display = show ? '' : 'none';
+          if (!show && pr) pr.style.display = 'none';
+        }
+      });
+    }
+    if (szEl) {
+      szEl.addEventListener('click', function(e) {
+        if (e.target.classList.contains('pill')) { calcMitePct(); }
+      });
+    }
+  }, 100);
 }
 
 async function saveInsp(tid, isEdit) {
@@ -278,15 +302,26 @@ async function saveInsp(tid, isEdit) {
   var WX=window._wx;
   var ws=WX?{temp:WX.temp,desc:WX.desc,wind:WX.wind,score:WX.score}:null;
   var feedType = getPill('ifd')||'None';
-  var obj={hive_id:hiveId,date,weather_snap:ws,weather:getPill('iwx'),queen_seen:getPill('iq'),population:getStar('ip'),honey:getStar('ih'),brood:getStar('ib'),temperament:getPill('itm'),varroa:getPill('iv'),feed_type:feedType==='None'?null:feedType,feed_qty:gv('f-ifdqty')||null,feed_notes:gv('f-ifdnotes')||null,actions:gv('f-iact'),notes:gv('f-inotes'),box_data:serializeFrameBoxes()};
+  var washDone = getPill('iv-washdone') === 'Yes';
+  var miteCount = washDone ? (parseInt(document.getElementById('f-imitecount').value)||0) : null;
+  var sampleSizeEl = washDone ? document.querySelector('#iv-samplesize .pill.active') : null;
+  var sampleSize = washDone ? (sampleSizeEl ? parseInt(sampleSizeEl.textContent) : 300) : null;
+  var mitePct = (washDone && sampleSize) ? parseFloat(((miteCount/sampleSize)*100).toFixed(2)) : null;
+  var varroaLabel = 'Not checked';
+  if (washDone && mitePct !== null) {
+    if (mitePct < 2) varroaLabel = 'Low (<2%)';
+    else if (mitePct < 4) varroaLabel = 'Medium (2-4%)';
+    else varroaLabel = 'High (>4%)';
+  }
+  var obj={hive_id:hiveId,date,weather_snap:ws,weather:getPill('iwx'),queen_seen:getPill('iq'),population:getStar('ip'),honey:getStar('ih'),brood:getStar('ib'),temperament:getPill('itm'),varroa:varroaLabel,mite_count:miteCount,sample_size:sampleSize,mite_pct:mitePct,feed_type:feedType==='None'?null:feedType,feed_qty:gv('f-ifdqty')||null,feed_notes:gv('f-ifdnotes')||null,actions:gv('f-iact'),notes:gv('f-inotes'),box_data:serializeFrameBoxes()};
   if (isEdit) {
     await (typeof dbUpdateSafe==='function'?dbUpdateSafe('inspections',tid,obj):dbUpdate('inspections',tid,obj));
-    Object.assign(DATA.inspections.find(function(x){return x.id===tid;}), {...obj,hiveId:obj.hive_id,queenSeen:obj.queen_seen,weatherSnap:obj.weather_snap,feedType:obj.feed_type,feedQty:obj.feed_qty,feedNotes:obj.feed_notes,boxData:obj.box_data});
+    Object.assign(DATA.inspections.find(function(x){return x.id===tid;}), {...obj,hiveId:obj.hive_id,queenSeen:obj.queen_seen,weatherSnap:obj.weather_snap,feedType:obj.feed_type,feedQty:obj.feed_qty,feedNotes:obj.feed_notes,boxData:obj.box_data,miteCount:obj.mite_count,sampleSize:obj.sample_size,mitePct:obj.mite_pct});
   } else {
     var row=await (typeof dbInsertSafe==='function'?dbInsertSafe('inspections',obj):dbInsert('inspections',obj));
     if (row) {
       if (PHOTOS[tid]) { for(var p of PHOTOS[tid]){var s=await dbInsert('photos',{context_id:row.id,data_url:p.dataUrl}); if(s){PHOTOS[row.id]=PHOTOS[row.id]||[];PHOTOS[row.id].push({id:s.id,dataUrl:p.dataUrl});}} delete PHOTOS[tid]; }
-      DATA.inspections.push({...row,hiveId:row.hive_id,queenSeen:row.queen_seen,weatherSnap:row.weather_snap,feedType:row.feed_type,feedQty:row.feed_qty,feedNotes:row.feed_notes,boxData:row.box_data});
+      DATA.inspections.push({...row,hiveId:row.hive_id,queenSeen:row.queen_seen,weatherSnap:row.weather_snap,feedType:row.feed_type,feedQty:row.feed_qty,feedNotes:row.feed_notes,boxData:row.box_data,miteCount:row.mite_count,sampleSize:row.sample_size,mitePct:row.mite_pct});
       await autoGenerateReminders(row, obj);
     }
   }
@@ -309,7 +344,7 @@ function openSplitModal(hiveId) {
   h += '<div class="fg"><label>New Hive Name</label><input id="f-splitname" placeholder="e.g. Queen Beatrice II" value="'+esc(parentHive.name)+' Split"></div>';
   h += '<div class="fg"><label>New Hive Location</label><input id="f-splitloc" placeholder="e.g. South Orchard" value="'+esc(parentHive.location||'')+'"></div>';
   h += '<div class="fg"><label>Queen Strategy</label>'+makePills('sqsrc',['Walk-away (raise own queen)','Purchased queen','Raised cell from colony'],'Walk-away (raise own queen)')+'</div>';
-  h += '<div class="fg"><label>Lineage / Notes</label><textarea id="f-splitnotes" placeholder="e.g. Daughter of Queen Beatrice — VSH genetics. Walk-away split, will check for queen cells at day 5."></textarea></div>';
+  h += '<div class="fg"><label>Lineage / Notes</label><textarea id="f-splitnotes" placeholder="e.g. Daughter of Queen Beatrice — VSH genetics."></textarea></div>';
   h += '<button class="btn btn-p" onclick="saveSplit(\''+hiveId+'\')">Save Split &amp; Create New Hive</button>';
   h += '<button class="btn btn-c" onclick="closeModal()">Cancel</button>';
   openModal(h);
@@ -324,51 +359,24 @@ async function saveSplit(parentHiveId) {
   if (!splitDate) { alert('Please enter the split date'); return; }
   var queenSrc  = getPill('sqsrc');
   var notes     = gv('f-splitnotes');
-
-  // Create the new child hive record
   var newHiveObj = {
-    name:              newName,
-    location:          gv('f-splitloc'),
-    year:              new Date(splitDate).getFullYear(),
-    boxes:             1,
-    species:           parentHive.species || 'Italian',
-    status:            'Monitoring',
-    notes:             'Split from '+parentHive.name+' on '+splitDate+(notes?'. '+notes:''),
-    install_date:      splitDate,
-    install_confirmed: true,   // skip the package install reminder flow for splits
-    parent_hive_id:    parentHiveId,
-    queen_source:      queenSrc
+    name: newName, location: gv('f-splitloc'), year: new Date(splitDate).getFullYear(),
+    boxes: 1, species: parentHive.species || 'Italian', status: 'Monitoring',
+    notes: 'Split from '+parentHive.name+' on '+splitDate+(notes?'. '+notes:''),
+    install_date: splitDate, install_confirmed: true,
+    parent_hive_id: parentHiveId, queen_source: queenSrc
   };
   var newHiveRow = await dbInsert('hives', newHiveObj);
   if (!newHiveRow) { alert('Error creating split hive — please try again'); return; }
   DATA.hives.push(newHiveRow);
-
-  // Auto-generate queen-check reminders based on strategy
   var reminders = buildSplitReminderList(newHiveRow, queenSrc);
   var added = 0;
   for (var r of reminders) {
-    var obj = {
-      hive_id:          newHiveRow.id,
-      next_date:        r.date,
-      rem_type:         'Inspection',
-      notes:            newName + ': ' + r.label + ' — ' + r.desc,
-      item_name:        null, item_cost: null, item_qty: null,
-      supplier_id:      null, completed: false, added_to_finance: false
-    };
+    var obj = { hive_id: newHiveRow.id, next_date: r.date, rem_type: 'Inspection', notes: newName+': '+r.label+' — '+r.desc, item_name:null, item_cost:null, item_qty:null, supplier_id:null, completed:false, added_to_finance:false };
     var row = await dbInsert('reminders', obj);
-    if (row) {
-      DATA.reminders.push({
-        ...row,
-        hiveId: row.hive_id, nextDate: row.next_date, remType: row.rem_type,
-        itemName: null, itemCost: null, itemQty: null, supplierId: null,
-        addedToFinance: false
-      });
-      added++;
-    }
+    if (row) { DATA.reminders.push({...row,hiveId:row.hive_id,nextDate:row.next_date,remType:row.rem_type,itemName:null,itemCost:null,itemQty:null,supplierId:null,addedToFinance:false}); added++; }
   }
-
-  closeModal();
-  renderAll();
+  closeModal(); renderAll();
   showAutoRemindToast('Split logged — "'+newName+'" created with '+added+' queen-check reminders');
 }
 
@@ -376,9 +384,9 @@ function buildSplitReminderList(newHive, queenSrc) {
   var d = newHive.install_date;
   if (queenSrc && queenSrc.includes('Walk-away')) {
     return [
-      { label:'Queen Cell Check',           date:addDays(d,5),  desc:'Look for capped queen cells. Do NOT destroy extras yet — let them sort it out or remove extras on day 10.' },
-      { label:'Virgin Queen Hatch Check',   date:addDays(d,14), desc:'Virgin queen should have hatched. Minimal disturbance — no full inspection needed, just observe entrance activity.' },
-      { label:'Queen Mating / Laying Check',date:addDays(d,24), desc:'Check for eggs and young larvae to confirm mated queen is laying. No eggs by day 28 = emergency requeen.' },
+      { label:'Queen Cell Check',           date:addDays(d,5),  desc:'Look for capped queen cells. Do NOT destroy extras yet.' },
+      { label:'Virgin Queen Hatch Check',   date:addDays(d,14), desc:'Virgin queen should have hatched. Minimal disturbance.' },
+      { label:'Queen Mating / Laying Check',date:addDays(d,24), desc:'Check for eggs and young larvae to confirm mated queen is laying.' },
     ];
   } else if (queenSrc && queenSrc.includes('Purchased')) {
     return [
@@ -386,7 +394,6 @@ function buildSplitReminderList(newHive, queenSrc) {
       { label:'Queen Release Confirm', date:addDays(d,8), desc:'Confirm queen released and accepted. Look for eggs or young larvae.' },
     ];
   } else {
-    // Raised cell from colony
     return [
       { label:'Queen Cell Check',         date:addDays(d,7),  desc:'Confirm a good capped queen cell is present and undamaged.' },
       { label:'Virgin Queen Hatch Check', date:addDays(d,16), desc:'Virgin queen should be hatching — leave undisturbed.' },
@@ -413,7 +420,7 @@ function openRequeenModal(hiveId) {
   h += '<div class="fg"><label>New Queen Source</label>'+makePills('rqsrc',['Purchased (mated)','Raised in-house','Emergency cell from colony'],'Purchased (mated)')+'</div>';
   h += '<div class="fg"><label>New Queen Marked?</label>'+makePills('rqmark',['Yes','No'],'No')+'</div>';
   h += '<div class="fg"><label>Mark Color / ID <span style="font-size:11px;color:var(--txt2);font-weight:400">(optional)</span></label><input id="f-rqmarkid" placeholder="e.g. White dot — 2026, or breeder tag"></div>';
-  h += '<div class="fg"><label>Source / Breeder Notes</label><textarea id="f-rqnotes" placeholder="e.g. Purchased from Kelley Bees — VSH Italian, 2026 queen. Good temperament line."></textarea></div>';
+  h += '<div class="fg"><label>Source / Breeder Notes</label><textarea id="f-rqnotes" placeholder="e.g. Purchased from Kelley Bees — VSH Italian, 2026 queen."></textarea></div>';
   h += '<button class="btn btn-p" onclick="saveRequeen(\''+hiveId+'\')">Save &amp; Create Acceptance Reminders</button>';
   h += '<button class="btn btn-c" onclick="closeModal()">Cancel</button>';
   openModal(h);
@@ -424,47 +431,20 @@ async function saveRequeen(hiveId) {
   if (!hive) return;
   var rqDate = gv('f-rqdate');
   if (!rqDate) { alert('Please enter the requeening date'); return; }
-  var oldQ   = getPill('rqold');
-  var src    = getPill('rqsrc');
-  var marked = getPill('rqmark');
-  var markId = gv('f-rqmarkid');
-  var notes  = gv('f-rqnotes');
-
-  // Append requeening event to hive notes and set status to Monitoring
-  var eventNote = '[Requeened '+rqDate+'] Old queen: '+oldQ+
-    '. New queen: '+src+(marked==='Yes'&&markId?' (marked: '+markId+')':marked==='Yes'?' (marked)':'')+
-    (notes?'. '+notes:'.');
+  var oldQ=getPill('rqold'), src=getPill('rqsrc'), marked=getPill('rqmark'), markId=gv('f-rqmarkid'), notes=gv('f-rqnotes');
+  var eventNote = '[Requeened '+rqDate+'] Old queen: '+oldQ+'. New queen: '+src+(marked==='Yes'&&markId?' (marked: '+markId+')':marked==='Yes'?' (marked)':'')+(notes?'. '+notes:'.');
   var updatedNotes = (hive.notes ? hive.notes.trim()+'\n' : '') + eventNote;
   var rqMeta = { status: 'Monitoring', notes: updatedNotes };
   await dbUpdate('hives', hiveId, rqMeta);
   Object.assign(hive, rqMeta);
-
-  // Build acceptance-check reminders based on queen source
   var rems = buildRequeenReminderList(hive, rqDate, src);
   var added = 0;
   for (var r of rems) {
-    var obj = {
-      hive_id:          hiveId,
-      next_date:        r.date,
-      rem_type:         'Inspection',
-      notes:            hive.name + ': ' + r.label + ' — ' + r.desc,
-      item_name:        null, item_cost: null, item_qty: null,
-      supplier_id:      null, completed: false, added_to_finance: false
-    };
+    var obj = { hive_id:hiveId, next_date:r.date, rem_type:'Inspection', notes:hive.name+': '+r.label+' — '+r.desc, item_name:null, item_cost:null, item_qty:null, supplier_id:null, completed:false, added_to_finance:false };
     var row = await dbInsert('reminders', obj);
-    if (row) {
-      DATA.reminders.push({
-        ...row,
-        hiveId: row.hive_id, nextDate: row.next_date, remType: row.rem_type,
-        itemName: null, itemCost: null, itemQty: null, supplierId: null,
-        addedToFinance: false
-      });
-      added++;
-    }
+    if (row) { DATA.reminders.push({...row,hiveId:row.hive_id,nextDate:row.next_date,remType:row.rem_type,itemName:null,itemCost:null,itemQty:null,supplierId:null,addedToFinance:false}); added++; }
   }
-
-  closeModal();
-  renderAll();
+  closeModal(); renderAll();
   showAutoRemindToast('Requeening logged — '+added+' acceptance reminders created');
 }
 
@@ -472,7 +452,7 @@ function buildRequeenReminderList(hive, rqDate, src) {
   if (src && src.includes('Purchased')) {
     return [
       { label:'Queen Cage Check',       date:addDays(rqDate,4), desc:'Check candy plug — confirm workers are chewing through it. Do NOT manually release.' },
-      { label:'Queen Acceptance Check', date:addDays(rqDate,8), desc:'Confirm queen released and accepted. Look for eggs or young larvae. No eggs by day 10 = emergency action needed.' },
+      { label:'Queen Acceptance Check', date:addDays(rqDate,8), desc:'Confirm queen released and accepted. Look for eggs or young larvae.' },
     ];
   } else if (src && src.includes('Emergency')) {
     return [
@@ -480,10 +460,9 @@ function buildRequeenReminderList(hive, rqDate, src) {
       { label:'Virgin Queen Laying Check', date:addDays(rqDate,24), desc:'Check for eggs and young brood confirming mated laying queen.' },
     ];
   } else {
-    // Raised in-house
     return [
-      { label:'Queen Introduction Check', date:addDays(rqDate,5),  desc:'Confirm queen is out of her cage or introduction cell. Calm bee behavior is a good sign.' },
-      { label:'Queen Laying Check',        date:addDays(rqDate,14), desc:'Look for eggs and young larvae confirming queen accepted and actively laying.' },
+      { label:'Queen Introduction Check', date:addDays(rqDate,5),  desc:'Confirm queen is out of her cage or introduction cell.' },
+      { label:'Queen Laying Check',       date:addDays(rqDate,14), desc:'Look for eggs and young larvae confirming queen accepted and actively laying.' },
     ];
   }
 }

@@ -66,7 +66,7 @@ async function loadAllData() {
   ]);
   var [hives,insp,txn,docs,assets,harv,treat,feed,rem,contacts,photos] = results.map(function(r){ return r.status==='fulfilled'?r.value:[]; });
   DATA.hives = hives;
-  DATA.inspections = insp.map(function(i){return{...i,hiveId:i.hive_id,queenSeen:i.queen_seen,weatherSnap:i.weather_snap,boxData:i.box_data};});
+  DATA.inspections = insp.map(function(i){return{...i,hiveId:i.hive_id,queenSeen:i.queen_seen,weatherSnap:i.weather_snap,boxData:i.box_data,miteCount:i.mite_count,sampleSize:i.sample_size,mitePct:i.mite_pct};});
   DATA.transactions = txn.map(function(t){return{...t,desc:t.description};});
   DATA.docs = docs.map(function(d){return{...d,dataUrl:d.data_url};});
   DATA.assets = assets || [];

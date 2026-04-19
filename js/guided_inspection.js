@@ -3,6 +3,23 @@
 // GUIDED INSPECTION SYSTEM
 // ═══════════════════════════════════════════════════════
 
+function calcGiMitePct() {
+  var cnt = parseInt(document.getElementById('gi-mitecount').value) || 0;
+  var sEl = document.querySelector('#gi-samplesize .pill.active');
+  var sz = sEl ? parseInt(sEl.textContent) : 300;
+  var pct = (cnt / sz) * 100;
+  var res = document.getElementById('gi-pct-result');
+  if (!res) return;
+  var label = pct < 2 ? '✅ Low (<2%)' : pct < 4 ? '⚠️ Medium (2–4%)' : '🚨 High (>4%)';
+  var col = pct < 2
+    ? 'background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok-bd)'
+    : pct < 4
+    ? 'background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-bd)'
+    : 'background:var(--red-bg);color:var(--red);border:1px solid var(--red-bd)';
+  res.innerHTML = '<div style="' + col + ';border-radius:10px;padding:10px 12px">' + cnt + ' / ' + sz + ' = ' + pct.toFixed(2) + '% — ' + label + '</div>';
+  res.style.display = '';
+}
+
 // ═══════════════════════════════════════════════════════
 // AUBEE VARROA THRESHOLDS & RECOMMENDATIONS
 // ═══════════════════════════════════════════════════════
@@ -13,8 +30,8 @@ function getColonyPhase(period, broodless) {
   if (m === 3 || m === 4) return 'population-increase';
   if (m === 5 || m === 6) return 'peak-population';
   if (m >= 7 && m <= 10) return 'population-decrease';
-  if (m === 11) return 'population-decrease'; // Pre-winter — still transitioning in Alabama; broodless flag handles true dormancy
-  return 'dormant-brood'; // December
+  if (m === 11) return 'population-decrease';
+  return 'dormant-brood';
 }
 
 var AUBEE_THRESHOLDS = {
@@ -29,24 +46,16 @@ function getVarroaRecs(pct, period, broodless) {
   var supersOn = period.supersOn;
   var phase = getColonyPhase(period, broodless);
   var thresh = AUBEE_THRESHOLDS[phase];
-
-  // Determine alert level
   var level, label, msg;
   if (pct < thresh.acceptable) {
-    level = 'green';
-    label = '✅ Acceptable — No Threat';
+    level = 'green'; label = '✅ Acceptable — No Threat';
     msg = 'Mite population poses no current threat. Continue regular monitoring per AUBEE schedule.';
     return { level, label, msg, recs:[], phase:thresh.label, thresh, nextWash: period.inspFreq * 2 };
   }
   if (pct < thresh.danger) {
-    level = 'yellow';
-    label = '⚠️ Caution — Prepare to Act';
+    level = 'yellow'; label = '⚠️ Caution — Prepare to Act';
     msg = 'Mite population is reading levels that may soon cause damage. Non-chemical control should be employed. Chemical control may need to be employed within a month. Resample in 14 days.';
-    // Non-chemical first per AUBEE
-    var cauRecs = [
-      { id:'drone-brood', name:'🖼️ Drone Brood Frame Removal (Non-Chemical)', note:'Per AUBEE: first-line response at Caution level. Insert drone comb frame, allow queen to lay, remove and freeze when capped. Reduces mite load 30–40%.', warn:'', isNonChem:true }
-    ];
-    // Add supers-safe chemical options
+    var cauRecs = [{ id:'drone-brood', name:'🖼️ Drone Brood Frame Removal (Non-Chemical)', note:'Per AUBEE: first-line response at Caution level. Insert drone comb frame, allow queen to lay, remove and freeze when capped. Reduces mite load 30–40%.', warn:'', isNonChem:true }];
     if (supersOn) {
       cauRecs.push({ id:'formic-pro', name:'Formic Pro (MAQS)', note:'Safe with supers on. Only treatment that penetrates capped brood.', warn:'⚠️ Temps 50–85°F. Above 92°F risks brood/queen mortality', isNonChem:false });
       cauRecs.push({ id:'hopguard3', name:'HopGuard 3', note:'Safe with supers on. Organic hop extract.', warn:'⚠️ Less effective with heavy brood', isNonChem:false });
@@ -56,10 +65,7 @@ function getVarroaRecs(pct, period, broodless) {
     }
     return { level, label, msg, recs:cauRecs, phase:thresh.label, thresh, nextWash:14 };
   }
-
-  // Danger level
-  level = 'red';
-  label = '🔴 Danger — Colony Loss Likely';
+  level = 'red'; label = '🔴 Danger — Colony Loss Likely';
   msg = 'Colony loss is likely unless the beekeeper controls mites. Begin treatment immediately. Do not repeat the same chemical used earlier this season.';
   var danRecs = [];
   if (supersOn) {
@@ -76,13 +82,15 @@ function getVarroaRecs(pct, period, broodless) {
   }
   return { level, label, msg, recs:danRecs, phase:thresh.label, thresh, nextWash:21 };
 }
+
 function getAlabamaSeason() {
-  var m = new Date().getMonth() + 1; // 1-12
+  var m = new Date().getMonth() + 1;
   if (m >= 3 && m <= 5) return 'spring';
   if (m >= 6 && m <= 8) return 'summer';
   if (m >= 9 && m <= 11) return 'fall';
   return 'winter';
 }
+
 function getAlabamaPeriod() {
   var m = new Date().getMonth() + 1;
   if (m === 1 || m === 2) return { label:'Winter Cluster', inspFreq:30, miteThresh:1, supersOn:false, washNeeded:false, desc:'Only inspect on days above 55°F. Do not break cluster.' };
@@ -94,7 +102,6 @@ function getAlabamaPeriod() {
   if (m === 9 || m === 10) return { label:'Fall Flow & Winter Prep', inspFreq:21, miteThresh:2, supersOn:false, washNeeded:m===10, desc:'Goldenrod and asters flowing. Assess winter stores. Final treatment window before cold.' };
   return { label:'Pre-Winter', inspFreq:14, miteThresh:1, supersOn:false, washNeeded:true, desc:'Last treatment window before winter cluster. OA vaporization when broodless is near 100% effective. Reduce entrance. Ensure adequate stores for winter — this is the most critical month to catch a mite problem before it\'s too late.' };
 }
-
 
 // SHB recommendations
 // NOTE: There is no scientifically established numeric threshold for SHB — unlike Varroa mite percentages,
@@ -124,10 +131,8 @@ function getSHBRecs(level) {
   ]};
 }
 
-// Next inspection recommendation
 function getNextInspDate(data, period) {
   var days = period.inspFreq;
-  // Override based on findings
   if (data.queenSeen === 'No ✗') days = 5;
   else if (data.queenSeen === 'Eggs Only') days = 7;
   else if (data.varroa === 'High (>4%)') days = 7;
@@ -140,13 +145,12 @@ function getNextInspDate(data, period) {
   return { date: d.toISOString().slice(0,10), days: days };
 }
 
-// State object for the guided inspection
 var _GINSP = {};
 
 function openInspChoice(hiveId) {
   if (!DATA.hives.length) { alert('Please add a hive first!'); return; }
   var h = '<div class="modal-title">🔍 Add Inspection</div>';
-  h += '<button class="choice-btn" onclick="startGuidedInsp(\''+( hiveId||'')+'\')"><div class="choice-ico">🧭</div><div><div class="choice-title">Guided Walkthrough</div><div class="choice-sub">Step-by-step with Alabama seasonal recommendations & mite/SHB action plan</div></div></button>';
+  h += '<button class="choice-btn" onclick="startGuidedInsp(\''+(hiveId||'')+'\')"><div class="choice-ico">🧭</div><div><div class="choice-title">Guided Walkthrough</div><div class="choice-sub">Step-by-step with Alabama seasonal recommendations & mite/SHB action plan</div></div></button>';
   h += '<button class="choice-btn" onclick="closeModal();openInspModal();"><div class="choice-ico">📋</div><div><div class="choice-title">Quick Entry</div><div class="choice-sub">Fill out the inspection form manually</div></div></button>';
   h += '<button class="btn btn-c" onclick="closeModal()" style="margin-top:4px">Cancel</button>';
   openModal(h);
@@ -167,16 +171,11 @@ function startGuidedInsp(hiveId) {
     step: 1, totalSteps: 5,
     hiveId: hiveId || (DATA.hives[0] ? DATA.hives[0].id : ''),
     date: today, weather: selWx, weatherSnap: WX ? {temp:WX.temp,desc:WX.desc,wind:WX.wind} : null,
-    // Step 2
     entranceActivity:'Normal', beardingOrFanning:false, deadBeesOutside:false, robbingActivity:false,
-    // Step 3
     queenSeen:'Yes ✓', population:3, brood:3, swarmCells:'No', temperament:'Calm',
-    // Step 4
     honey:3, pollenAdequate:true, feedingNeeded:false,
-    // Step 5 — mites & SHB
-    miteWashDone:false, miteCount:0, miteTotal:100, shbLevel:'low',
+    miteWashDone:false, miteCount:0, miteTotal:300, shbLevel:'low',
     varroa:'Not checked',
-    // Step 6 — actions
     actions:'', notes:'', period: period,
     tempId: 'gi'+Date.now()
   };
@@ -188,17 +187,15 @@ function renderGuidedStep() {
   var total = _GINSP.totalSteps;
   var period = _GINSP.period;
 
-  // Progress bar
   var prog = '<div class="ginsp-progress">';
   for (var i=1; i<=total; i++) {
-    prog += '<div class="ginsp-step-dot '+(i<s?'done':i===s?'active':'')+'"></div>';
+    prog += '<div class="ginsp-step-dot '+(i<s?'done':i===s?'active':'')+'""></div>';
   }
   prog += '</div>';
 
   var body = '';
 
   if (s === 1) {
-    // Step 1: Hive selection, date, weather + seasonal context
     var hiveOpts = DATA.hives.map(function(h){ return '<option value="'+h.id+'"'+(_GINSP.hiveId===h.id?' selected':'')+'>'+esc(h.name)+'</option>'; }).join('');
     var WX = window._wx;
     var wxBanner = WX ? '<div style="background:linear-gradient(135deg,#1a3a5c,#2563a8);border-radius:12px;padding:11px;color:#fff;font-size:13px;display:flex;align-items:center;gap:10px;margin-bottom:12px"><span style="font-size:22px">'+WX.wxSvg+'</span><span>'+WX.temp+'°F · '+WX.desc+' · 💨'+WX.wind+'mph</span></div>' : '';
@@ -211,7 +208,6 @@ function renderGuidedStep() {
     body += '<div class="fg"><label>Weather</label>'+makePills('gi-wx',['☀️ Sunny','⛅ Cloudy','🌧️ Rainy','🌬️ Windy'],_GINSP.weather)+'</div>';
 
   } else if (s === 2) {
-    // Step 2: Exterior check
     body += '<div class="ginsp-step-title">Step 2 — Exterior Check</div>';
     body += '<div class="ginsp-step-sub">Before opening — assess the hive from outside.</div>';
     body += '<div class="fg"><label>Entrance Activity</label>'+makePills('gi-entrance',['Normal','Sluggish','Very Active'],_GINSP.entranceActivity)+'</div>';
@@ -221,7 +217,6 @@ function renderGuidedStep() {
     if (period.supersOn) body += '<div class="ginsp-alert yellow">🌸 <strong>Spring Flow Active</strong> — Watch closely for swarm preparations. Inspect for queen cells this visit.</div>';
 
   } else if (s === 3) {
-    // Step 3: Brood & queen
     body += '<div class="ginsp-step-title">Step 3 — Brood & Queen</div>';
     body += '<div class="ginsp-step-sub">Work through the brood box frame by frame.</div>';
     body += '<div class="fg"><label>Queen Seen?</label>'+makePills('gi-queen',['Yes ✓','No ✗','Eggs Only'],_GINSP.queenSeen)+'</div>';
@@ -232,7 +227,6 @@ function renderGuidedStep() {
     if (period.label.includes('Spring')) body += '<div class="ginsp-alert yellow">🐝 <strong>Swarm Season:</strong> Any capped queen cells at bottom of frame = swarm imminent. Act today if found.</div>';
 
   } else if (s === 4) {
-    // Step 4: Stores & SHB
     body += '<div class="ginsp-step-title">Step 4 — Stores & Beetles</div>';
     body += '<div class="ginsp-step-sub">Assess food stores and small hive beetle pressure.</div>';
     body += '<div class="fg"><label>Honey Stores</label>'+makeStars('gi-honey',_GINSP.honey)+'</div>';
@@ -249,7 +243,7 @@ function renderGuidedStep() {
     body += '<div class="ginsp-step-sub">Record mite wash results and final notes.</div>';
     body += '<div class="fg"><label>Is Colony Currently Broodless?</label>'+makePills('gi-broodless',['No','Yes — No Capped Brood'],_GINSP.broodless?'Yes — No Capped Brood':'No')+'</div>';
     body += '<div class="fg"><label>Alcohol Wash Done This Visit?</label>'+makePills('gi-washdone',['No','Yes'],_GINSP.miteWashDone?'Yes':'No')+'</div>';
-    body += '<div id="gi-wash-fields" style="'+(!_GINSP.miteWashDone?'display:none':'')+'"><div class="row2"><div class="fg"><label>Mites Counted</label><input id="gi-mitecount" type="number" value="'+_GINSP.miteCount+'" placeholder="0" min="0"></div><div class="fg"><label>Bees Sampled</label><input id="gi-mitetotal" type="number" value="'+_GINSP.miteTotal+'" placeholder="100" min="1"></div></div></div>';
+    body += '<div id="gi-wash-fields" style="'+(!_GINSP.miteWashDone?'display:none':'')+'"><div class="row2"><div class="fg"><label>Mites Counted</label><input id="gi-mitecount" type="number" value="'+_GINSP.miteCount+'" placeholder="0" min="0" oninput="calcGiMitePct()"></div><div class="fg"><label>Sample Size</label>'+makePills('gi-samplesize',['100','300'],String(_GINSP.miteTotal))+'</div></div><div id="gi-pct-result" style="border-radius:10px;padding:10px 12px;margin-top:4px;margin-bottom:4px;font-size:14px;font-weight:700;text-align:center;'+(_GINSP.miteWashDone?'':'display:none')+'"></div></div>';
     if (period.washNeeded) body += '<div class="ginsp-alert yellow">🧪 <strong>Wash Recommended This Month</strong> — '+period.label+' is a key AUBEE monitoring point for Alabama colonies.</div>';
     body += '<div class="fg" style="margin-top:4px"><label>Actions Taken</label><textarea id="gi-actions" placeholder="e.g. Added super, replaced oil trap, treated for varroa…">'+esc(_GINSP.actions)+'</textarea></div>';
     body += '<div class="fg"><label>Additional Notes</label><textarea id="gi-notes" placeholder="Observations, concerns, next steps…">'+esc(_GINSP.notes)+'</textarea></div>';
@@ -259,10 +253,28 @@ function renderGuidedStep() {
       '<svg viewBox="0 0 24 24" fill="none" style="width:18px;height:18px" xmlns="http://www.w3.org/2000/svg"><path d="M3 9a2 2 0 012-2h2l1.5-2h7L17 7h2a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="14" r="3.5" stroke="currentColor" stroke-width="2"/></svg>'+
       'Add Photo</button></div>'+
       '<div class="pgal" id="pgal-h">'+buildGallery(_GINSP.tempId)+'</div></div>';
-    body += '<script>document.getElementById("gi-washdone").addEventListener("click",function(e){if(e.target.classList.contains("pill")){var show=e.target.textContent==="Yes";document.getElementById("gi-wash-fields").style.display=show?"":"none";}});<\/script>';
+    setTimeout(function() {
+      var washDoneEl = document.getElementById('gi-washdone');
+      var sampleSizeEl = document.getElementById('gi-samplesize');
+      if (washDoneEl) {
+        washDoneEl.addEventListener('click', function(e) {
+          if (e.target.classList.contains('pill')) {
+            var show = e.target.textContent === 'Yes';
+            var wf = document.getElementById('gi-wash-fields');
+            var pr = document.getElementById('gi-pct-result');
+            if (wf) wf.style.display = show ? '' : 'none';
+            if (!show && pr) pr.style.display = 'none';
+          }
+        });
+      }
+      if (sampleSizeEl) {
+        sampleSizeEl.addEventListener('click', function(e) {
+          if (e.target.classList.contains('pill')) { calcGiMitePct(); }
+        });
+      }
+    }, 100);
   }
 
-  // Nav buttons
   var nav = '<div class="ginsp-nav">';
   if (s > 1) nav += '<button class="btn btn-c" style="flex:1" onclick="ginspBack()">← Back</button>';
   if (s < total) nav += '<button class="btn btn-p" style="flex:2" onclick="ginspNext()">Next →</button>';
@@ -275,8 +287,6 @@ function renderGuidedStep() {
 
 function ginspNext() {
   var s = _GINSP.step;
-  var period = _GINSP.period;
-
   if (s === 1) {
     _GINSP.hiveId = document.getElementById('gi-hive').value;
     _GINSP.date = document.getElementById('gi-date').value;
@@ -303,12 +313,12 @@ function ginspNext() {
     _GINSP.miteWashDone = getPill('gi-washdone') === 'Yes';
     if (_GINSP.miteWashDone) {
       _GINSP.miteCount = parseInt(document.getElementById('gi-mitecount').value) || 0;
-      _GINSP.miteTotal = parseInt(document.getElementById('gi-mitetotal').value) || 100;
+      var _szEl = document.querySelector('#gi-samplesize .pill.active');
+      _GINSP.miteTotal = _szEl ? parseInt(_szEl.textContent) : 300;
     }
     _GINSP.actions = document.getElementById('gi-actions').value.trim();
     _GINSP.notes = document.getElementById('gi-notes').value.trim();
   }
-
   _GINSP.step++;
   renderGuidedStep();
 }
@@ -323,25 +333,22 @@ async function saveGuidedInsp() {
   _GINSP.miteWashDone = getPill('gi-washdone') === 'Yes';
   if (_GINSP.miteWashDone) {
     _GINSP.miteCount = parseInt(document.getElementById('gi-mitecount').value) || 0;
-    _GINSP.miteTotal = parseInt(document.getElementById('gi-mitetotal').value) || 100;
+    var _szEl = document.querySelector('#gi-samplesize .pill.active');
+    _GINSP.miteTotal = _szEl ? parseInt(_szEl.textContent) : 300;
   }
   _GINSP.actions = document.getElementById('gi-actions').value.trim();
   _GINSP.notes = document.getElementById('gi-notes').value.trim();
 
   var period = _GINSP.period;
-
-  // Calculate varroa %
   var mitePct = 0;
   var varroaLabel = 'Not checked';
   if (_GINSP.miteWashDone && _GINSP.miteTotal > 0) {
     mitePct = (_GINSP.miteCount / _GINSP.miteTotal) * 100;
-    if (mitePct < 1) varroaLabel = 'Low (<2%)';
-    else if (mitePct < 2) varroaLabel = 'Low (<2%)';
+    if (mitePct < 2) varroaLabel = 'Low (<2%)';
     else if (mitePct < 4) varroaLabel = 'Medium (2-4%)';
     else varroaLabel = 'High (>4%)';
   }
 
-  // Build inspection notes with exterior & stores observations
   var autoNotes = [];
   if (_GINSP.entranceActivity !== 'Normal') autoNotes.push('Entrance: '+_GINSP.entranceActivity);
   if (_GINSP.beardingOrFanning) autoNotes.push('Bearding/fanning observed');
@@ -354,25 +361,19 @@ async function saveGuidedInsp() {
   if (_GINSP.miteWashDone) autoNotes.push('Alcohol wash: '+_GINSP.miteCount+'/'+_GINSP.miteTotal+' = '+mitePct.toFixed(1)+'%');
   var fullNotes = (autoNotes.length ? autoNotes.join(' · ') + (_GINSP.notes ? '\n' : '') : '') + (_GINSP.notes || '');
 
-  // Save inspection to DB
   var tid = 'i' + Date.now();
   var obj = {
-    hive_id: _GINSP.hiveId,
-    date: _GINSP.date,
-    weather: _GINSP.weather,
-    weather_snap: _GINSP.weatherSnap,
-    queen_seen: _GINSP.queenSeen,
-    population: _GINSP.population,
-    honey: _GINSP.honey,
-    brood: _GINSP.brood,
-    temperament: _GINSP.temperament,
-    varroa: varroaLabel,
-    actions: _GINSP.actions,
-    notes: fullNotes
+    hive_id: _GINSP.hiveId, date: _GINSP.date, weather: _GINSP.weather,
+    weather_snap: _GINSP.weatherSnap, queen_seen: _GINSP.queenSeen,
+    population: _GINSP.population, honey: _GINSP.honey, brood: _GINSP.brood,
+    temperament: _GINSP.temperament, varroa: varroaLabel,
+    mite_count: _GINSP.miteWashDone ? _GINSP.miteCount : null,
+    sample_size: _GINSP.miteWashDone ? _GINSP.miteTotal : null,
+    mite_pct: _GINSP.miteWashDone && _GINSP.miteTotal > 0 ? parseFloat(mitePct.toFixed(2)) : null,
+    actions: _GINSP.actions, notes: fullNotes
   };
   var row = await dbInsert('inspections', obj);
   if (row) {
-    // Save any photos taken during guided inspection
     if (PHOTOS[_GINSP.tempId]) {
       for (var p of PHOTOS[_GINSP.tempId]) {
         var ps = await dbInsert('photos', {context_id:row.id, data_url:p.dataUrl});
@@ -380,12 +381,9 @@ async function saveGuidedInsp() {
       }
       delete PHOTOS[_GINSP.tempId];
     }
-    DATA.inspections.push({...row, hiveId:row.hive_id, queenSeen:row.queen_seen, weatherSnap:row.weather_snap});
+    DATA.inspections.push({...row, hiveId:row.hive_id, queenSeen:row.queen_seen, weatherSnap:row.weather_snap, miteCount:row.mite_count, sampleSize:row.sample_size, mitePct:row.mite_pct});
   }
-
   closeModal();
-
-  // Show results & recommendations
   showInspResults(mitePct, period);
 }
 
@@ -398,13 +396,11 @@ function showInspResults(mitePct, period, broodless) {
   var h = '<div class="modal-title">Inspection Complete</div>';
   h += '<div style="font-size:13px;color:var(--txt2);margin-bottom:14px">'+(hive?esc(hive.name)+' · ':'')+_GINSP.date+'</div>';
 
-  // Varroa results
   if (varRec) {
     h += '<div style="font-family:\'Playfair Display\',serif;font-size:15px;color:var(--bark);margin-bottom:8px">🧪 Varroa Results</div>';
     h += '<div class="ginsp-alert '+varRec.level+'"><strong>'+varRec.label+'</strong><br>';
     h += '<span style="font-size:11px;opacity:.8">Phase: '+varRec.phase+' · Acceptable: &lt;'+varRec.thresh.acceptable+'% · Danger: &gt;'+varRec.thresh.danger+'%</span><br>';
     h += mitePct.toFixed(1)+'% ('+_GINSP.miteCount+' mites / '+_GINSP.miteTotal+' bees)<br>'+varRec.msg+'</div>';
-
     if (varRec.recs.length) {
       h += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--txt2);margin:10px 0 6px">Recommended Actions — Tap to expand</div>';
       varRec.recs.forEach(function(r){
@@ -413,8 +409,7 @@ function showInspResults(mitePct, period, broodless) {
         h += '<div class="tref-header" onclick="toggleTref(this)" style="padding:12px">';
         h += '<div class="tref-ico '+(r.isNonChem?'nonchemical':treatData?treatData.class:'organic')+'" style="width:36px;height:36px;font-size:16px">'+(r.isNonChem?'🌿':treatData?treatData.icon:'💊')+'</div>';
         h += '<div style="flex:1"><div class="tref-name" style="font-size:14px">'+esc(r.name)+'</div><div style="font-size:11px;color:var(--txt2);margin-top:2px">'+esc(r.note)+'</div></div>';
-        h += '<div class="tref-chevron">▼</div>';
-        h += '</div>';
+        h += '<div class="tref-chevron">▼</div></div>';
         h += '<div class="tref-body">';
         if (r.warn) h += '<div class="tref-warn">'+esc(r.warn)+'</div>';
         if (r.isNonChem) {
@@ -446,7 +441,6 @@ function showInspResults(mitePct, period, broodless) {
     h += '<div class="ginsp-alert yellow">🧪 No alcohol wash done this visit. AUBEE recommends 4 washes per year — see schedule in the 📚 Library tab.</div>';
   }
 
-  // SHB results
   h += '<div style="font-family:\'Playfair Display\',serif;font-size:15px;color:var(--bark);margin:14px 0 8px">🪲 Small Hive Beetle</div>';
   h += '<div class="ginsp-alert '+shbRec.level+'"><strong>'+shbRec.label+'</strong><br>'+shbRec.msg+'</div>';
   if (shbRec.recs.length) {
@@ -455,19 +449,15 @@ function showInspResults(mitePct, period, broodless) {
     });
   }
 
-  // Queen alert
   if (_GINSP.queenSeen === 'No ✗') {
     h += '<div class="ginsp-alert red" style="margin-top:14px">👑 <strong>Queen Not Seen</strong> — Check for eggs and young larvae. Recheck in 5 days. If no eggs found colony may be queenless.</div>';
   } else if (_GINSP.queenSeen === 'Eggs Only') {
     h += '<div class="ginsp-alert yellow" style="margin-top:14px">👑 <strong>Eggs Only — Queen Present But Unseen</strong> — Recheck in 7 days to confirm laying pattern.</div>';
   }
-
-  // Swarm alert
   if (_GINSP.swarmCells && _GINSP.swarmCells !== 'No') {
     h += '<div class="ginsp-alert orange" style="margin-top:8px">🐝 <strong>Swarm Cells Found</strong> — Monitor closely. Consider splitting the colony to prevent a swarm.</div>';
   }
 
-  // Next inspection
   h += '<div style="font-family:\'Playfair Display\',serif;font-size:15px;color:var(--bark);margin:14px 0 8px">📅 Next Inspection</div>';
   h += '<div class="ginsp-alert green">Recommended next visit in <strong>'+nextInsp.days+' days</strong> — <strong>'+fmtDate(nextInsp.date)+'</strong></div>';
   h += '<button class="btn btn-p" onclick="addInspReminder(\''+nextInsp.date+'\',\''+_GINSP.hiveId+'\')">📅 Add Reminder for '+fmtDate(nextInsp.date)+'</button>';
@@ -481,7 +471,6 @@ function showInspResults(mitePct, period, broodless) {
 }
 
 async function addInspReminder(date, hiveId) {
-  var hive = DATA.hives.find(function(h){return h.id===hiveId;});
   var obj = {rem_type:'Inspection', hive_id:hiveId, next_date:date, notes:'Next inspection — recommended by guided walkthrough', item_name:'', item_qty:'', item_cost:null, supplier_id:null, completed:false, added_to_finance:false};
   var row = await dbInsert('reminders', obj);
   if (row) DATA.reminders.push({...row, hiveId:row.hive_id, nextDate:row.next_date, remType:row.rem_type, itemName:row.item_name, itemCost:row.item_cost, itemQty:row.item_qty, supplierId:row.supplier_id, addedToFinance:row.added_to_finance});
