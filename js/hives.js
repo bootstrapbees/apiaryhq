@@ -257,8 +257,8 @@ function openInspModal(item) {
   openModal(h);
   renderFrameSection();
   setTimeout(function() {
-    var washEl = document.getElementById('iv-washdone');
-    var szEl = document.getElementById('iv-samplesize');
+    var washEl = document.getElementById('pill-iv-washdone');
+    var szEl = document.getElementById('pill-iv-samplesize');
     if (washEl) {
       washEl.addEventListener('click', function(e) {
         if (e.target.classList.contains('pill')) {

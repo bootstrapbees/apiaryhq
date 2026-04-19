@@ -254,8 +254,8 @@ function renderGuidedStep() {
       'Add Photo</button></div>'+
       '<div class="pgal" id="pgal-h">'+buildGallery(_GINSP.tempId)+'</div></div>';
     setTimeout(function() {
-      var washDoneEl = document.getElementById('gi-washdone');
-      var sampleSizeEl = document.getElementById('gi-samplesize');
+      var washDoneEl = document.getElementById('pill-gi-washdone');
+      var sampleSizeEl = document.getElementById('pill-gi-samplesize');
       if (washDoneEl) {
         washDoneEl.addEventListener('click', function(e) {
           if (e.target.classList.contains('pill')) {
