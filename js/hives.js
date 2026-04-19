@@ -324,7 +324,7 @@ function openSplitModal(hiveId) {
   h += '<div style="font-size:13px;color:var(--txt2);margin-bottom:14px">Splitting from <strong>'+esc(parentHive.name)+'</strong>. A new hive record will be created for the split.</div>';
   h += '<div class="fg"><label>Split Date</label><input id="f-splitdate" type="date" value="'+today+'"></div>';
   h += '<div class="fg"><label>New Hive Name</label><input id="f-splitname" placeholder="e.g. Queen Beatrice II" value="'+esc(parentHive.name)+' Split"></div>';
-  h += '<div class="fg"><label>New Hive Location</label><input id="f-splitloc" placeholder="e.g. South Orchard" value="'+esc(parentHive.location||'':'')+'"></div>';
+  h += '<div class="fg"><label>New Hive Location</label><input id="f-splitloc" placeholder="e.g. South Orchard" value="'+esc(parentHive.location||'')+'"></div>';
   h += '<div class="fg"><label>Queen Strategy</label>'+makePills('sqsrc',['Walk-away (raise own queen)','Purchased queen','Raised cell from colony'],'Walk-away (raise own queen)')+'</div>';
   h += '<div class="fg"><label>Lineage / Notes</label><textarea id="f-splitnotes" placeholder="e.g. Daughter of Queen Beatrice — VSH genetics."></textarea></div>';
   h += '<button class="btn btn-p" onclick="saveSplit(\''+hiveId+'\')">Save Split &amp; Create New Hive</button>';
