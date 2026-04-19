@@ -322,7 +322,7 @@ header {
 .fin-prompt{background:var(--blu-bg);border:1px solid var(--blu-bd);border-radius:var(--r-sm);padding:12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--blu)}
 
 /* ─── REMINDERS ─── */
-#remind-list{padding-bottom:100px}
+#remind-list,#insp-list,#feed-list,#treat-list,#harvest-list{padding-bottom:100px}
 .remind-row{display:flex;align-items:center;gap:12px;padding:13px;margin-bottom:8px;cursor:pointer}
 .remind-overdue{border-left:3px solid var(--red)!important}
 .remind-soon   {border-left:3px solid var(--honey)!important}

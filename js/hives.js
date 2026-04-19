@@ -7,8 +7,8 @@ function openHiveModal(hive) {
   var tid = edit ? hive.id : ('h'+Date.now());
   var h = '<div class="modal-title">'+(edit?'Edit':'Add')+' Hive</div>';
   h += '<div class="fg"><label>Hive Name</label><input id="f-hname" value="'+esc(hive?hive.name:'')+'" placeholder="e.g. Queen Beatrice"></div>';
-  h += '<div class="fg"><label>Location</label><input id="f-hloc" value="'+esc(hive?hive.location||':'')+'" placeholder="e.g. North Orchard"></div>';
-  h += '<div class="row2"><div class="fg"><label>Year Est.</label><input id="f-hyear" type="number" value="'+esc(hive?hive.year||':'')+'" placeholder="'+new Date().getFullYear()+'"></div><div class="fg"><label>Boxes</label><input id="f-hboxes" type="number" value="'+esc(hive?hive.boxes||':'')+'" placeholder="2"></div></div>';
+  h += '<div class="fg"><label>Location</label><input id="f-hloc" value="'+esc(hive?hive.location||'')+'" placeholder="e.g. North Orchard"></div>';
+  h += '<div class="row2"><div class="fg"><label>Year Est.</label><input id="f-hyear" type="number" value="'+esc(hive?hive.year||'')+'" placeholder="'+new Date().getFullYear()+'"></div><div class="fg"><label>Boxes</label><input id="f-hboxes" type="number" value="'+esc(hive?hive.boxes||'')+'" placeholder="2"></div></div>';
   h += '<div class="fg"><label>Installation Date <span style="font-size:11px;color:var(--txt2);font-weight:400">(package or nuc)</span></label><input id="f-hinstall" type="date" value="'+esc(hive?hive.install_date||'':'')+'"></div>';
   h += '<div class="fg"><label>Species</label>'+makePills('hsp',['Italian','Carniolan','Buckfast','Russian','Other'],hive?hive.species||'Italian':'Italian')+'</div>';
   h += '<div class="fg"><label>Status</label>'+makePills('hst',['Healthy','Monitoring','Weak','Queenless'],hive?hive.status||'Healthy':'Healthy')+'</div>';
