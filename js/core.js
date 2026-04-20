@@ -91,6 +91,7 @@ function savePhotos() {}
 // ═══════════════════════════════════════════════════════
 function gv(id) { var e = document.getElementById(id); return e ? e.value.trim() : ''; }
 function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function decodeHtml(s) { var t=document.createElement('textarea'); t.innerHTML=String(s||''); return t.value; }
 function fmtDate(d) { return new Date(d + 'T12:00:00').toLocaleDateString('en-US', {day:'numeric',month:'short',year:'numeric'}); }
 function pad2(n) { return String(n).padStart(2,'0'); }
 function starsHTML(n) { var s=''; for(var i=0;i<5;i++) s+=(i<n?'⭐':'☆'); return s; }
@@ -186,17 +187,12 @@ async function showApp(user) {
   document.getElementById('hdr-apiary-name').textContent = apiaryName;
   document.getElementById('settings-apiary-name').textContent = apiaryName;
   document.getElementById('settings-email').textContent = user.email || '';
-  // Load preferences
   _prefs.units = localStorage.getItem('hkpro_units') || 'lbs';
   _prefs.currency = localStorage.getItem('hkpro_currency') || '$';
   updatePrefLabels();
-  // Render dark toggle
   var dt = document.getElementById('dark-toggle');
   if (dt) dt.classList.toggle('on', _dark);
-  // Load logo
   renderHeaderLogo(meta.logo_url);
-  // Sync ZIP from Supabase user metadata — always use Supabase as source of truth
-  // This ensures ZIP stays in sync across all devices automatically
   if (meta.zip && meta.lat && meta.lng) {
     localStorage.setItem('apiaryhq_zip', meta.zip);
     localStorage.setItem('apiaryhq_lat', meta.lat);
@@ -208,8 +204,6 @@ async function showApp(user) {
   document.getElementById('main-nav').style.display = '';
   showTab('dash');
 }
-
-// ── Password Reset Helpers ───────────────────────────────
 
 async function showForgotPassword() {
   var email = document.getElementById('auth-email').value.trim();
@@ -254,14 +248,14 @@ async function submitPasswordReset() {
     msgEl.textContent = 'Passwords do not match.';
     msgEl.className = 'auth-msg err'; return;
   }
-  btn.disabled = true; btn.textContent = 'Updating\u2026';
+  btn.disabled = true; btn.textContent = 'Updating…';
   var { error } = await sb.auth.updateUser({ password: pass });
   if (error) {
     msgEl.textContent = error.message || 'Could not update password.';
     msgEl.className = 'auth-msg err';
     btn.disabled = false; btn.textContent = 'Update Password';
   } else {
-    msgEl.textContent = '\u2705 Password updated! Signing you in\u2026';
+    msgEl.textContent = '✅ Password updated! Signing you in…';
     msgEl.className = 'auth-msg ok';
     setTimeout(async function() {
       var { data } = await sb.auth.getSession();
@@ -276,18 +270,14 @@ async function submitPasswordReset() {
   }
 }
 
-// Init: check for saved session
 (async function() {
   document.querySelectorAll('.page').forEach(function(p){p.style.display='none';});
   document.getElementById('fab-btn').style.display = 'none';
-
-  // Detect Supabase password-recovery redirect (#type=recovery in hash)
   if (window.location.hash && window.location.hash.includes('type=recovery')) {
-    await sb.auth.getSession(); // Let SDK parse the token
+    await sb.auth.getSession();
     showResetPanel();
     return;
   }
-
   var {data} = await sb.auth.getSession();
   if (data && data.session && data.session.user) {
     await showApp(data.session.user);
@@ -388,10 +378,6 @@ function saveCurrencyPref() {
   localStorage.setItem('hkpro_currency', _prefs.currency);
   updatePrefLabels(); closeModal();
 }
-// ══════════════════════════════════════════════════════════════════════════════
-// LEGAL MODALS
-// ══════════════════════════════════════════════════════════════════════════════
-
 function openPrivacyModal() {
     var h = '<div class="modal-title">Privacy Statement</div>';
     h += '<div style="font-size:14px; color:var(--txt2); line-height:1.5; max-height:300px; overflow-y:auto; margin-bottom:20px; text-align:left;">';
@@ -402,7 +388,6 @@ function openPrivacyModal() {
     h += '<button class="btn btn-p" onclick="closeModal()">Close</button>';
     openModal(h);
 }
-
 function openCopyrightModal() {
     var h = '<div class="modal-title">Copyright Statement</div>';
     h += '<div style="font-size:14px; color:var(--txt2); line-height:1.5; margin-bottom:20px; text-align:left;">';
