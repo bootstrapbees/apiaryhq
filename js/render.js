@@ -415,6 +415,7 @@ function renderAll() {
     }
     if (!remSorted.length && !completed.length) rHtml='<div class="empty"><div class="ei">'+icon('remind')+'</div><div class="et">No reminders yet</div><div class="es">Tap + to add a reminder or task</div></div>';
     rl.innerHTML = rHtml;
+    rl.style.paddingBottom = '90px';
   }
 
   // ── DOCS ──

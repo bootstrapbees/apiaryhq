@@ -198,7 +198,7 @@ function exportInspectionsPDF(hiveId) {
     doc.text((hive?hive.name:'Unknown Hive') + ' — ' + fmtDate(i.date), margin+3, y+5.5);
     y += 11;
     doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(122, 88, 48);
-    var line1 = 'Weather: '+(i.weather||'—')+' | Queen: '+(i.queenSeen||'—')+' | Temperament: '+(i.temperament||'—');
+    var line1 = 'Weather: '+(decodeHtml(i.weather)||'—')+' | Queen: '+(i.queenSeen||'—')+' | Temperament: '+(i.temperament||'—');
     doc.text(line1, margin+3, y);
     y += 5;
     doc.text('Population: '+String(i.population||0)+'/5   Honey Stores: '+String(i.honey||0)+'/5   Brood: '+String(i.brood||0)+'/5', margin+3, y);

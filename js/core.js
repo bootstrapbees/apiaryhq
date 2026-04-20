@@ -91,6 +91,7 @@ function savePhotos() {}
 // ═══════════════════════════════════════════════════════
 function gv(id) { var e = document.getElementById(id); return e ? e.value.trim() : ''; }
 function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function decodeHtml(s) { var t=document.createElement('textarea'); t.innerHTML=String(s||''); return t.value; }
 function fmtDate(d) { return new Date(d + 'T12:00:00').toLocaleDateString('en-US', {day:'numeric',month:'short',year:'numeric'}); }
 function pad2(n) { return String(n).padStart(2,'0'); }
 function starsHTML(n) { var s=''; for(var i=0;i<5;i++) s+=(i<n?'⭐':'☆'); return s; }
